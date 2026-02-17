@@ -1048,10 +1048,20 @@ void CV_GetQuadSubPixTest::run_func()
     matrix[2] -= matrix[0]*dx + matrix[1]*dy;
     matrix[5] -= matrix[3]*dx + matrix[4]*dy;
 
-    CV_Assert( src.depth() == dst.depth() );
-    cv::warpAffine(src, dst, M, dst.size(),
-                   cv::INTER_LINEAR + cv::WARP_INVERSE_MAP,
-                   cv::BORDER_REPLICATE);
+    if( src.depth() != dst.depth() )
+    {
+        cv::Mat tmp;
+        src.convertTo(tmp, dst.depth());
+        cv::warpAffine(tmp, dst, M, dst.size(),
+                       cv::INTER_LINEAR + cv::WARP_INVERSE_MAP,
+                       cv::BORDER_REPLICATE);
+    }
+    else
+    {
+        cv::warpAffine(src, dst, M, dst.size(),
+                       cv::INTER_LINEAR + cv::WARP_INVERSE_MAP,
+                       cv::BORDER_REPLICATE);
+    }
 }
 
 
