@@ -229,10 +229,9 @@ CV_IMPL void cvSetIdentity( CvArr* arr, CvScalar value )
 }
 
 
-CV_IMPL CvScalar cvTrace( const CvArr* arr )
-{
-    return cvScalar(cv::trace(cv::cvarrToMat(arr)));
-}
+// cvTrace has been removed as part of the C API migration.
+// Use cv::trace() instead:
+//   cv::Scalar s = cv::trace(cv::cvarrToMat(arr));
 
 
 CV_IMPL void cvTranspose( const CvArr* srcarr, CvArr* dstarr )

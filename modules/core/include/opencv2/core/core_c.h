@@ -1361,8 +1361,11 @@ CVAPI(int)  cvSolve( const CvArr* src1, const CvArr* src2, CvArr* dst,
 /** Calculates determinant of input matrix */
 CVAPI(double) cvDet( const CvArr* mat );
 
-/** Calculates trace of the matrix (sum of elements on the main diagonal) */
-CVAPI(CvScalar) cvTrace( const CvArr* mat );
+/** @deprecated Use cv::trace() instead. The legacy C API cvTrace has been removed.
+    @code
+    cv::Scalar s = cv::trace(mat);
+    @endcode
+*/
 
 /** Finds eigen values and vectors of a symmetric matrix */
 CVAPI(void)  cvEigenVV( CvArr* mat, CvArr* evects, CvArr* evals,
