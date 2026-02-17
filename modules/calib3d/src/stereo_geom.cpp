@@ -324,12 +324,6 @@ void stereoRectify( InputArray _cameraMatrix1, InputArray _distCoeffs1,
     }
 }
 
-/*
-CV_IMPL int cvStereoRectifyUncalibrated(
-    const CvMat* _points1, const CvMat* _points2,
-    const CvMat* F0, CvSize imgSize,
-    CvMat* _H1, CvMat* _H2, double threshold )
-*/
 bool stereoRectifyUncalibrated( InputArray _points1, InputArray _points2,
                                 InputArray _Fmat, Size imgSize,
                                 OutputArray _Hmat1, OutputArray _Hmat2, double threshold )
