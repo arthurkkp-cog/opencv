@@ -218,7 +218,10 @@ cvTsMarkContours( IplImage* img, int val )
                 *t = (uchar)val;
         }
 
-    cvThreshold( img, img, val - 2, val, CV_THRESH_BINARY );
+    {
+        cv::Mat img_mat = cv::cvarrToMat(img);
+        cv::threshold(img_mat, img_mat, val - 2, val, CV_THRESH_BINARY);
+    }
 }
 
 

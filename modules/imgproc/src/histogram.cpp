@@ -2517,7 +2517,10 @@ cvThreshHist( CvHistogram* hist, double thresh )
     {
         CvMat mat;
         cvGetMat( hist->bins, &mat, 0, 1 );
-        cvThreshold( &mat, &mat, thresh, 0, cv::THRESH_TOZERO );
+        {
+            cv::Mat m = cv::cvarrToMat(&mat);
+            cv::threshold(m, m, thresh, 0, cv::THRESH_TOZERO);
+        }
     }
     else
     {

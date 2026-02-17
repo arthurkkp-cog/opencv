@@ -302,7 +302,10 @@ cvStartFindContours_Impl( void* _img, CvMemStorage* storage,
 
     /* converts all pixels to 0 or 1 */
     if( CV_MAT_TYPE(mat->type) != CV_32S )
-        cvThreshold( mat, mat, 0, 1, cv::THRESH_BINARY );
+    {
+        cv::Mat m = cv::cvarrToMat(mat);
+        cv::threshold(m, m, 0, 1, cv::THRESH_BINARY);
+    }
 
     return scanner;
 }

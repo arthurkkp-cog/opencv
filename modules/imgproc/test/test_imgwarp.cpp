@@ -260,7 +260,10 @@ void CV_ResizeTest::get_test_array_types_and_sizes( int test_case_idx, vector<ve
 
 void CV_ResizeTest::run_func()
 {
-    cvResize( test_array[INPUT][0], test_array[INPUT_OUTPUT][0], interpolation );
+    cv::Mat src = cv::cvarrToMat(test_array[INPUT][0]);
+    cv::Mat dst = cv::cvarrToMat(test_array[INPUT_OUTPUT][0]);
+    cv::resize(src, dst, dst.size(), (double)dst.cols/src.cols,
+        (double)dst.rows/src.rows, interpolation);
 }
 
 

@@ -40,6 +40,7 @@
 //M*/
 
 #include "test_precomp.hpp"
+#include "opencv2/imgproc.hpp"
 #include "opencv2/imgproc/imgproc_c.h"
 
 namespace opencv_test { namespace {
@@ -108,7 +109,8 @@ protected:
 
 void CV_AccTest::run_func(void)
 {
-    cvAcc( test_array[INPUT][0], test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    cv::accumulate(test_mat[INPUT][0], test_mat[INPUT_OUTPUT][0],
+                   test_array[MASK][0] ? test_mat[MASK][0] : cv::Mat());
 }
 
 
@@ -141,7 +143,8 @@ CV_SquareAccTest::CV_SquareAccTest()
 
 void CV_SquareAccTest::run_func()
 {
-    cvSquareAcc( test_array[INPUT][0], test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    cv::accumulateSquare(test_mat[INPUT][0], test_mat[INPUT_OUTPUT][0],
+                         test_array[MASK][0] ? test_mat[MASK][0] : cv::Mat());
 }
 
 
@@ -178,8 +181,9 @@ CV_MultiplyAccTest::CV_MultiplyAccTest()
 
 void CV_MultiplyAccTest::run_func()
 {
-    cvMultiplyAcc( test_array[INPUT][0], test_array[INPUT][1],
-                   test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+    cv::accumulateProduct(test_mat[INPUT][0], test_mat[INPUT][1],
+                          test_mat[INPUT_OUTPUT][0],
+                          test_array[MASK][0] ? test_mat[MASK][0] : cv::Mat());
 }
 
 
@@ -218,8 +222,8 @@ CV_RunningAvgTest::CV_RunningAvgTest()
 
 void CV_RunningAvgTest::run_func()
 {
-    cvRunningAvg( test_array[INPUT][0], test_array[INPUT_OUTPUT][0],
-                  alpha, test_array[MASK][0] );
+    cv::accumulateWeighted(test_mat[INPUT][0], test_mat[INPUT_OUTPUT][0],
+                           alpha, test_array[MASK][0] ? test_mat[MASK][0] : cv::Mat());
 }
 
 
