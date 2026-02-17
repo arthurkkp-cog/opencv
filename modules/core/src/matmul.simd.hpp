@@ -1081,7 +1081,7 @@ static void gemmImpl( Mat A, Mat B, double alpha,
             if( C->data.ptr != D->data.ptr )
             {
                 if( !(flags & GEMM_3_T) )
-                    cvCopy( C, D );
+                    cv::cvarrToMat(C).copyTo(cv::cvarrToMat(D));
                 else
                     cvTranspose( C, D );
             }

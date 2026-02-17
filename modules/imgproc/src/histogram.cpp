@@ -2502,7 +2502,17 @@ cvClearHist( CvHistogram *hist )
 {
     if( !CV_IS_HIST(hist) )
         CV_Error( cv::Error::StsBadArg, "Invalid histogram header" );
-    cvZero( hist->bins );
+    if( CV_IS_SPARSE_MAT(hist->bins) )
+    {
+        CvSparseMat* _sm = (CvSparseMat*)(hist->bins);
+        cvClearSet( _sm->heap );
+        if( _sm->hashtable )
+            memset( _sm->hashtable, 0, _sm->hashsize*sizeof(_sm->hashtable[0]));
+    }
+    else
+    {
+        cv::cvarrToMat(hist->bins).setTo(cv::Scalar(0));
+    }
 }
 
 
@@ -2549,10 +2559,10 @@ cvNormalizeHist( CvHistogram* hist, double factor )
     {
         CvMat mat;
         cvGetMat( hist->bins, &mat, 0, 1 );
-        sum = cvSum( &mat ).val[0];
+        sum = cv::sum(cv::cvarrToMat(&mat))[0];
         if( fabs(sum) < DBL_EPSILON )
             sum = 1;
-        cvScale( &mat, &mat, factor/sum, 0 );
+        { cv::Mat _m = cv::cvarrToMat(&mat); _m.convertTo(_m, _m.type(), factor/sum, 0); }
     }
     else
     {
@@ -2600,7 +2610,10 @@ cvGetMinMaxHistValue( const CvHistogram* hist,
         CvPoint minPt = {0, 0}, maxPt = {0, 0};
 
         cvGetMat( hist->bins, &mat, 0, 1 );
-        cvMinMaxLoc( &mat, &minVal, &maxVal, &minPt, &maxPt );
+        cv::Point _minPt, _maxPt;
+        cv::minMaxLoc( cv::cvarrToMat(&mat), &minVal, &maxVal, &_minPt, &_maxPt );
+        minPt = cvPoint(_minPt.x, _minPt.y);
+        maxPt = cvPoint(_maxPt.x, _maxPt.y);
 
         if( dims == 1 )
         {
@@ -2921,7 +2934,39 @@ cvCopyHist( const CvHistogram* src, CvHistogram** _dst )
         cvSetHistBinRanges( dst, thresh, CV_IS_UNIFORM_HIST(src));
     }
 
-    cvCopy( src->bins, dst->bins );
+    if( is_sparse )
+    {
+        CvSparseMat* _src = (CvSparseMat*)src->bins;
+        CvSparseMat* _dst = (CvSparseMat*)dst->bins;
+        _dst->dims = _src->dims;
+        memcpy(_dst->size, _src->size, _src->dims*sizeof(_src->size[0]));
+        _dst->valoffset = _src->valoffset;
+        _dst->idxoffset = _src->idxoffset;
+        cvClearSet(_dst->heap);
+        if( _src->heap->active_count >= _dst->hashsize*3 )
+        {
+            cvFree(&_dst->hashtable);
+            _dst->hashsize = _src->hashsize;
+            _dst->hashtable = (void**)cvAlloc(_dst->hashsize*sizeof(_dst->hashtable[0]));
+        }
+        memset(_dst->hashtable, 0, _dst->hashsize*sizeof(_dst->hashtable[0]));
+        CvSparseMatIterator _iter;
+        CvSparseNode* _node;
+        for( _node = cvInitSparseMatIterator(_src, &_iter);
+             _node != 0; _node = cvGetNextSparseNode(&_iter))
+        {
+            CvSparseNode* _copy = (CvSparseNode*)cvSetNew(_dst->heap);
+            int _tabidx = _node->hashval & (_dst->hashsize - 1);
+            memcpy(_copy, _node, _dst->heap->elem_size);
+            _copy->next = (CvSparseNode*)_dst->hashtable[_tabidx];
+            _dst->hashtable[_tabidx] = _copy;
+        }
+    }
+    else
+    {
+        cv::Mat _s = cv::cvarrToMat(src->bins), _d = cv::cvarrToMat(dst->bins);
+        _s.copyTo(_d);
+    }
 }
 
 
@@ -3037,14 +3082,22 @@ cvCalcArrHist( CvArr** img, CvHistogram* hist, int accumulate, const CvArr* mask
         CvSparseMat* sparsemat = (CvSparseMat*)hist->bins;
 
         if( !accumulate )
-            cvZero( hist->bins );
+        {
+            cvClearSet( sparsemat->heap );
+            if( sparsemat->hashtable )
+                memset( sparsemat->hashtable, 0, sparsemat->hashsize*sizeof(sparsemat->hashtable[0]));
+        }
         cv::SparseMat sH;
         sparsemat->copyToSparseMat(sH);
         cv::calcHist( &images[0], (int)images.size(), 0, _mask, sH, sH.dims(),
                       sH.dims() > 0 ? sH.hdr->size : 0, ranges, uniform, accumulate != 0, true );
 
         if( accumulate )
-            cvZero( sparsemat );
+        {
+            cvClearSet( sparsemat->heap );
+            if( sparsemat->hashtable )
+                memset( sparsemat->hashtable, 0, sparsemat->hashsize*sizeof(sparsemat->hashtable[0]));
+        }
 
         cv::SparseMatConstIterator it = sH.begin();
         int nz = (int)sH.nzcount();
@@ -3206,16 +3259,22 @@ cvCalcBayesianProb( CvHistogram** src, int count, CvHistogram** dst )
             CV_Error( cv::Error::StsBadArg, "The function supports dense histograms only" );
     }
 
-    cvZero( dst[0]->bins );
+    { cv::Mat _m = cv::cvarrToMat(dst[0]->bins); _m = cv::Scalar(0); }
     // dst[0] = src[0] + ... + src[count-1]
     for( i = 0; i < count; i++ )
-        cvAdd( src[i]->bins, dst[0]->bins, dst[0]->bins );
+    {
+        cv::Mat _s = cv::cvarrToMat(src[i]->bins), _d = cv::cvarrToMat(dst[0]->bins);
+        cv::add(_s, _d, _d, cv::noArray(), _d.type());
+    }
 
-    cvDiv( 0, dst[0]->bins, dst[0]->bins );
+    { cv::Mat _d = cv::cvarrToMat(dst[0]->bins); cv::divide(1.0, _d, _d, _d.type()); }
 
     // dst[i] = src[i]*(1/dst[0])
     for( i = count - 1; i >= 0; i-- )
-        cvMul( src[i]->bins, dst[0]->bins, dst[i]->bins );
+    {
+        cv::Mat _s = cv::cvarrToMat(src[i]->bins), _d0 = cv::cvarrToMat(dst[0]->bins), _di = cv::cvarrToMat(dst[i]->bins);
+        cv::multiply(_s, _d0, _di, 1, _di.type());
+    }
 }
 
 

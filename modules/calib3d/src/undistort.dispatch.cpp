@@ -354,7 +354,7 @@ static void cvUndistortPointsInternal( const CvMat* _src, CvMat* _dst, const CvM
     CV_Assert( CV_IS_MAT(_cameraMatrix) &&
         _cameraMatrix->rows == 3 && _cameraMatrix->cols == 3 );
 
-    cvConvert( _cameraMatrix, &matA );
+    { cv::Mat _s = cv::cvarrToMat(_cameraMatrix), _d = cv::cvarrToMat(&matA); _s.convertTo(_d, _d.type()); }
 
 
     if( _distCoeffs )
@@ -370,7 +370,7 @@ static void cvUndistortPointsInternal( const CvMat* _src, CvMat* _dst, const CvM
         _Dk = cvMat( _distCoeffs->rows, _distCoeffs->cols,
             CV_MAKETYPE(CV_64F,CV_MAT_CN(_distCoeffs->type)), k);
 
-        cvConvert( _distCoeffs, &_Dk );
+        { cv::Mat _s = cv::cvarrToMat(_distCoeffs), _d = cv::cvarrToMat(&_Dk); _s.convertTo(_d, _d.type()); }
         if (k[12] != 0 || k[13] != 0)
         {
             cv::detail::computeTiltProjectionMatrix<double>(k[12], k[13], NULL, NULL, NULL, &invMatTilt);
@@ -381,7 +381,7 @@ static void cvUndistortPointsInternal( const CvMat* _src, CvMat* _dst, const CvM
     if( matR )
     {
         CV_Assert( CV_IS_MAT(matR) && matR->rows == 3 && matR->cols == 3 );
-        cvConvert( matR, &_RR );
+        { cv::Mat _s = cv::cvarrToMat(matR), _d = cv::cvarrToMat(&_RR); _s.convertTo(_d, _d.type()); }
     }
     else
         cvSetIdentity(&_RR);
@@ -391,7 +391,7 @@ static void cvUndistortPointsInternal( const CvMat* _src, CvMat* _dst, const CvM
         double PP[3][3];
         CvMat _P3x3, _PP=cvMat(3, 3, CV_64F, PP);
         CV_Assert( CV_IS_MAT(matP) && matP->rows == 3 && (matP->cols == 3 || matP->cols == 4));
-        cvConvert( cvGetCols(matP, &_P3x3, 0, 3), &_PP );
+        { cv::Mat _s = cv::cvarrToMat(cvGetCols(matP, &_P3x3, 0, 3)), _d = cv::cvarrToMat(&_PP); _s.convertTo(_d, _d.type()); }
         cvMatMul( &_PP, &_RR, &_RR );
     }
 

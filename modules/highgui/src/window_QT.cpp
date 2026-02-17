@@ -2548,7 +2548,7 @@ DefaultViewPort::DefaultViewPort(CvWindow* arg, int arg2) : QGraphicsView(arg), 
     setStyleSheet( "QGraphicsView { border-style: none; }" );
 
     image2Draw_mat = cvCreateMat(viewport()->height(), viewport()->width(), CV_8UC3);
-    cvZero(image2Draw_mat);
+    cv::cvarrToMat(image2Draw_mat).setTo(cv::Scalar(0));
 
     nbChannelOriginImage = 0;
 

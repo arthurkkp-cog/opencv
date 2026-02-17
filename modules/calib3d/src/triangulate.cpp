@@ -175,15 +175,15 @@ icvCorrectMatches(CvMat *F_, CvMat *points1_, CvMat *points2_, CvMat *new_points
 
     // Make sure F uses double precision
     F.reset(cvCreateMat(3,3,CV_64FC1));
-    cvConvert(F_, F);
+    { cv::Mat _s = cv::cvarrToMat(F_), _d = cv::cvarrToMat(F); _s.convertTo(_d, _d.type()); }
 
     // Make sure points1 uses double precision
     points1.reset(cvCreateMat(points1_->rows,points1_->cols,CV_64FC2));
-    cvConvert(points1_, points1);
+    { cv::Mat _s = cv::cvarrToMat(points1_), _d = cv::cvarrToMat(points1); _s.convertTo(_d, _d.type()); }
 
     // Make sure points2 uses double precision
     points2.reset(cvCreateMat(points2_->rows,points2_->cols,CV_64FC2));
-    cvConvert(points2_, points2);
+    { cv::Mat _s = cv::cvarrToMat(points2_), _d = cv::cvarrToMat(points2); _s.convertTo(_d, _d.type()); }
 
     tmp33.reset(cvCreateMat(3,3,CV_64FC1));
     tmp31.reset(cvCreateMat(3,1,CV_64FC1)), tmp31_2.reset(cvCreateMat(3,1,CV_64FC1));
@@ -208,26 +208,26 @@ icvCorrectMatches(CvMat *F_, CvMat *points1_, CvMat *points2_, CvMat *new_points
         x2 = points2->data.db[p*2];
         y2 = points2->data.db[p*2+1];
 
-        cvSetZero(T1i);
+        cv::cvarrToMat(T1i).setTo(cv::Scalar(0));
         cvSetReal2D(T1i,0,0,1);
         cvSetReal2D(T1i,1,1,1);
         cvSetReal2D(T1i,2,2,1);
         cvSetReal2D(T1i,0,2,x1);
         cvSetReal2D(T1i,1,2,y1);
-        cvSetZero(T2i);
+        cv::cvarrToMat(T2i).setTo(cv::Scalar(0));
         cvSetReal2D(T2i,0,0,1);
         cvSetReal2D(T2i,1,1,1);
         cvSetReal2D(T2i,2,2,1);
         cvSetReal2D(T2i,0,2,x2);
         cvSetReal2D(T2i,1,2,y2);
         cvGEMM(T2i,F,1,0,0,tmp33,CV_GEMM_A_T);
-        cvSetZero(TFT);
+        cv::cvarrToMat(TFT).setTo(cv::Scalar(0));
         cvGEMM(tmp33,T1i,1,0,0,TFT);
 
         // Compute the right epipole e1 from F * e1 = 0
-        cvSetZero(U);
-        cvSetZero(S);
-        cvSetZero(V);
+        cv::cvarrToMat(U).setTo(cv::Scalar(0));
+        cv::cvarrToMat(S).setTo(cv::Scalar(0));
+        cv::cvarrToMat(V).setTo(cv::Scalar(0));
         cvSVD(TFT,S,U,V);
         scale = sqrt(cvGetReal2D(V,0,2)*cvGetReal2D(V,0,2) + cvGetReal2D(V,1,2)*cvGetReal2D(V,1,2));
         cvSetReal2D(e1,0,0,cvGetReal2D(V,0,2)/scale);
@@ -240,13 +240,13 @@ icvCorrectMatches(CvMat *F_, CvMat *points1_, CvMat *points2_, CvMat *new_points
         }
 
         // Compute the left epipole e2 from e2' * F = 0  =>  F' * e2 = 0
-        cvSetZero(TFTt);
+        cv::cvarrToMat(TFTt).setTo(cv::Scalar(0));
         cvTranspose(TFT, TFTt);
-        cvSetZero(U);
-        cvSetZero(S);
-        cvSetZero(V);
+        cv::cvarrToMat(U).setTo(cv::Scalar(0));
+        cv::cvarrToMat(S).setTo(cv::Scalar(0));
+        cv::cvarrToMat(V).setTo(cv::Scalar(0));
         cvSVD(TFTt,S,U,V);
-        cvSetZero(e2);
+        cv::cvarrToMat(e2).setTo(cv::Scalar(0));
         scale = sqrt(cvGetReal2D(V,0,2)*cvGetReal2D(V,0,2) + cvGetReal2D(V,1,2)*cvGetReal2D(V,1,2));
         cvSetReal2D(e2,0,0,cvGetReal2D(V,0,2)/scale);
         cvSetReal2D(e2,1,0,cvGetReal2D(V,1,2)/scale);
@@ -258,13 +258,13 @@ icvCorrectMatches(CvMat *F_, CvMat *points1_, CvMat *points2_, CvMat *new_points
         }
 
         // Replace F by R2 * F * R1'
-        cvSetZero(R1);
+        cv::cvarrToMat(R1).setTo(cv::Scalar(0));
         cvSetReal2D(R1,0,0,cvGetReal2D(e1,0,0));
         cvSetReal2D(R1,0,1,cvGetReal2D(e1,1,0));
         cvSetReal2D(R1,1,0,-cvGetReal2D(e1,1,0));
         cvSetReal2D(R1,1,1,cvGetReal2D(e1,0,0));
         cvSetReal2D(R1,2,2,1);
-        cvSetZero(R2);
+        cv::cvarrToMat(R2).setTo(cv::Scalar(0));
         cvSetReal2D(R2,0,0,cvGetReal2D(e2,0,0));
         cvSetReal2D(R2,0,1,cvGetReal2D(e2,1,0));
         cvSetReal2D(R2,1,0,-cvGetReal2D(e2,1,0));
@@ -292,7 +292,7 @@ icvCorrectMatches(CvMat *F_, CvMat *points1_, CvMat *points2_, CvMat *new_points
         cvSetReal2D(polynomial,0,0,( -a*d*d*b+b*b*c*d ));
 
         // Solve g(t) for t to get 6 roots
-        cvSetZero(result);
+        cv::cvarrToMat(result).setTo(cv::Scalar(0));
         cvSolvePoly(polynomial, result, 100, 20);
 
         // Evaluate the cost function s(t) at the real part of the 6 roots
@@ -338,9 +338,9 @@ icvCorrectMatches(CvMat *F_, CvMat *points1_, CvMat *points2_, CvMat *new_points
     }
 
     if( new_points1 )
-        cvConvert( points1, new_points1 );
+    { cv::Mat _s = cv::cvarrToMat(points1), _d = cv::cvarrToMat(new_points1); _s.convertTo(_d, _d.type()); }
     if( new_points2 )
-        cvConvert( points2, new_points2 );
+    { cv::Mat _s = cv::cvarrToMat(points2), _d = cv::cvarrToMat(new_points2); _s.convertTo(_d, _d.type()); }
 }
 
 void cv::triangulatePoints( InputArray _projMatr1, InputArray _projMatr2,

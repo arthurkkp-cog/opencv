@@ -1074,7 +1074,7 @@ CvBoost::train( const CvMat* _train_data, int _tflag,
         cvSeqPush( weak, &tree );
         update_weights( tree );
         trim_weights();
-        if( cvCountNonZero(subsample_mask) == 0 )
+        if( cv::countNonZero(cv::cvarrToMat(subsample_mask)) == 0 )
             break;
     }
 
@@ -1271,7 +1271,7 @@ CvBoost::update_weights( CvBoostTree* tree )
             CvMat _sample, _mask;
 
             // invert the subsample mask
-            cvXorS( subsample_mask, cvScalar(1.), subsample_mask );
+            { cv::Mat _m = cv::cvarrToMat(subsample_mask); cv::bitwise_xor(_m, cv::Scalar::all(1), _m); }
             data->get_vectors( subsample_mask, values, missing, 0 );
 
             _sample = cvMat( 1, data->var_count, CV_32F );
@@ -1438,7 +1438,7 @@ CvBoost::trim_weights()
         EXIT;
 
     // use weak_eval as temporary buffer for sorted weights
-    cvCopy( weights, weak_eval );
+    cv::cvarrToMat(weights).copyTo(cv::cvarrToMat(weak_eval));
 
     std::sort(weak_eval->data.db, weak_eval->data.db + count);
 
@@ -1494,8 +1494,8 @@ CvBoost::get_active_vars( bool absolute_idx )
         assert(!active_vars && !active_vars_abs);
         mask = cvCreateMat( 1, data->var_count, CV_8U );
         inv_map = cvCreateMat( 1, data->var_count, CV_32S );
-        cvZero( mask );
-        cvSet( inv_map, cvScalar(-1) );
+        cv::cvarrToMat(mask).setTo(cv::Scalar(0));
+        cv::cvarrToMat(inv_map).setTo(cv::Scalar(-1));
 
         // first pass: compute the mask of used variables
         cvStartReadSeq( weak, &reader );
@@ -1529,7 +1529,7 @@ CvBoost::get_active_vars( bool absolute_idx )
             }
         }
 
-        nactive_vars = cvCountNonZero(mask);
+        nactive_vars = cv::countNonZero(cv::cvarrToMat(mask));
 
         //if ( nactive_vars > 0 )
         {

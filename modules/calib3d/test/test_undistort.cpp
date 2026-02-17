@@ -561,7 +561,7 @@ void CV_UndistortPointsTest::distortPoints(const CvMat* _src, CvMat* _dst, const
     }
     else
     {
-        cvZero(__P);
+        cv::cvarrToMat(__P).setTo(cv::Scalar(0));
         __P->data.db[0] = 1;
         __P->data.db[4] = 1;
         __P->data.db[8] = 1;
@@ -569,11 +569,11 @@ void CV_UndistortPointsTest::distortPoints(const CvMat* _src, CvMat* _dst, const
     CvMat* __R = cvCreateMat(3,3,CV_64F);
     if (matR)
     {
-        cvCopy(matR,__R);
+        { cv::Mat _s = cv::cvarrToMat(matR), _d = cv::cvarrToMat(__R); _s.copyTo(_d); }
     }
     else
     {
-        cvZero(__R);
+        cv::cvarrToMat(__R).setTo(cv::Scalar(0));
         __R->data.db[0] = 1;
         __R->data.db[4] = 1;
         __R->data.db[8] = 1;

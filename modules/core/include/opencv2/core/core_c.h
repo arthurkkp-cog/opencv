@@ -870,10 +870,6 @@ unchanged unless it needs to be changed according to new_cn value.
 CVAPI(CvMat*) cvReshape( const CvArr* arr, CvMat* header,
                         int new_cn, int new_rows CV_DEFAULT(0) );
 
-/** Repeats source 2d array several times in both horizontal and
-   vertical direction to fill destination array */
-CVAPI(void) cvRepeat( const CvArr* src, CvArr* dst );
-
 /** @brief Allocates array data
 
 The function allocates image, matrix or multi-dimensional dense array data. Note that in the case of
@@ -942,101 +938,6 @@ input matrix or image. In the case of image the size of ROI is returned.
  */
 CVAPI(CvSize) cvGetSize( const CvArr* arr );
 
-/** @brief Copies one array to another.
-
-The function copies selected elements from an input array to an output array:
-
-\f[\texttt{dst} (I)= \texttt{src} (I)  \quad \text{if} \quad \texttt{mask} (I)  \ne 0.\f]
-
-If any of the passed arrays is of IplImage type, then its ROI and COI fields are used. Both arrays
-must have the same type, the same number of dimensions, and the same size. The function can also
-copy sparse arrays (mask is not supported in this case).
-@param src The source array
-@param dst The destination array
-@param mask Operation mask, 8-bit single channel array; specifies elements of the destination array
-to be changed
- */
-CVAPI(void)  cvCopy( const CvArr* src, CvArr* dst,
-                     const CvArr* mask CV_DEFAULT(NULL) );
-
-/** @brief Sets every element of an array to a given value.
-
-The function copies the scalar value to every selected element of the destination array:
-\f[\texttt{arr} (I)= \texttt{value} \quad \text{if} \quad \texttt{mask} (I)  \ne 0\f]
-If array arr is of IplImage type, then is ROI used, but COI must not be set.
-@param arr The destination array
-@param value Fill value
-@param mask Operation mask, 8-bit single channel array; specifies elements of the destination
-array to be changed
- */
-CVAPI(void)  cvSet( CvArr* arr, CvScalar value,
-                    const CvArr* mask CV_DEFAULT(NULL) );
-
-/** @brief Clears the array.
-
-The function clears the array. In the case of dense arrays (CvMat, CvMatND or IplImage),
-cvZero(array) is equivalent to cvSet(array,cvScalarAll(0),0). In the case of sparse arrays all the
-elements are removed.
-@param arr Array to be cleared
- */
-CVAPI(void)  cvSetZero( CvArr* arr );
-#define cvZero  cvSetZero
-
-
-/** Splits a multi-channel array into the set of single-channel arrays or
-   extracts particular [color] plane */
-CVAPI(void)  cvSplit( const CvArr* src, CvArr* dst0, CvArr* dst1,
-                      CvArr* dst2, CvArr* dst3 );
-
-/** Merges a set of single-channel arrays into the single multi-channel array
-   or inserts one particular [color] plane to the array */
-CVAPI(void)  cvMerge( const CvArr* src0, const CvArr* src1,
-                      const CvArr* src2, const CvArr* src3,
-                      CvArr* dst );
-
-/** Copies several channels from input arrays to
-   certain channels of output arrays */
-CVAPI(void)  cvMixChannels( const CvArr** src, int src_count,
-                            CvArr** dst, int dst_count,
-                            const int* from_to, int pair_count );
-
-/** @brief Converts one array to another with optional linear transformation.
-
-The function has several different purposes, and thus has several different names. It copies one
-array to another with optional scaling, which is performed first, and/or optional type conversion,
-performed after:
-
-\f[\texttt{dst} (I) =  \texttt{scale} \texttt{src} (I) + ( \texttt{shift} _0, \texttt{shift} _1,...)\f]
-
-All the channels of multi-channel arrays are processed independently.
-
-The type of conversion is done with rounding and saturation, that is if the result of scaling +
-conversion can not be represented exactly by a value of the destination array element type, it is
-set to the nearest representable value on the real axis.
-@param src Source array
-@param dst Destination array
-@param scale Scale factor
-@param shift Value added to the scaled source array elements
- */
-CVAPI(void)  cvConvertScale( const CvArr* src, CvArr* dst,
-                             double scale CV_DEFAULT(1),
-                             double shift CV_DEFAULT(0) );
-#define cvCvtScale cvConvertScale
-#define cvScale  cvConvertScale
-#define cvConvert( src, dst )  cvConvertScale( (src), (dst), 1, 0 )
-
-
-/** Performs linear transformation on every source array element,
-   stores absolute value of the result:
-   dst(x,y,c) = abs(scale*src(x,y,c)+shift).
-   destination array must have 8u type.
-   In other cases one may use cvConvertScale + cvAbsDiffS */
-CVAPI(void)  cvConvertScaleAbs( const CvArr* src, CvArr* dst,
-                                double scale CV_DEFAULT(1),
-                                double shift CV_DEFAULT(0) );
-#define cvCvtScaleAbs  cvConvertScaleAbs
-
-
 /** checks termination criteria validity and
    sets eps to default_eps (if it is not set),
    max_iter to default_max_iters (if it is not set)
@@ -1049,50 +950,10 @@ CVAPI(CvTermCriteria) cvCheckTermCriteria( CvTermCriteria criteria,
 *                   Arithmetic, logic and comparison operations                          *
 \****************************************************************************************/
 
-/** dst(mask) = src1(mask) + src2(mask) */
-CVAPI(void)  cvAdd( const CvArr* src1, const CvArr* src2, CvArr* dst,
-                    const CvArr* mask CV_DEFAULT(NULL));
-
-/** dst(mask) = src(mask) + value */
-CVAPI(void)  cvAddS( const CvArr* src, CvScalar value, CvArr* dst,
-                     const CvArr* mask CV_DEFAULT(NULL));
-
-/** dst(mask) = src1(mask) - src2(mask) */
-CVAPI(void)  cvSub( const CvArr* src1, const CvArr* src2, CvArr* dst,
-                    const CvArr* mask CV_DEFAULT(NULL));
-
-/** dst(mask) = src(mask) - value = src(mask) + (-value) */
-CV_INLINE  void  cvSubS( const CvArr* src, CvScalar value, CvArr* dst,
-                         const CvArr* mask CV_DEFAULT(NULL))
-{
-    cvAddS( src, cvScalar( -value.val[0], -value.val[1], -value.val[2], -value.val[3]),
-            dst, mask );
-}
-
-/** dst(mask) = value - src(mask) */
-CVAPI(void)  cvSubRS( const CvArr* src, CvScalar value, CvArr* dst,
-                      const CvArr* mask CV_DEFAULT(NULL));
-
-/** dst(idx) = src1(idx) * src2(idx) * scale
-   (scaled element-wise multiplication of 2 arrays) */
-CVAPI(void)  cvMul( const CvArr* src1, const CvArr* src2,
-                    CvArr* dst, double scale CV_DEFAULT(1) );
-
-/** element-wise division/inversion with scaling:
-    dst(idx) = src1(idx) * scale / src2(idx)
-    or dst(idx) = scale / src2(idx) if src1 == 0 */
-CVAPI(void)  cvDiv( const CvArr* src1, const CvArr* src2,
-                    CvArr* dst, double scale CV_DEFAULT(1));
-
 /** dst = src1 * scale + src2 */
 CVAPI(void)  cvScaleAdd( const CvArr* src1, CvScalar scale,
                          const CvArr* src2, CvArr* dst );
 #define cvAXPY( A, real_scalar, B, C ) cvScaleAdd(A, cvRealScalar(real_scalar), B, C)
-
-/** dst = src1 * alpha + src2 * beta + gamma */
-CVAPI(void)  cvAddWeighted( const CvArr* src1, double alpha,
-                            const CvArr* src2, double beta,
-                            double gamma, CvArr* dst );
 
 /** @brief Calculates the dot product of two arrays in Euclidean metrics.
 
@@ -1108,75 +969,12 @@ process multi-dimensional arrays, row by row, layer by layer, and so on.
  */
 CVAPI(double)  cvDotProduct( const CvArr* src1, const CvArr* src2 );
 
-/** dst(idx) = src1(idx) & src2(idx) */
-CVAPI(void) cvAnd( const CvArr* src1, const CvArr* src2,
-                  CvArr* dst, const CvArr* mask CV_DEFAULT(NULL));
-
-/** dst(idx) = src(idx) & value */
-CVAPI(void) cvAndS( const CvArr* src, CvScalar value,
-                   CvArr* dst, const CvArr* mask CV_DEFAULT(NULL));
-
-/** dst(idx) = src1(idx) | src2(idx) */
-CVAPI(void) cvOr( const CvArr* src1, const CvArr* src2,
-                 CvArr* dst, const CvArr* mask CV_DEFAULT(NULL));
-
-/** dst(idx) = src(idx) | value */
-CVAPI(void) cvOrS( const CvArr* src, CvScalar value,
-                  CvArr* dst, const CvArr* mask CV_DEFAULT(NULL));
-
-/** dst(idx) = src1(idx) ^ src2(idx) */
-CVAPI(void) cvXor( const CvArr* src1, const CvArr* src2,
-                  CvArr* dst, const CvArr* mask CV_DEFAULT(NULL));
-
-/** dst(idx) = src(idx) ^ value */
-CVAPI(void) cvXorS( const CvArr* src, CvScalar value,
-                   CvArr* dst, const CvArr* mask CV_DEFAULT(NULL));
-
-/** dst(idx) = ~src(idx) */
-CVAPI(void) cvNot( const CvArr* src, CvArr* dst );
-
-/** dst(idx) = lower(idx) <= src(idx) < upper(idx) */
-CVAPI(void) cvInRange( const CvArr* src, const CvArr* lower,
-                      const CvArr* upper, CvArr* dst );
-
-/** dst(idx) = lower <= src(idx) < upper */
-CVAPI(void) cvInRangeS( const CvArr* src, CvScalar lower,
-                       CvScalar upper, CvArr* dst );
-
 #define CV_CMP_EQ   0
 #define CV_CMP_GT   1
 #define CV_CMP_GE   2
 #define CV_CMP_LT   3
 #define CV_CMP_LE   4
 #define CV_CMP_NE   5
-
-/** The comparison operation support single-channel arrays only.
-   Destination image should be 8uC1 or 8sC1 */
-
-/** dst(idx) = src1(idx) _cmp_op_ src2(idx) */
-CVAPI(void) cvCmp( const CvArr* src1, const CvArr* src2, CvArr* dst, int cmp_op );
-
-/** dst(idx) = src1(idx) _cmp_op_ value */
-CVAPI(void) cvCmpS( const CvArr* src, double value, CvArr* dst, int cmp_op );
-
-/** dst(idx) = min(src1(idx),src2(idx)) */
-CVAPI(void) cvMin( const CvArr* src1, const CvArr* src2, CvArr* dst );
-
-/** dst(idx) = max(src1(idx),src2(idx)) */
-CVAPI(void) cvMax( const CvArr* src1, const CvArr* src2, CvArr* dst );
-
-/** dst(idx) = min(src(idx),value) */
-CVAPI(void) cvMinS( const CvArr* src, double value, CvArr* dst );
-
-/** dst(idx) = max(src(idx),value) */
-CVAPI(void) cvMaxS( const CvArr* src, double value, CvArr* dst );
-
-/** dst(x,y,c) = abs(src1(x,y,c) - src2(x,y,c)) */
-CVAPI(void) cvAbsDiff( const CvArr* src1, const CvArr* src2, CvArr* dst );
-
-/** dst(x,y,c) = abs(src(x,y,c) - value(c)) */
-CVAPI(void) cvAbsDiffS( const CvArr* src, CvArr* dst, CvScalar value );
-#define cvAbs( src, dst ) cvAbsDiffS( (src), (dst), cvScalarAll(0))
 
 /****************************************************************************************\
 *                                Math operations                                         *
@@ -1319,14 +1117,6 @@ CVAPI(void)  cvTranspose( const CvArr* src, CvArr* dst );
 /** Completes the symmetric matrix from the lower (LtoR=0) or from the upper (LtoR!=0) part */
 CVAPI(void)  cvCompleteSymm( CvMat* matrix, int LtoR CV_DEFAULT(0) );
 
-/** Mirror array data around horizontal (flip=0),
-   vertical (flip=1) or both(flip=-1) axises:
-   cvFlip(src) flips images vertically and sequences horizontally (inplace) */
-CVAPI(void)  cvFlip( const CvArr* src, CvArr* dst CV_DEFAULT(NULL),
-                     int flip_mode CV_DEFAULT(0));
-#define cvMirror cvFlip
-
-
 #define CV_SVD_MODIFY_A   1
 #define CV_SVD_U_T        2
 #define CV_SVD_V_T        4
@@ -1433,25 +1223,6 @@ CVAPI(double)  cvMahalanobis( const CvArr* vec1, const CvArr* vec2, const CvArr*
 *                                    Array Statistics                                    *
 \****************************************************************************************/
 
-/** Finds sum of array elements */
-CVAPI(CvScalar)  cvSum( const CvArr* arr );
-
-/** Calculates number of non-zero pixels */
-CVAPI(int)  cvCountNonZero( const CvArr* arr );
-
-/** Calculates mean value of array elements */
-CVAPI(CvScalar)  cvAvg( const CvArr* arr, const CvArr* mask CV_DEFAULT(NULL) );
-
-/** Calculates mean and standard deviation of pixel values */
-CVAPI(void)  cvAvgSdv( const CvArr* arr, CvScalar* mean, CvScalar* std_dev,
-                       const CvArr* mask CV_DEFAULT(NULL) );
-
-/** Finds global minimum, maximum and their positions */
-CVAPI(void)  cvMinMaxLoc( const CvArr* arr, double* min_val, double* max_val,
-                          CvPoint* min_loc CV_DEFAULT(NULL),
-                          CvPoint* max_loc CV_DEFAULT(NULL),
-                          const CvArr* mask CV_DEFAULT(NULL) );
-
 /** @anchor core_c_NormFlags
   @name Flags for cvNorm and cvNormalize
   @{
@@ -1471,19 +1242,6 @@ CVAPI(void)  cvMinMaxLoc( const CvArr* arr, double* min_val, double* max_val,
 #define CV_RELATIVE_L1  (CV_RELATIVE | CV_L1)
 #define CV_RELATIVE_L2  (CV_RELATIVE | CV_L2)
 /** @} */
-
-/** Finds norm, difference norm or relative difference norm for an array (or two arrays)
-@see ref core_c_NormFlags "flags"
-*/
-CVAPI(double)  cvNorm( const CvArr* arr1, const CvArr* arr2 CV_DEFAULT(NULL),
-                       int norm_type CV_DEFAULT(CV_L2),
-                       const CvArr* mask CV_DEFAULT(NULL) );
-
-/** @see ref core_c_NormFlags "flags" */
-CVAPI(void)  cvNormalize( const CvArr* src, CvArr* dst,
-                          double a CV_DEFAULT(1.), double b CV_DEFAULT(0.),
-                          int norm_type CV_DEFAULT(CV_L2),
-                          const CvArr* mask CV_DEFAULT(NULL) );
 
 /** @anchor core_c_ReduceFlags
   @name Flags for cvReduce
@@ -1886,11 +1644,6 @@ CVAPI(int)  cvNextGraphItem( CvGraphScanner* scanner );
 
 /** Creates a copy of graph */
 CVAPI(CvGraph*) cvCloneGraph( const CvGraph* graph, CvMemStorage* storage );
-
-
-/** Does look-up transformation. Elements of the source array
-   (that should be 8uC1 or 8sC1) are used as indexes in lutarr 256-element table */
-CVAPI(void) cvLUT( const CvArr* src, CvArr* dst, const CvArr* lut );
 
 
 /******************* Iteration through the sequence tree *****************/

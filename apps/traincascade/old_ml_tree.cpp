@@ -180,9 +180,9 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
 
         // compare new and old train data
         if( !(data->var_count == var_count &&
-            cvNorm( data->var_type, var_type, CV_C ) < FLT_EPSILON &&
-            cvNorm( data->cat_count, cat_count, CV_C ) < FLT_EPSILON &&
-            cvNorm( data->cat_map, cat_map, CV_C ) < FLT_EPSILON) )
+            cv::norm(cv::cvarrToMat(data->var_type), cv::cvarrToMat(var_type), CV_C) < FLT_EPSILON &&
+            cv::norm(cv::cvarrToMat(data->cat_count), cv::cvarrToMat(cat_count), CV_C) < FLT_EPSILON &&
+            cv::norm(cv::cvarrToMat(data->cat_map), cv::cvarrToMat(cat_map), CV_C) < FLT_EPSILON) )
             CV_ERROR( cv::Error::StsBadArg,
             "The new training data must have the same types and the input and output variables "
             "and the same categories for categorical variables" );
@@ -659,7 +659,7 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
 
         // normalize weights
         if( have_priors )
-            cvScale( priors, priors, 1./sum );
+            { cv::Mat _m = cv::cvarrToMat(priors); _m.convertTo(_m, _m.type(), 1./sum, 0); }
 
         CV_CALL( priors_mult = cvCloneMat( priors ));
         CV_CALL( counts = cvCreateMat( 1, m, CV_32SC1 ));
@@ -688,7 +688,7 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
 void CvDTreeTrainData::do_responses_copy()
 {
     responses_copy = cvCreateMat( responses->rows, responses->cols, responses->type );
-    cvCopy( responses, responses_copy);
+    cv::cvarrToMat(responses).copyTo(cv::cvarrToMat(responses_copy));
     responses = responses_copy;
 }
 
@@ -757,7 +757,7 @@ CvDTreeNode* CvDTreeTrainData::subsample_data( const CvMat* _subsample_idx )
         root = new_node( 0, count, 1, 0 );
 
         CV_CALL( subsample_co = cvCreateMat( 1, sample_count*2, CV_32SC1 ));
-        cvZero( subsample_co );
+        cv::cvarrToMat(subsample_co).setTo(cv::Scalar(0));
         co = subsample_co->data.i;
         for( i = 0; i < count; i++ )
             co[sidx[i]*2]++;
@@ -918,7 +918,7 @@ void CvDTreeTrainData::get_vectors( const CvMat* _subsample_idx,
         sidx = subsample_idx->data.i;
         CV_CALL( subsample_co = cvCreateMat( 1, sample_count*2, CV_32SC1 ));
         co = subsample_co->data.i;
-        cvZero( subsample_co );
+        cv::cvarrToMat(subsample_co).setTo(cv::Scalar(0));
         count = subsample_idx->cols + subsample_idx->rows - 1;
         for( i = 0; i < count; i++ )
             co[sidx[i]*2]++;
@@ -3752,7 +3752,7 @@ const CvMat* CvDTree::get_var_importance()
         if( !node )
             return 0;
         var_importance = cvCreateMat( 1, data->var_count, CV_64F );
-        cvZero( var_importance );
+        cv::cvarrToMat(var_importance).setTo(cv::Scalar(0));
         importance = var_importance->data.db;
 
         for(;;)
@@ -3779,7 +3779,7 @@ const CvMat* CvDTree::get_var_importance()
             node = parent->right;
         }
 
-        cvNormalize( var_importance, var_importance, 1., 0, CV_L1 );
+        { cv::Mat _m = cv::cvarrToMat(var_importance); cv::normalize(_m, _m, 1., 0., cv::NORM_L1); }
     }
 
     return var_importance;

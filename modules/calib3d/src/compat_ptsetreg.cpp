@@ -91,7 +91,7 @@ void CvLevMarq::init( int nparams, int nerrs, CvTermCriteria criteria0, bool _co
     if( !param || param->rows != nparams || nerrs != (err ? err->rows : 0) )
         clear();
     mask.reset(cvCreateMat( nparams, 1, CV_8U ));
-    cvSet(mask, cvScalarAll(1));
+    cv::cvarrToMat(mask).setTo(cv::Scalar::all(1));
     prevParam.reset(cvCreateMat( nparams, 1, CV_64F ));
     param.reset(cvCreateMat( nparams, 1, CV_64F ));
     JtJ.reset(cvCreateMat( nparams, nparams, CV_64F ));
@@ -132,8 +132,8 @@ bool CvLevMarq::update( const CvMat*& _param, CvMat*& matJ, CvMat*& _err )
     if( state == STARTED )
     {
         _param = param;
-        cvZero( J );
-        cvZero( err );
+        cv::cvarrToMat(J).setTo(cv::Scalar(0));
+        cv::cvarrToMat(err).setTo(cv::Scalar(0));
         matJ = J;
         _err = err;
         state = CALC_J;
@@ -144,26 +144,26 @@ bool CvLevMarq::update( const CvMat*& _param, CvMat*& matJ, CvMat*& _err )
     {
         cvMulTransposed( J, JtJ, 1 );
         cvGEMM( J, err, 1, 0, 0, JtErr, CV_GEMM_A_T );
-        cvCopy( param, prevParam );
+        { cv::Mat _s = cv::cvarrToMat(param), _d = cv::cvarrToMat(prevParam); _s.copyTo(_d); }
         step();
         if( iters == 0 )
-            prevErrNorm = cvNorm(err, 0, CV_L2);
+            prevErrNorm = cv::norm(cv::cvarrToMat(err), CV_L2);
         _param = param;
-        cvZero( err );
+        cv::cvarrToMat(err).setTo(cv::Scalar(0));
         _err = err;
         state = CHECK_ERR;
         return true;
     }
 
     CV_Assert( state == CHECK_ERR );
-    errNorm = cvNorm( err, 0, CV_L2 );
+    errNorm = cv::norm(cv::cvarrToMat(err), CV_L2);
     if( errNorm > prevErrNorm )
     {
         if( ++lambdaLg10 <= 16 )
         {
             step();
             _param = param;
-            cvZero( err );
+            cv::cvarrToMat(err).setTo(cv::Scalar(0));
             _err = err;
             state = CHECK_ERR;
             return true;
@@ -172,7 +172,7 @@ bool CvLevMarq::update( const CvMat*& _param, CvMat*& matJ, CvMat*& _err )
 
     lambdaLg10 = MAX(lambdaLg10-1, -16);
     if( ++iters >= criteria.max_iter ||
-        cvNorm(param, prevParam, CV_RELATIVE_L2) < criteria.epsilon )
+        cv::norm(cv::cvarrToMat(param), cv::cvarrToMat(prevParam), CV_RELATIVE_L2) < criteria.epsilon )
     {
         _param = param;
         state = DONE;
@@ -181,7 +181,7 @@ bool CvLevMarq::update( const CvMat*& _param, CvMat*& matJ, CvMat*& _err )
 
     prevErrNorm = errNorm;
     _param = param;
-    cvZero(J);
+    cv::cvarrToMat(J).setTo(cv::Scalar(0));
     matJ = J;
     _err = err;
     state = CALC_J;
@@ -201,8 +201,8 @@ bool CvLevMarq::updateAlt( const CvMat*& _param, CvMat*& _JtJ, CvMat*& _JtErr, d
     if( state == STARTED )
     {
         _param = param;
-        cvZero( JtJ );
-        cvZero( JtErr );
+        cv::cvarrToMat(JtJ).setTo(cv::Scalar(0));
+        cv::cvarrToMat(JtErr).setTo(cv::Scalar(0));
         errNorm = 0;
         _JtJ = JtJ;
         _JtErr = JtErr;
@@ -213,7 +213,7 @@ bool CvLevMarq::updateAlt( const CvMat*& _param, CvMat*& _JtJ, CvMat*& _JtErr, d
 
     if( state == CALC_J )
     {
-        cvCopy( param, prevParam );
+        { cv::Mat _s = cv::cvarrToMat(param), _d = cv::cvarrToMat(prevParam); _s.copyTo(_d); }
         step();
         _param = param;
         prevErrNorm = errNorm;
@@ -239,7 +239,7 @@ bool CvLevMarq::updateAlt( const CvMat*& _param, CvMat*& _JtJ, CvMat*& _JtErr, d
 
     lambdaLg10 = MAX(lambdaLg10-1, -16);
     if( ++iters >= criteria.max_iter ||
-        cvNorm(param, prevParam, CV_RELATIVE_L2) < criteria.epsilon )
+        cv::norm(cv::cvarrToMat(param), cv::cvarrToMat(prevParam), CV_RELATIVE_L2) < criteria.epsilon )
     {
         _param = param;
         _JtJ = JtJ;
@@ -249,8 +249,8 @@ bool CvLevMarq::updateAlt( const CvMat*& _param, CvMat*& _JtJ, CvMat*& _JtErr, d
     }
 
     prevErrNorm = errNorm;
-    cvZero( JtJ );
-    cvZero( JtErr );
+    cv::cvarrToMat(JtJ).setTo(cv::Scalar(0));
+    cv::cvarrToMat(JtErr).setTo(cv::Scalar(0));
     _param = param;
     _JtJ = JtJ;
     _JtErr = JtErr;

@@ -124,9 +124,9 @@ void CV_POSITTest::run( int start_from )
         progress = update_progress( progress, counter, test_case_count, 0 );
 
         /* set all rotation matrix to zero */
-        cvZero( true_rotationX );
-        cvZero( true_rotationY );
-        cvZero( true_rotationZ );
+        cv::cvarrToMat(true_rotationX).setTo(cv::Scalar(0));
+        cv::cvarrToMat(true_rotationY).setTo(cv::Scalar(0));
+        cv::cvarrToMat(true_rotationZ).setTo(cv::Scalar(0));
 
         /* fill random rotation matrix */
         angleX = (float)(cvtest::randReal(rng)*2*CV_PI);

@@ -216,7 +216,7 @@ void CV_ProjectPointsTest::prepare_to_validation( int /*test_case_idx*/ )
 
     if( theta1 > CV_PI )
         theta1 = -(CV_PI*2 - theta1);
-    cvScale( vec2, vec2, theta1/(theta0 ? theta0 : 1) );
+    { cv::Mat _m = cv::cvarrToMat(vec2); _m.convertTo(_m, _m.type(), theta1/(theta0 ? theta0 : 1), 0); }
 
     if( calc_jacobians )
     {
