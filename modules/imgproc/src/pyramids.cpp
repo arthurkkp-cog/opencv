@@ -1657,7 +1657,7 @@ cvCreatePyramid( const CvArr* srcarr, int extra_layers, double rate,
             ptr += layer_step*layer_size.height;
         }
         else
-            pyramid[i] = cvCreateMat( layer_size.height, layer_size.width, src->type );
+            pyramid[i] = cvCreateMat( layer_size.height, layer_size.width, src->type, 1 );
 
         if( calc )
             cvPyrDown( pyramid[i-1], pyramid[i], filter );
