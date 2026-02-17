@@ -189,7 +189,7 @@ cvTsDistTransform( const CvMat* _src, CvMat* _dst, int dist_type,
         mask[2] = 2.1969f;
     }
 
-    temp = cvCreateMat( height + mask_size-1, width + mask_size-1, CV_32F );
+    temp = cvCreateMat( height + mask_size-1, width + mask_size-1, CV_32F , 1);
     tstep = temp->step / sizeof(float);
 
     if( mask_size == 3 )

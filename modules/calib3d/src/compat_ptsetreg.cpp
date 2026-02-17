@@ -90,16 +90,16 @@ void CvLevMarq::init( int nparams, int nerrs, CvTermCriteria criteria0, bool _co
 {
     if( !param || param->rows != nparams || nerrs != (err ? err->rows : 0) )
         clear();
-    mask.reset(cvCreateMat( nparams, 1, CV_8U ));
+    mask.reset(cvCreateMat( nparams, 1, CV_8U , 1));
     cvSet(mask, cvScalarAll(1));
-    prevParam.reset(cvCreateMat( nparams, 1, CV_64F ));
-    param.reset(cvCreateMat( nparams, 1, CV_64F ));
-    JtJ.reset(cvCreateMat( nparams, nparams, CV_64F ));
-    JtErr.reset(cvCreateMat( nparams, 1, CV_64F ));
+    prevParam.reset(cvCreateMat( nparams, 1, CV_64F , 1));
+    param.reset(cvCreateMat( nparams, 1, CV_64F , 1));
+    JtJ.reset(cvCreateMat( nparams, nparams, CV_64F , 1));
+    JtErr.reset(cvCreateMat( nparams, 1, CV_64F , 1));
     if( nerrs > 0 )
     {
-        J.reset(cvCreateMat( nerrs, nparams, CV_64F ));
-        err.reset(cvCreateMat( nerrs, 1, CV_64F ));
+        J.reset(cvCreateMat( nerrs, nparams, CV_64F , 1));
+        err.reset(cvCreateMat( nerrs, 1, CV_64F , 1));
     }
     errNorm = prevErrNorm = DBL_MAX;
     lambdaLg10 = -3;
@@ -299,9 +299,9 @@ void CvLevMarq::step()
     int nparams_nz = countNonZero(_mask);
     if(!JtJN || JtJN->rows != nparams_nz) {
         // prevent re-allocation in every step
-        JtJN.reset(cvCreateMat( nparams_nz, nparams_nz, CV_64F ));
-        JtJV.reset(cvCreateMat( nparams_nz, 1, CV_64F ));
-        JtJW.reset(cvCreateMat( nparams_nz, 1, CV_64F ));
+        JtJN.reset(cvCreateMat( nparams_nz, nparams_nz, CV_64F , 1));
+        JtJV.reset(cvCreateMat( nparams_nz, 1, CV_64F , 1));
+        JtJW.reset(cvCreateMat( nparams_nz, 1, CV_64F , 1));
     }
 
     Mat _JtJN = cvarrToMat(JtJN);

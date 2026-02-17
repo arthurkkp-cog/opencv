@@ -2644,7 +2644,7 @@ void DefaultViewPort::updateImage(const CvArr* arr)
             cvReleaseMat(&image2Draw_mat);
 
         //the image in ipl (to do a deep copy with cvCvtColor)
-        image2Draw_mat = cvCreateMat(mat->rows, mat->cols, CV_8UC3);
+        image2Draw_mat = cvCreateMat(mat->rows, mat->cols, CV_8UC3, 1);
         image2Draw_qt = QImage(image2Draw_mat->data.ptr, image2Draw_mat->cols, image2Draw_mat->rows, image2Draw_mat->step, QImage::Format_RGB888);
 
         //use to compute mouse coordinate, I need to update the ratio here and in resizeEvent

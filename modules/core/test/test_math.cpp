@@ -1657,7 +1657,7 @@ static double cvTsSVDet( CvMat* mat, double* ratio )
 {
     int type = CV_MAT_TYPE(mat->type);
     int i, nm = MIN( mat->rows, mat->cols );
-    CvMat* w = cvCreateMat( nm, 1, type );
+    CvMat* w = cvCreateMat( nm, 1, type , 1);
     double det = 1.;
 
     cvSVD( mat, w, 0, 0, 0 );
