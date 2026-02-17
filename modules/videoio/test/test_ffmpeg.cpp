@@ -1107,4 +1107,152 @@ TEST(videoio_ffmpeg, seek_with_negative_dts)
     }
 }
 
+TEST(videoio_ffmpeg, grab_retrieve_direct)
+{
+    if (!videoio_registry::hasBackend(CAP_FFMPEG))
+        throw SkipTestException("FFmpeg backend was not found");
+
+    const string filename = findDataFile("video/big_buck_bunny.mp4");
+    VideoCapture cap(filename, CAP_FFMPEG);
+    ASSERT_TRUE(cap.isOpened());
+
+    ASSERT_TRUE(cap.grab());
+
+    Mat frame;
+    ASSERT_TRUE(cap.retrieve(frame));
+    ASSERT_FALSE(frame.empty());
+    EXPECT_GT(frame.cols, 0);
+    EXPECT_GT(frame.rows, 0);
+    EXPECT_EQ(frame.channels(), 3);
+    EXPECT_EQ(frame.depth(), CV_8U);
+}
+
+TEST(videoio_ffmpeg, grab_multiple_retrieve)
+{
+    if (!videoio_registry::hasBackend(CAP_FFMPEG))
+        throw SkipTestException("FFmpeg backend was not found");
+
+    const string filename = findDataFile("video/big_buck_bunny.mp4");
+    VideoCapture cap(filename, CAP_FFMPEG);
+    ASSERT_TRUE(cap.isOpened());
+
+    const int nFrames = 10;
+    for (int i = 0; i < nFrames; i++)
+    {
+        ASSERT_TRUE(cap.grab()) << "Failed to grab frame " << i;
+        Mat frame;
+        ASSERT_TRUE(cap.retrieve(frame)) << "Failed to retrieve frame " << i;
+        ASSERT_FALSE(frame.empty()) << "Empty frame at index " << i;
+    }
+}
+
+TEST(videoio_ffmpeg, release_and_reopen)
+{
+    if (!videoio_registry::hasBackend(CAP_FFMPEG))
+        throw SkipTestException("FFmpeg backend was not found");
+
+    const string filename = findDataFile("video/big_buck_bunny.mp4");
+
+    VideoCapture cap(filename, CAP_FFMPEG);
+    ASSERT_TRUE(cap.isOpened());
+
+    Mat frame1;
+    ASSERT_TRUE(cap.read(frame1));
+    ASSERT_FALSE(frame1.empty());
+
+    cap.release();
+    ASSERT_FALSE(cap.isOpened());
+
+    ASSERT_TRUE(cap.open(filename, CAP_FFMPEG));
+    ASSERT_TRUE(cap.isOpened());
+
+    Mat frame2;
+    ASSERT_TRUE(cap.read(frame2));
+    ASSERT_FALSE(frame2.empty());
+
+    EXPECT_EQ(frame1.size(), frame2.size());
+    EXPECT_EQ(frame1.type(), frame2.type());
+    EXPECT_EQ(0, cvtest::norm(frame1, frame2, NORM_INF));
+}
+
+TEST(videoio_ffmpeg, double_release)
+{
+    if (!videoio_registry::hasBackend(CAP_FFMPEG))
+        throw SkipTestException("FFmpeg backend was not found");
+
+    const string filename = findDataFile("video/big_buck_bunny.mp4");
+
+    VideoCapture cap(filename, CAP_FFMPEG);
+    ASSERT_TRUE(cap.isOpened());
+
+    cap.release();
+    ASSERT_FALSE(cap.isOpened());
+
+    EXPECT_NO_THROW(cap.release());
+    ASSERT_FALSE(cap.isOpened());
+}
+
+TEST(videoio_ffmpeg, operations_on_released_capture)
+{
+    if (!videoio_registry::hasBackend(CAP_FFMPEG))
+        throw SkipTestException("FFmpeg backend was not found");
+
+    const string filename = findDataFile("video/big_buck_bunny.mp4");
+
+    VideoCapture cap(filename, CAP_FFMPEG);
+    ASSERT_TRUE(cap.isOpened());
+
+    cap.release();
+    ASSERT_FALSE(cap.isOpened());
+
+    EXPECT_FALSE(cap.grab());
+
+    Mat frame;
+    EXPECT_FALSE(cap.read(frame));
+    EXPECT_TRUE(frame.empty());
+}
+
+TEST(videoio_ffmpeg, write_then_read_grab_retrieve)
+{
+    if (!videoio_registry::hasBackend(CAP_FFMPEG))
+        throw SkipTestException("FFmpeg backend was not found");
+
+    const string filename = tempfile("test_grab_retrieve.avi");
+    const Size sz(640, 480);
+    const double fps = 25.0;
+    const int numFrames = 10;
+
+    {
+        VideoWriter writer(filename, CAP_FFMPEG, VideoWriter::fourcc('M','J','P','G'), fps, sz);
+        if (!writer.isOpened())
+            throw SkipTestException("MJPG codec is not available");
+        Mat frame(sz, CV_8UC3);
+        for (int i = 0; i < numFrames; i++)
+        {
+            frame = Scalar(i * 20, i * 10, 255 - i * 20);
+            writer.write(frame);
+        }
+        writer.release();
+    }
+
+    {
+        VideoCapture cap(filename, CAP_FFMPEG);
+        ASSERT_TRUE(cap.isOpened());
+
+        int count = 0;
+        while (cap.grab())
+        {
+            Mat frame;
+            ASSERT_TRUE(cap.retrieve(frame)) << "Failed to retrieve frame " << count;
+            ASSERT_FALSE(frame.empty());
+            EXPECT_EQ(sz, frame.size());
+            EXPECT_EQ(CV_8UC3, frame.type());
+            count++;
+        }
+        EXPECT_EQ(numFrames, count);
+    }
+
+    remove(filename.c_str());
+}
+
 }} // namespace
