@@ -1632,7 +1632,7 @@ cvCreatePyramid( const CvArr* srcarr, int extra_layers, double rate,
         ptr = buf->data.ptr;
     }
 
-    CvMat** pyramid = (CvMat**)cvAlloc( (extra_layers+1)*sizeof(pyramid[0]) );
+    CvMat** pyramid = (CvMat**)cv::fastMalloc( (extra_layers+1)*sizeof(pyramid[0]) );
     memset( pyramid, 0, (extra_layers+1)*sizeof(pyramid[0]) );
 
     pyramid[0] = cvCreateMatHeader( size.height, size.width, src->type );

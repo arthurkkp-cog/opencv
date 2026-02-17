@@ -1264,7 +1264,7 @@ cvCopy( const void* srcarr, void* dstarr, const void* maskarr )
             cvFree( &dst1->hashtable );
             dst1->hashsize = src1->hashsize;
             dst1->hashtable =
-                (void**)cvAlloc( dst1->hashsize*sizeof(dst1->hashtable[0]));
+                (void**)cv::fastMalloc( dst1->hashsize*sizeof(dst1->hashtable[0]));
         }
 
         memset( dst1->hashtable, 0, dst1->hashsize*sizeof(dst1->hashtable[0]));

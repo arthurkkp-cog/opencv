@@ -125,7 +125,7 @@ cvCreateMatHeader( int rows, int cols, int type )
         CV_Error( cv::Error::StsUnsupportedFormat, "Invalid matrix type" );
     min_step *= cols;
 
-    CvMat* arr = (CvMat*)cvAlloc( sizeof(*arr));
+    CvMat* arr = (CvMat*)cv::fastMalloc( sizeof(*arr));
 
     arr->step = min_step;
     arr->type = CV_MAT_MAGIC_VAL | type | CV_MAT_CONT_FLAG;
@@ -288,7 +288,7 @@ cvCreateMatNDHeader( int dims, const int* sizes, int type )
         CV_Error( cv::Error::StsOutOfRange,
         "non-positive or too large number of dimensions" );
 
-    CvMatND* arr = (CvMatND*)cvAlloc( sizeof(*arr) );
+    CvMatND* arr = (CvMatND*)cv::fastMalloc( sizeof(*arr) );
 
     cvInitMatNDHeader( arr, dims, sizes, type, 0 );
     arr->hdr_refcount = 1;
@@ -550,7 +550,7 @@ cvCreateSparseMat( int dims, const int* sizes, int type )
             CV_Error( cv::Error::StsBadSize, "one of dimension sizes is non-positive" );
     }
 
-    CvSparseMat* arr = (CvSparseMat*)cvAlloc(sizeof(*arr)+MAX(0,dims-CV_MAX_DIM)*sizeof(arr->size[0]));
+    CvSparseMat* arr = (CvSparseMat*)cv::fastMalloc(sizeof(*arr)+MAX(0,dims-CV_MAX_DIM)*sizeof(arr->size[0]));
 
     arr->type = CV_SPARSE_MAT_MAGIC_VAL | type;
     arr->dims = dims;
@@ -568,7 +568,7 @@ cvCreateSparseMat( int dims, const int* sizes, int type )
     arr->hashsize = CV_SPARSE_HASH_SIZE0;
     size = arr->hashsize*sizeof(arr->hashtable[0]);
 
-    arr->hashtable = (void**)cvAlloc( size );
+    arr->hashtable = (void**)cv::fastMalloc( size );
     memset( arr->hashtable, 0, size );
 
     return arr;
@@ -700,7 +700,7 @@ icvGetNodePtr( CvSparseMat* mat, const int* idx, int* _type,
             CV_Assert( (newsize & (newsize - 1)) == 0 );
 
             // resize hash table
-            newtable = (void**)cvAlloc( newrawsize );
+            newtable = (void**)cv::fastMalloc( newrawsize );
             memset( newtable, 0, newrawsize );
 
             node = cvInitSparseMatIterator( mat, &iterator );
@@ -814,7 +814,7 @@ cvCreateData( CvArr* arr )
         total_size = (size_t)_total_size;
         if(_total_size != (int64)total_size)
             CV_Error(cv::Error::StsNoMem, "Too big buffer is allocated" );
-        mat->refcount = (int*)cvAlloc( (size_t)total_size );
+        mat->refcount = (int*)cv::fastMalloc( (size_t)total_size );
         mat->data.ptr = (uchar*)cvAlignPtr( mat->refcount + 1, CV_MALLOC_ALIGN );
         *mat->refcount = 1;
     }
@@ -831,7 +831,7 @@ cvCreateData( CvArr* arr )
             if( (int64)img->imageSize != imageSize_tmp )
                 CV_Error( cv::Error::StsNoMem, "Overflow for imageSize" );
             img->imageData = img->imageDataOrigin =
-                        (char*)cvAlloc( (size_t)img->imageSize );
+                        (char*)cv::fastMalloc( (size_t)img->imageSize );
         }
         else
         {
@@ -878,7 +878,7 @@ cvCreateData( CvArr* arr )
             }
         }
 
-        mat->refcount = (int*)cvAlloc( total_size +
+        mat->refcount = (int*)cv::fastMalloc( total_size +
                                         sizeof(int) + CV_MALLOC_ALIGN );
         mat->data.ptr = (uchar*)cvAlignPtr( mat->refcount + 1, CV_MALLOC_ALIGN );
         *mat->refcount = 1;
@@ -2830,7 +2830,7 @@ static IplROI* icvCreateROI( int coi, int xOffset, int yOffset, int width, int h
     IplROI *roi = 0;
     if( !CvIPL.createROI )
     {
-        roi = (IplROI*)cvAlloc( sizeof(*roi));
+        roi = (IplROI*)cv::fastMalloc( sizeof(*roi));
 
         roi->coi = coi;
         roi->xOffset = xOffset;
@@ -2876,7 +2876,7 @@ cvCreateImageHeader( CvSize size, int depth, int channels )
 
     if( !CvIPL.createHeader )
     {
-        img = (IplImage *)cvAlloc( sizeof( *img ));
+        img = (IplImage *)cv::fastMalloc( sizeof( *img ));
         cvInitImageHeader( img, size, depth, channels, IPL_ORIGIN_TL,
                                     CV_DEFAULT_IMAGE_ROW_ALIGN );
     }
@@ -3132,7 +3132,7 @@ cvCloneImage( const IplImage* src )
 
     if( !CvIPL.cloneImage )
     {
-        dst = (IplImage*)cvAlloc( sizeof(*dst));
+        dst = (IplImage*)cv::fastMalloc( sizeof(*dst));
 
         memcpy( dst, src, sizeof(*src));
         dst->nSize = sizeof(IplImage);

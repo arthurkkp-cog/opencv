@@ -488,6 +488,12 @@ Returns empty string if feature is not defined
 */
 CV_EXPORTS_W String getHardwareFeatureName(int feature);
 
+/** @brief Returns a textual description of the given error status code.
+
+@param status The error status code, one of cv::Error::Code values.
+*/
+CV_EXPORTS const char* errorStr(int status);
+
 /** @brief Returns list of CPU features enabled during compilation.
 
 Returned value is a string containing space separated list of CPU features with following markers:

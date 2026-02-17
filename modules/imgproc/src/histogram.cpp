@@ -2419,7 +2419,7 @@ cvCreateHist( int dims, int *sizes, CvHistType type, float** ranges, int uniform
     if( !sizes )
         CV_Error( CV_HeaderIsNull, "Null <sizes> pointer" );
 
-    hist = (CvHistogram *)cvAlloc( sizeof( CvHistogram ));
+    hist = (CvHistogram *)cv::fastMalloc( sizeof( CvHistogram ));
     hist->type = CV_HIST_MAGIC_VAL + ((int)type & 1);
     if (uniform) hist->type|= CV_HIST_UNIFORM_FLAG;
     hist->thresh2 = 0;
@@ -2960,7 +2960,7 @@ cvSetHistBinRanges( CvHistogram* hist, float** ranges, int uniform )
 
         if( !hist->thresh2 )
         {
-            hist->thresh2 = (float**)cvAlloc(
+            hist->thresh2 = (float**)cv::fastMalloc(
                         dims*sizeof(hist->thresh2[0])+
                         total*sizeof(hist->thresh2[0][0]));
         }
@@ -3525,7 +3525,7 @@ static void *icvReadHist( CvFileStorage * fs, CvFileNode * node )
     int is_uniform = 0;
     int have_ranges = 0;
 
-    h = (CvHistogram *)cvAlloc( sizeof(CvHistogram) );
+    h = (CvHistogram *)cv::fastMalloc( sizeof(CvHistogram) );
 
     type = cvReadIntByName( fs, node, "type", 0 );
     is_uniform = cvReadIntByName( fs, node, "is_uniform", 0 );
@@ -3591,7 +3591,7 @@ static void *icvReadHist( CvFileStorage * fs, CvFileNode * node )
         else
         {
             float* dim_ranges;
-            h->thresh2 = (float**)cvAlloc(
+            h->thresh2 = (float**)cv::fastMalloc(
                 dims*sizeof(h->thresh2[0])+
                 total*sizeof(h->thresh2[0][0]));
             dim_ranges = (float*)(h->thresh2 + dims);

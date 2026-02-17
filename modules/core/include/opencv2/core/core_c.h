@@ -62,6 +62,7 @@
      // then handle MSVC
 #    pragma warning(disable:4190)
 #  endif
+namespace cv { CV_EXPORTS void fastFree(void* ptr); }
 #endif
 
 #ifdef __cplusplus
@@ -76,20 +77,7 @@ extern "C" {
 *          Array allocation, deallocation, initialization and access to elements         *
 \****************************************************************************************/
 
-/** `malloc` wrapper.
-   If there is no enough memory, the function
-   (as well as other OpenCV functions that call cvAlloc)
-   raises an error. */
-CVAPI(void*)  cvAlloc( size_t size );
-
-/** `free` wrapper.
-   Here and further all the memory releasing functions
-   (that all call cvFree) take double pointer in order to
-   to clear pointer to the data after releasing it.
-   Passing pointer to NULL pointer is Ok: nothing happens in this case
-*/
-CVAPI(void)   cvFree_( void* ptr );
-#define cvFree(ptr) (cvFree_(*(ptr)), *(ptr)=0)
+#define cvFree(ptr) (cv::fastFree(*(ptr)), *(ptr)=0)
 
 /** @brief Creates an image header but does not allocate the image data.
 
@@ -1932,8 +1920,6 @@ CVAPI(int) cvKMeans2( const CvArr* samples, int cluster_count, CvArr* labels,
 *                                    System functions                                    *
 \****************************************************************************************/
 
-/** Loads optimized functions from IPP, MKL etc. or switches back to pure C code */
-CVAPI(int)  cvUseOptimized( int on_off );
 
 typedef IplImage* (CV_STDCALL* Cv_iplCreateImageHeader)
                             (int,int,int,char*,char*,int,int,int,int,int,
@@ -2580,80 +2566,16 @@ CVAPI(void*) cvClone( const void* struct_ptr );
 
 /*********************************** Measuring Execution Time ***************************/
 
-/** helper functions for RNG initialization and accurate time measurement:
-   uses internal clock counter on x86 */
-CVAPI(int64)  cvGetTickCount( void );
-CVAPI(double) cvGetTickFrequency( void );
-
-/*********************************** CPU capabilities ***********************************/
-
-CVAPI(int) cvCheckHardwareSupport(int feature);
-
-/*********************************** Multi-Threading ************************************/
-
-/** retrieve/set the number of threads used in OpenMP implementations */
-CVAPI(int)  cvGetNumThreads( void );
-CVAPI(void) cvSetNumThreads( int threads CV_DEFAULT(0) );
-/** get index of the thread being executed */
-CVAPI(int)  cvGetThreadNum( void );
 
 
 /********************************** Error Handling **************************************/
-
-/** Get current OpenCV error status */
-CVAPI(int) cvGetErrStatus( void );
-
-/** Sets error status silently */
-CVAPI(void) cvSetErrStatus( int status );
 
 #define CV_ErrModeLeaf     0   /* Print error and exit program */
 #define CV_ErrModeParent   1   /* Print error and continue */
 #define CV_ErrModeSilent   2   /* Don't print and continue */
 
-/** Retrieves current error processing mode */
-CVAPI(int)  cvGetErrMode( void );
-
-/** Sets error processing mode, returns previously used mode */
-CVAPI(int) cvSetErrMode( int mode );
-
-/** Sets error status and performs some additional actions (displaying message box,
- writing message to stderr, terminating application etc.)
- depending on the current error mode */
-CVAPI(void) cvError( int status, const char* func_name,
-                    const char* err_msg, const char* file_name, int line );
-
-/** Retrieves textual description of the error given its code */
-CVAPI(const char*) cvErrorStr( int status );
-
-/** Retrieves detailed information about the last error occurred */
-CVAPI(int) cvGetErrInfo( const char** errcode_desc, const char** description,
-                        const char** filename, int* line );
-
-/** Maps IPP error codes to the counterparts from OpenCV */
-CVAPI(int) cvErrorFromIppStatus( int ipp_status );
-
-typedef int (CV_CDECL *CvErrorCallback)( int status, const char* func_name,
-                                        const char* err_msg, const char* file_name, int line, void* userdata );
-
-/** Assigns a new error-handling function */
-CVAPI(CvErrorCallback) cvRedirectError( CvErrorCallback error_handler,
-                                       void* userdata CV_DEFAULT(NULL),
-                                       void** prev_userdata CV_DEFAULT(NULL) );
-
-/** Output nothing */
-CVAPI(int) cvNulDevReport( int status, const char* func_name, const char* err_msg,
-                          const char* file_name, int line, void* userdata );
-
-/** Output to console(fprintf(stderr,...)) */
-CVAPI(int) cvStdErrReport( int status, const char* func_name, const char* err_msg,
-                          const char* file_name, int line, void* userdata );
-
-/** Output to MessageBox(WIN32) */
-CVAPI(int) cvGuiBoxReport( int status, const char* func_name, const char* err_msg,
-                          const char* file_name, int line, void* userdata );
-
 #define OPENCV_ERROR(status,func,context)                           \
-cvError((status),(func),(context),__FILE__,__LINE__)
+cv::error(cv::Exception((status),(context),(func),__FILE__,__LINE__))
 
 #define OPENCV_ASSERT(expr,func,context)                            \
 {if (! (expr))                                      \
@@ -2681,7 +2603,7 @@ static char cvFuncName[] = Name
  */
 #define CV_ERROR( Code, Msg )                                       \
 {                                                                   \
-    cvError( (Code), cvFuncName, Msg, __FILE__, __LINE__ );        \
+    cv::error(cv::Exception( (Code), Msg, cvFuncName, __FILE__, __LINE__ )); \
     __CV_EXIT__;                                                   \
 }
 
@@ -2692,8 +2614,6 @@ static char cvFuncName[] = Name
  */
 #define CV_CHECK()                                                  \
 {                                                                   \
-    if( cvGetErrStatus() < 0 )                                      \
-        CV_ERROR( CV_StsBackTrace, "Inner function failed." );      \
 }
 
 
