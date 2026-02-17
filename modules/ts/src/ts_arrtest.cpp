@@ -194,7 +194,7 @@ int ArrayTest::prepare_test_case( int test_case_idx )
                 }
                 else
                 {
-                    test_array[i][j] = cvCreateMat( whole_size.height, whole_size.width, types[i][j] );
+                    test_array[i][j] = cvCreateMat( whole_size.height, whole_size.width, types[i][j] , 1);
                     if( use_roi )
                     {
                         CvMat submat, *mat = (CvMat*)test_array[i][j];

@@ -84,14 +84,14 @@ void CV_POSITTest::run( int start_from )
     RNG& rng = ts->get_rng();
     int progress = 0;
 
-    CvMat* true_rotationX = cvCreateMat( 3, 3, CV_32F );
-    CvMat* true_rotationY = cvCreateMat( 3, 3, CV_32F );
-    CvMat* true_rotationZ = cvCreateMat( 3, 3, CV_32F );
-    CvMat* tmp_matrix = cvCreateMat( 3, 3, CV_32F );
-    CvMat* true_rotation = cvCreateMat( 3, 3, CV_32F );
-    CvMat* rotation = cvCreateMat( 3, 3, CV_32F );
-    CvMat* translation = cvCreateMat( 3, 1, CV_32F );
-    CvMat* true_translation = cvCreateMat( 3, 1, CV_32F );
+    CvMat* true_rotationX = cvCreateMat( 3, 3, CV_32F , 1);
+    CvMat* true_rotationY = cvCreateMat( 3, 3, CV_32F , 1);
+    CvMat* true_rotationZ = cvCreateMat( 3, 3, CV_32F , 1);
+    CvMat* tmp_matrix = cvCreateMat( 3, 3, CV_32F , 1);
+    CvMat* true_rotation = cvCreateMat( 3, 3, CV_32F , 1);
+    CvMat* rotation = cvCreateMat( 3, 3, CV_32F , 1);
+    CvMat* translation = cvCreateMat( 3, 1, CV_32F , 1);
+    CvMat* true_translation = cvCreateMat( 3, 1, CV_32F , 1);
 
     const float flFocalLength = 760.f;
     const float flEpsilon = 0.5f;

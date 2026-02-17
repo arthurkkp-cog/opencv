@@ -276,8 +276,8 @@ void CV_ResizeTest::prepare_to_validation( int /*test_case_idx*/ )
     CvMat _src = cvMat(test_mat[INPUT][0]), _dst = cvMat(test_mat[REF_INPUT_OUTPUT][0]);
     CvMat *src = &_src, *dst = &_dst;
     int i, j, k;
-    CvMat* x_idx = cvCreateMat( 1, dst->cols, CV_32SC1 );
-    CvMat* y_idx = cvCreateMat( 1, dst->rows, CV_32SC1 );
+    CvMat* x_idx = cvCreateMat( 1, dst->cols, CV_32SC1 , 1);
+    CvMat* y_idx = cvCreateMat( 1, dst->rows, CV_32SC1 , 1);
     int* x_tab = x_idx->data.i;
     int elem_size = CV_ELEM_SIZE(src->type);
     int drows = dst->rows, dcols = dst->cols;

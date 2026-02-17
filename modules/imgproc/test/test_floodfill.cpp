@@ -257,11 +257,11 @@ cvTsFloodFill( CvMat* _img, CvPoint seed_pt, CvScalar new_val,
 
     if( CV_MAT_DEPTH(_img->type) == CV_8U || CV_MAT_DEPTH(_img->type) == CV_32S )
     {
-        tmp = cvCreateMat( rows, cols, CV_MAKETYPE(CV_32F,CV_MAT_CN(_img->type)) );
+        tmp = cvCreateMat( rows, cols, CV_MAKETYPE(CV_32F,CV_MAT_CN(_img->type)), 1 );
         cvtest::convert(cvarrToMat(_img), cvarrToMat(tmp), -1);
     }
 
-    mask = cvCreateMat( rows + 2, cols + 2, CV_16UC1 );
+    mask = cvCreateMat( rows + 2, cols + 2, CV_16UC1, 1 );
 
     if( _mask )
         cvtest::convert(cvarrToMat(_mask), cvarrToMat(mask), -1);

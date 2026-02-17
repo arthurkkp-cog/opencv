@@ -272,7 +272,7 @@ CV_\<bit depth\>\<S|U|F\>C\<number of channels\> , where S=signed, U=unsigned, F
 example, CV _ 8UC1 means the elements are 8-bit unsigned and the there is 1 channel, and CV _
 32SC2 means the elements are 32-bit signed and there are 2 channels.
  */
-CVAPI(CvMat*)  cvCreateMat( int rows, int cols, int type );
+CVAPI(CvMat*)  cvCreateMat( int rows, int cols, int type, int flags );
 
 /** @brief Deallocates a matrix.
 

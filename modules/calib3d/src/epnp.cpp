@@ -58,7 +58,7 @@ void epnp::choose_control_points(void)
 
 
   // Take C1, C2, and C3 from PCA on the reference points:
-  CvMat * PW0 = cvCreateMat(number_of_correspondences, 3, CV_64F);
+  CvMat * PW0 = cvCreateMat(number_of_correspondences, 3, CV_64F, 1);
 
   double pw0tpw0[3 * 3] = {}, dc[3] = {}, uct[3 * 3] = {};
   CvMat PW0tPW0 = cvMat(3, 3, CV_64F, pw0tpw0);
@@ -154,7 +154,7 @@ void epnp::compute_pose(Mat& R, Mat& t)
   choose_control_points();
   compute_barycentric_coordinates();
 
-  CvMat * M = cvCreateMat(2 * number_of_correspondences, 12, CV_64F);
+  CvMat * M = cvCreateMat(2 * number_of_correspondences, 12, CV_64F, 1);
 
   for(int i = 0; i < number_of_correspondences; i++)
     fill_M(M, 2 * i, &alphas[0] + 4 * i, us[2 * i], us[2 * i + 1]);

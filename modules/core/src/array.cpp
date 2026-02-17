@@ -96,10 +96,11 @@ cvSetIPLAllocators( Cv_iplCreateImageHeader createHeader,
 
 // Creates CvMat and underlying data
 CV_IMPL CvMat*
-cvCreateMat( int height, int width, int type )
+cvCreateMat( int height, int width, int type, int flags )
 {
     CvMat* arr = cvCreateMatHeader( height, width, type );
-    cvCreateData( arr );
+    if( flags & 1 )
+        cvCreateData( arr );
 
     return arr;
 }
