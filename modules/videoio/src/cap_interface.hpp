@@ -8,7 +8,6 @@
 #include "opencv2/core.hpp"
 #include "opencv2/core/core_c.h"
 #include "opencv2/videoio.hpp"
-#include "opencv2/videoio/videoio_c.h"
 #include "opencv2/videoio/utils.private.hpp"
 
 //===================================================
