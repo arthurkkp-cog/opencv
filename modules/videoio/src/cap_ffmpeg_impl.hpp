@@ -3650,16 +3650,6 @@ CvCapture_FFMPEG* cvCreateStreamCaptureWithParams_FFMPEG(const Ptr<IStreamReader
     return 0;
 }
 
-void cvReleaseCapture_FFMPEG(CvCapture_FFMPEG** capture)
-{
-    if( capture && *capture )
-    {
-        (*capture)->close();
-        delete *capture;
-        *capture = 0;
-    }
-}
-
 int cvSetCaptureProperty_FFMPEG(CvCapture_FFMPEG* capture, int prop_id, double value)
 {
     return capture->setProperty(prop_id, value);
@@ -3668,22 +3658,6 @@ int cvSetCaptureProperty_FFMPEG(CvCapture_FFMPEG* capture, int prop_id, double v
 double cvGetCaptureProperty_FFMPEG(CvCapture_FFMPEG* capture, int prop_id)
 {
     return capture->getProperty(prop_id);
-}
-
-int cvGrabFrame_FFMPEG(CvCapture_FFMPEG* capture)
-{
-    return capture->grabFrame();
-}
-
-int cvRetrieveFrame_FFMPEG(CvCapture_FFMPEG* capture, unsigned char** data, int* step, int* width, int* height, int* cn)
-{
-    int depth = CV_8U;
-    return cvRetrieveFrame2_FFMPEG(capture, data, step, width, height, cn, &depth);
-}
-
-int cvRetrieveFrame2_FFMPEG(CvCapture_FFMPEG* capture, unsigned char** data, int* step, int* width, int* height, int* cn, int* depth)
-{
-    return capture->retrieveFrame(0, data, step, width, height, cn, depth);
 }
 
 static CvVideoWriter_FFMPEG* cvCreateVideoWriterWithParams_FFMPEG( const char* filename, int fourcc, double fps,

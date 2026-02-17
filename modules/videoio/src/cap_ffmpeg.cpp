@@ -51,10 +51,6 @@
 
 // TODO drop legacy code
 //#define icvCreateFileCapture_FFMPEG_p cvCreateFileCapture_FFMPEG
-#define icvReleaseCapture_FFMPEG_p cvReleaseCapture_FFMPEG
-#define icvGrabFrame_FFMPEG_p cvGrabFrame_FFMPEG
-#define icvRetrieveFrame_FFMPEG_p cvRetrieveFrame_FFMPEG
-#define icvRetrieveFrame2_FFMPEG_p cvRetrieveFrame2_FFMPEG
 #define icvSetCaptureProperty_FFMPEG_p cvSetCaptureProperty_FFMPEG
 #define icvGetCaptureProperty_FFMPEG_p cvGetCaptureProperty_FFMPEG
 #define icvCreateVideoWriter_FFMPEG_p cvCreateVideoWriter_FFMPEG
@@ -96,7 +92,7 @@ public:
     }
     virtual bool grabFrame() CV_OVERRIDE
     {
-        return ffmpegCapture ? icvGrabFrame_FFMPEG_p(ffmpegCapture)!=0 : false;
+        return ffmpegCapture ? ffmpegCapture->grabFrame() != 0 : false;
     }
     virtual bool retrieveFrame_(int flag, cv::OutputArray frame) CV_OVERRIDE
     {
@@ -114,7 +110,7 @@ public:
         }
 
         if (flag == 0) {
-            if (!icvRetrieveFrame2_FFMPEG_p(ffmpegCapture, &data, &step, &width, &height, &cn, &depth))
+            if (!ffmpegCapture->retrieveFrame(0, &data, &step, &width, &height, &cn, &depth))
                 return false;
         }
         else {
@@ -150,9 +146,11 @@ public:
     void close()
     {
         if (ffmpegCapture)
-            icvReleaseCapture_FFMPEG_p( &ffmpegCapture );
-        CV_Assert(ffmpegCapture == 0);
-        ffmpegCapture = 0;
+        {
+            ffmpegCapture->close();
+            delete ffmpegCapture;
+            ffmpegCapture = 0;
+        }
     }
 
     virtual bool isOpened() const CV_OVERRIDE { return ffmpegCapture != 0; }
