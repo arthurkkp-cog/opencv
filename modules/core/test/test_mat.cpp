@@ -446,9 +446,9 @@ TEST(Core_PCA, accuracy)
     _prjTestPoints = cvMat(prjTestPoints);
     _backPrjTestPoints = cvMat(backPrjTestPoints);
 
-    cvCalcPCA( &_points, &_avg, &_eval, &_evec, CV_PCA_DATA_AS_ROW );
-    cvProjectPCA( &_testPoints, &_avg, &_evec, &_prjTestPoints );
-    cvBackProjectPCA( &_prjTestPoints, &_avg, &_evec, &_backPrjTestPoints );
+    { PCA pca(cv::cvarrToMat(&_points), cv::Mat(), CV_PCA_DATA_AS_ROW, maxComponents); pca.mean.copyTo(cv::cvarrToMat(&_avg)); pca.eigenvalues.copyTo(cv::cvarrToMat(&_eval)); pca.eigenvectors.copyTo(cv::cvarrToMat(&_evec)); }
+    { PCA pca; pca.mean = cv::cvarrToMat(&_avg).clone(); pca.eigenvectors = cv::cvarrToMat(&_evec).clone(); pca.project(cv::cvarrToMat(&_testPoints)).copyTo(cv::cvarrToMat(&_prjTestPoints)); }
+    { PCA pca; pca.mean = cv::cvarrToMat(&_avg).clone(); pca.eigenvectors = cv::cvarrToMat(&_evec).clone(); pca.backProject(cv::cvarrToMat(&_prjTestPoints)).copyTo(cv::cvarrToMat(&_backPrjTestPoints)); }
 
     err = cvtest::norm(prjTestPoints, rPrjTestPoints, NORM_L2 | NORM_RELATIVE);
     ASSERT_LE(err, diffPrjEps) << "bad accuracy of cvProjectPCA() (CV_PCA_DATA_AS_ROW)";
@@ -464,9 +464,9 @@ TEST(Core_PCA, accuracy)
     prjTestPoints = prjTestPoints.t(); _prjTestPoints = cvMat(prjTestPoints);
     backPrjTestPoints = backPrjTestPoints.t(); _backPrjTestPoints = cvMat(backPrjTestPoints);
 
-    cvCalcPCA( &_points, &_avg, &_eval, &_evec, CV_PCA_DATA_AS_COL );
-    cvProjectPCA( &_testPoints, &_avg, &_evec, &_prjTestPoints );
-    cvBackProjectPCA( &_prjTestPoints, &_avg, &_evec, &_backPrjTestPoints );
+    { PCA pca(cv::cvarrToMat(&_points), cv::Mat(), CV_PCA_DATA_AS_COL, maxComponents); pca.mean.copyTo(cv::cvarrToMat(&_avg)); pca.eigenvalues.copyTo(cv::cvarrToMat(&_eval)); pca.eigenvectors.copyTo(cv::cvarrToMat(&_evec)); }
+    { PCA pca; pca.mean = cv::cvarrToMat(&_avg).clone(); pca.eigenvectors = cv::cvarrToMat(&_evec).clone(); pca.project(cv::cvarrToMat(&_testPoints)).copyTo(cv::cvarrToMat(&_prjTestPoints)); }
+    { PCA pca; pca.mean = cv::cvarrToMat(&_avg).clone(); pca.eigenvectors = cv::cvarrToMat(&_evec).clone(); pca.backProject(cv::cvarrToMat(&_prjTestPoints)).copyTo(cv::cvarrToMat(&_backPrjTestPoints)); }
 
     err = cvtest::norm(cv::abs(prjTestPoints), cv::abs(rPrjTestPoints.t()), NORM_L2 | NORM_RELATIVE);
     ASSERT_LE(err, diffPrjEps) << "bad accuracy of cvProjectPCA() (CV_PCA_DATA_AS_COL)";

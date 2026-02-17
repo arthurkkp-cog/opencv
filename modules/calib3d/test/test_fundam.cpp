@@ -73,7 +73,7 @@ static int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
         theta = sqrt(r[0]*r[0] + r[1]*r[1] + r[2]*r[2]);
         if( theta < DBL_EPSILON )
         {
-            cvSetIdentity( dst );
+            { cv::Mat _m = cv::cvarrToMat(dst); cv::setIdentity(_m); }
 
             if( jacobian )
             {
@@ -107,9 +107,9 @@ static int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
             CvMat matA = cvMat(3, 3, CV_64F, A);
             CvMat matR = cvMat(3, 3, CV_64F, R);
 
-            cvSetIdentity( &matR, cvRealScalar(alpha) );
-            cvScaleAdd( &_omegav, cvRealScalar(beta), &matR, &matR );
-            cvScaleAdd( &matA, cvRealScalar(gamma), &matR, &matR );
+            { cv::Mat _m = cv::cvarrToMat(&matR); cv::setIdentity(_m, cv::Scalar(alpha)); }
+            { cv::Mat _s = cv::cvarrToMat(&_omegav), _d = cv::cvarrToMat(&matR); cv::scaleAdd(_s, beta, _d, _d); }
+            { cv::Mat _s = cv::cvarrToMat(&matA), _d = cv::cvarrToMat(&matR); cv::scaleAdd(_s, gamma, _d, _d); }
             cvConvert( &matR, dst );
 
             if( jacobian )
@@ -166,42 +166,42 @@ static int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
                 CvMat _dm1dm2_part;
 
                 cvGetSubRect( &_dm1dm2, &_dm1dm2_part, cvRect(0,12,3,9) );
-                cvTranspose( &_dm1dw, &_dm1dm2_part );
+                { cv::Mat _s = cv::cvarrToMat(&_dm1dw), _d = cv::cvarrToMat(&_dm1dm2_part); cv::transpose(_s, _d); }
 
                 memset( dRdm1, 0, sizeof(dRdm1) );
                 dRdm1[0*21] = dRdm1[4*21] = dRdm1[8*21] = 1;
 
                 cvGetCol( &_dRdm1, &_dRdm1_part, 1 );
-                cvTranspose( &_omegav, &_omegav );
+                { cv::Mat _m = cv::cvarrToMat(&_omegav); cv::transpose(_m, _m); }
                 cvReshape( &_omegav, &_omegav, 1, 1 );
-                cvTranspose( &_omegav, &_dRdm1_part );
+                { cv::Mat _s = cv::cvarrToMat(&_omegav), _d = cv::cvarrToMat(&_dRdm1_part); cv::transpose(_s, _d); }
 
                 cvGetCol( &_dRdm1, &_dRdm1_part, 2 );
                 cvReshape( &matA, &matA, 1, 1 );
-                cvTranspose( &matA, &_dRdm1_part );
+                { cv::Mat _s = cv::cvarrToMat(&matA), _d = cv::cvarrToMat(&_dRdm1_part); cv::transpose(_s, _d); }
 
                 cvGetSubRect( &_dRdm1, &_dRdm1_part, cvRect(3,0,9,9) );
-                cvSetIdentity( &_dRdm1_part, cvScalarAll(beta) );
+                { cv::Mat _m = cv::cvarrToMat(&_dRdm1_part); cv::setIdentity(_m, cv::Scalar(beta)); }
 
                 cvGetSubRect( &_dRdm1, &_dRdm1_part, cvRect(12,0,9,9) );
-                cvSetIdentity( &_dRdm1_part, cvScalarAll(gamma) );
+                { cv::Mat _m = cv::cvarrToMat(&_dRdm1_part); cv::setIdentity(_m, cv::Scalar(gamma)); }
 
                 matJ = cvMat( 9, 3, CV_64FC1, J );
 
-                cvMatMul( &_dRdm1, &_dm1dm2, &_t0 );
-                cvMatMul( &_t0, &_dm2dm3, &_t1 );
-                cvMatMul( &_t1, &_dm3din, &matJ );
+                { cv::Mat _a = cv::cvarrToMat(&_dRdm1), _b = cv::cvarrToMat(&_dm1dm2), _c = cv::cvarrToMat(&_t0); cv::gemm(_a, _b, 1, cv::Mat(), 0, _c); }
+                { cv::Mat _a = cv::cvarrToMat(&_t0), _b = cv::cvarrToMat(&_dm2dm3), _c = cv::cvarrToMat(&_t1); cv::gemm(_a, _b, 1, cv::Mat(), 0, _c); }
+                { cv::Mat _a = cv::cvarrToMat(&_t1), _b = cv::cvarrToMat(&_dm3din), _c = cv::cvarrToMat(&matJ); cv::gemm(_a, _b, 1, cv::Mat(), 0, _c); }
 
                 _t0 = cvMat( 3, 9, CV_64FC1, t0 );
-                cvTranspose( &matJ, &_t0 );
+                { cv::Mat _s = cv::cvarrToMat(&matJ), _d = cv::cvarrToMat(&_t0); cv::transpose(_s, _d); }
 
                 for( i = 0; i < 3; i++ )
                 {
                     _t1 = cvMat( 3, 3, CV_64FC1, t0 + i*9 );
-                    cvTranspose( &_t1, &_t1 );
+                    { cv::Mat _m = cv::cvarrToMat(&_t1); cv::transpose(_m, _m); }
                 }
 
-                cvTranspose( &_t0, &matJ );
+                { cv::Mat _s = cv::cvarrToMat(&_t0), _d = cv::cvarrToMat(&matJ); cv::transpose(_s, _d); }
             }
         }
     }
@@ -218,17 +218,17 @@ static int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
         CvMat matV = cvMat( 3, 3, CV_64F, V );
 
         cvConvert( src, &matR );
-        cvSVD( &matR, &matW, &matU, &matV, CV_SVD_MODIFY_A + CV_SVD_U_T + CV_SVD_V_T );
-        cvGEMM( &matU, &matV, 1, 0, 0, &matR, CV_GEMM_A_T );
+        { cv::Mat _a = cv::cvarrToMat(&matR), _w = cv::cvarrToMat(&matW), _u = cv::cvarrToMat(&matU), _v = cv::cvarrToMat(&matV); cv::SVD::compute(_a, _w, _u, _v, CV_SVD_MODIFY_A + CV_SVD_U_T + CV_SVD_V_T); }
+        { cv::Mat _a = cv::cvarrToMat(&matU), _b = cv::cvarrToMat(&matV), _c = cv::cvarrToMat(&matR); cv::gemm(_a, _b, 1, cv::Mat(), 0, _c, CV_GEMM_A_T); }
 
-        cvMulTransposed( &matR, &matA, 0 );
-        cvSetIdentity( &matI );
+        { cv::Mat _s = cv::cvarrToMat(&matR), _d = cv::cvarrToMat(&matA); cv::mulTransposed(_s, _d, false); }
+        { cv::Mat _m = cv::cvarrToMat(&matI); cv::setIdentity(_m); }
 
         if( cvNorm( &matA, &matI, CV_C ) > 1e-3 ||
-            fabs( cvDet(&matR) - 1 ) > 1e-3 )
+            fabs( cv::determinant(cv::cvarrToMat(&matR)) - 1 ) > 1e-3 )
             return 0;
 
-        tr = (cvTrace(&matR).val[0] - 1.)*0.5;
+        tr = (cv::trace(cv::cvarrToMat(&matR))[0] - 1.)*0.5;
         tr = tr > 1. ? 1. : tr < -1. ? -1. : tr;
         theta = acos(tr);
         alpha = cos(theta);
@@ -285,8 +285,8 @@ static int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
                 double t0[3*5];
                 CvMat _t0 = cvMat( 3, 5, CV_64FC1, t0 );
 
-                cvMatMul( &_domegadvar2, &_dvar2dvar, &_t0 );
-                cvMatMul( &_t0, &_dvardR, &matJ );
+                { cv::Mat _a = cv::cvarrToMat(&_domegadvar2), _b = cv::cvarrToMat(&_dvar2dvar), _c = cv::cvarrToMat(&_t0); cv::gemm(_a, _b, 1, cv::Mat(), 0, _c); }
+                { cv::Mat _a = cv::cvarrToMat(&_t0), _b = cv::cvarrToMat(&_dvardR), _c = cv::cvarrToMat(&matJ); cv::gemm(_a, _b, 1, cv::Mat(), 0, _c); }
             }
         }
         else if( tr > 0 )
@@ -315,7 +315,7 @@ static int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
             for( i = 0; i < 3; i++ )
             {
                 CvMat t = cvMat( 3, 3, CV_64F, J + i*9 );
-                cvTranspose( &t, &t );
+                { cv::Mat _m = cv::cvarrToMat(&t); cv::transpose(_m, _m); }
             }
         }
     }
@@ -335,13 +335,13 @@ static int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
             {
                 _Jf = cvMat( matJ.rows, matJ.cols, CV_32FC1, Jf );
                 cvConvert( &matJ, &_Jf );
-                cvTranspose( &_Jf, jacobian );
+                { cv::Mat _s = cv::cvarrToMat(&_Jf), _d = cv::cvarrToMat(jacobian); cv::transpose(_s, _d); }
             }
         }
         else if( jacobian->rows == matJ.rows )
             cvCopy( &matJ, jacobian );
         else
-            cvTranspose( &matJ, jacobian );
+            { cv::Mat _s = cv::cvarrToMat(&matJ), _d = cv::cvarrToMat(jacobian); cv::transpose(_s, _d); }
     }
 
     return 1;

@@ -142,8 +142,8 @@ bool CvLevMarq::update( const CvMat*& _param, CvMat*& matJ, CvMat*& _err )
 
     if( state == CALC_J )
     {
-        cvMulTransposed( J, JtJ, 1 );
-        cvGEMM( J, err, 1, 0, 0, JtErr, CV_GEMM_A_T );
+        { cv::Mat _src = cv::cvarrToMat(J), _dst = cv::cvarrToMat(JtJ); cv::mulTransposed(_src, _dst, true); }
+        { cv::Mat _J = cv::cvarrToMat(J), _err = cv::cvarrToMat(err), _JtErr = cv::cvarrToMat(JtErr); cv::gemm(_J, _err, 1, cv::Mat(), 0, _JtErr, cv::GEMM_1_T); }
         cvCopy( param, prevParam );
         step();
         if( iters == 0 )

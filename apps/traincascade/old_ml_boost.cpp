@@ -1333,7 +1333,7 @@ CvBoost::update_weights( CvBoostTree* tree )
             for( i = 0; i < n; i++ )
                 weak_eval->data.db[i] *= -orig_response->data.i[i];
 
-            cvExp( weak_eval, weak_eval );
+            { cv::Mat _we = cv::cvarrToMat(weak_eval); cv::exp(_we, _we); }
 
             for( i = 0; i < n; i++ )
             {
@@ -1370,7 +1370,7 @@ CvBoost::update_weights( CvBoostTree* tree )
                 weak_eval->data.db[i] = -2*s;
             }
 
-            cvExp( weak_eval, weak_eval );
+            { cv::Mat _we = cv::cvarrToMat(weak_eval); cv::exp(_we, _we); }
 
             for( i = 0; i < n; i++ )
             {
@@ -1401,7 +1401,7 @@ CvBoost::update_weights( CvBoostTree* tree )
             for( i = 0; i < n; i++ )
                 weak_eval->data.db[i] *= -orig_response->data.i[i];
 
-            cvExp( weak_eval, weak_eval );
+            { cv::Mat _we = cv::cvarrToMat(weak_eval); cv::exp(_we, _we); }
 
             for( i = 0; i < n; i++ )
             {

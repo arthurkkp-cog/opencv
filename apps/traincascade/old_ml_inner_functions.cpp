@@ -160,7 +160,7 @@ CvMat* icvGenerateRandomClusterCenters ( int seed, const CvMat* data,
         CV_CALL(cvGetCol (data, &data_comp, i));
         CV_CALL(cvMinMaxLoc (&data_comp, &minVal, &maxVal, &minLoc, &maxLoc));
         CV_CALL(cvGetCol (centers, &centers_comp, i));
-        CV_CALL(cvRandArr (&rng, &centers_comp, CV_RAND_UNI, cvScalarAll(minVal), cvScalarAll(maxVal)));
+        { cv::Mat _cc = cv::cvarrToMat(&centers_comp); cv::RNG _rng_cpp((uint64)rng); _rng_cpp.fill(_cc, cv::RNG::UNIFORM, cv::Scalar::all(minVal), cv::Scalar::all(maxVal)); }
     }
 
     __END__;

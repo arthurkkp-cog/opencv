@@ -1259,7 +1259,7 @@ cvArcLength( const void *array, CvSlice slice, int is_closed )
             if( ++j == N || i == count - 1 )
             {
                 buffer.cols = j;
-                cvPow( &buffer, &buffer, 0.5 );
+                { cv::Mat _buf = cv::cvarrToMat(&buffer); cv::pow(_buf, 0.5, _buf); }
                 for( ; j > 0; j-- )
                     perimeter += buffer.data.fl[j-1];
             }
