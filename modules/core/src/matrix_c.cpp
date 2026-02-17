@@ -12,9 +12,21 @@
 CvMatND cvMatND(const cv::Mat& m)
 {
     CvMatND self;
-    cvInitMatNDHeader(&self, m.dims, m.size, m.type(), m.data );
-    int i, d = m.dims;
-    for( i = 0; i < d; i++ )
+    int type = CV_MAT_TYPE(m.type());
+    int64 step = CV_ELEM_SIZE(type);
+    int d = m.dims;
+    for( int i = d - 1; i >= 0; i-- )
+    {
+        self.dim[i].size = m.size[i];
+        self.dim[i].step = (int)step;
+        step *= m.size[i];
+    }
+    self.type = CV_MATND_MAGIC_VAL | (step <= INT_MAX ? CV_MAT_CONT_FLAG : 0) | type;
+    self.dims = d;
+    self.data.ptr = m.data;
+    self.refcount = 0;
+    self.hdr_refcount = 0;
+    for( int i = 0; i < d; i++ )
         self.dim[i].step = (int)m.step[i];
     self.type |= m.flags & cv::Mat::CONTINUOUS_FLAG;
     return self;
@@ -24,8 +36,29 @@ _IplImage cvIplImage(const cv::Mat& m)
 {
     _IplImage self;
     CV_Assert( m.dims <= 2 );
-    cvInitImageHeader(&self, cvSize(m.size()), cvIplDepth(m.flags), m.channels());
-    cvSetData(&self, m.data, (int)m.step[0]);
+    memset( &self, 0, sizeof(self));
+    self.nSize = sizeof(IplImage);
+    self.ID = IPL_IMAGE_MAGIC_VAL;
+    self.nChannels = m.channels();
+    self.depth = cvIplDepth(m.flags);
+    self.dataOrder = IPL_DATA_ORDER_PIXEL;
+    self.origin = IPL_ORIGIN_TL;
+    self.align = 4;
+    self.width = m.cols;
+    self.height = m.rows;
+    self.imageSize = 0;
+    self.roi = 0;
+    self.maskROI = 0;
+    self.imageId = 0;
+    self.tileInfo = 0;
+    self.widthStep = (int)m.step[0];
+    self.imageData = (char*)m.data;
+    self.imageDataOrigin = (char*)m.data;
+    int esz = CV_ELEM_SIZE(m.type());
+    int _step = self.widthStep;
+    if (_step == 0)
+        _step = esz * self.width;
+    self.imageSize = _step * self.height;
     return self;
 }
 
@@ -198,7 +231,8 @@ void extractImageCOI(const CvArr* arr, OutputArray _ch, int coi)
     if(coi < 0)
     {
         CV_Assert( CV_IS_IMAGE(arr) );
-        coi = cvGetImageCOI((const IplImage*)arr)-1;
+        const IplImage* _img = (const IplImage*)arr;
+        coi = (_img->roi ? _img->roi->coi : 0)-1;
     }
     CV_Assert(0 <= coi && coi < mat.channels());
     int _pairs[] = { coi, 0 };
@@ -211,7 +245,8 @@ void insertImageCOI(InputArray _ch, CvArr* arr, int coi)
     if(coi < 0)
     {
         CV_Assert( CV_IS_IMAGE(arr) );
-        coi = cvGetImageCOI((const IplImage*)arr)-1;
+        const IplImage* _img = (const IplImage*)arr;
+        coi = (_img->roi ? _img->roi->coi : 0)-1;
     }
     CV_Assert(ch.size == mat.size && ch.depth() == mat.depth() && 0 <= coi && coi < mat.channels());
     int _pairs[] = { 0, coi };
@@ -290,7 +325,20 @@ cvRange( CvArr* arr, double start, double end )
     double val = start;
 
     if( !CV_IS_MAT(mat) )
-        mat = cvGetMat( mat, &stub);
+    {
+        cv::Mat tmp = cv::cvarrToMat(arr);
+        stub.type = CV_MAT_MAGIC_VAL | tmp.type();
+        stub.rows = tmp.rows;
+        stub.cols = tmp.cols;
+        stub.data.ptr = tmp.data;
+        stub.step = (int)tmp.step[0];
+        stub.refcount = 0;
+        stub.hdr_refcount = 0;
+        int pix_size = CV_ELEM_SIZE(stub.type);
+        int min_step = stub.cols * pix_size;
+        stub.type |= (stub.rows == 1 || (int)stub.step == min_step ? CV_MAT_CONT_FLAG : 0);
+        mat = &stub;
+    }
 
     int rows = mat->rows;
     int cols = mat->cols;

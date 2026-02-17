@@ -12,7 +12,8 @@ CV_IMPL CvScalar cvSum( const CvArr* srcarr )
     cv::Scalar sum = cv::sum(cv::cvarrToMat(srcarr, false, true, 1));
     if( CV_IS_IMAGE(srcarr) )
     {
-        int coi = cvGetImageCOI((IplImage*)srcarr);
+        const IplImage* _img = (const IplImage*)srcarr;
+        int coi = _img->roi ? _img->roi->coi : 0;
         if( coi )
         {
             CV_Assert( 0 < coi && coi <= 4 );
@@ -38,7 +39,8 @@ cvAvg( const void* imgarr, const void* maskarr )
     cv::Scalar mean = !maskarr ? cv::mean(img) : cv::mean(img, cv::cvarrToMat(maskarr));
     if( CV_IS_IMAGE(imgarr) )
     {
-        int coi = cvGetImageCOI((IplImage*)imgarr);
+        const IplImage* _img = (const IplImage*)imgarr;
+        int coi = _img->roi ? _img->roi->coi : 0;
         if( coi )
         {
             CV_Assert( 0 < coi && coi <= 4 );
@@ -62,7 +64,8 @@ cvAvgSdv( const CvArr* imgarr, CvScalar* _mean, CvScalar* _sdv, const void* mask
 
     if( CV_IS_IMAGE(imgarr) )
     {
-        int coi = cvGetImageCOI((IplImage*)imgarr);
+        const IplImage* _img = (const IplImage*)imgarr;
+        int coi = _img->roi ? _img->roi->coi : 0;
         if( coi )
         {
             CV_Assert( 0 < coi && coi <= 4 );
@@ -107,14 +110,14 @@ cvNorm( const void* imgA, const void* imgB, int normType, const void* maskarr )
     if( maskarr )
         mask = cv::cvarrToMat(maskarr);
 
-    if( a.channels() > 1 && CV_IS_IMAGE(imgA) && cvGetImageCOI((const IplImage*)imgA) > 0 )
+    if( a.channels() > 1 && CV_IS_IMAGE(imgA) && ((const IplImage*)imgA)->roi && ((const IplImage*)imgA)->roi->coi > 0 )
         cv::extractImageCOI(imgA, a);
 
     if( !imgB )
         return !maskarr ? cv::norm(a, normType) : cv::norm(a, normType, mask);
 
     cv::Mat b = cv::cvarrToMat(imgB, false, true, 1);
-    if( b.channels() > 1 && CV_IS_IMAGE(imgB) && cvGetImageCOI((const IplImage*)imgB) > 0 )
+    if( b.channels() > 1 && CV_IS_IMAGE(imgB) && ((const IplImage*)imgB)->roi && ((const IplImage*)imgB)->roi->coi > 0 )
         cv::extractImageCOI(imgB, b);
 
     return !maskarr ? cv::norm(a, b, normType) : cv::norm(a, b, normType, mask);
