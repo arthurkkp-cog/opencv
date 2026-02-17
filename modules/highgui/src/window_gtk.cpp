@@ -623,7 +623,7 @@ std::vector< std::shared_ptr<CvWindow> >& getGTKWindows()
     return g_windows;
 }
 
-CV_IMPL int cvInitSystem( int argc, char** argv )
+int cvInitSystem( int argc, char** argv )
 {
     static int wasInitialized = 0;
     static bool hasError = false;
@@ -655,24 +655,6 @@ CV_IMPL int cvInitSystem( int argc, char** argv )
        CV_Error(Error::StsError, "GTK backend is not available");
 
     return 0;
-}
-
-CV_IMPL int cvStartWindowThread(){
-    cvInitSystem(0,NULL);
-    if (!thread_started)
-    {
-       (void)getWindowMutex();  // force mutex initialization
-
-       // protects the 'last key pressed' variable
-       last_key_mutex = g_mutex_new();
-
-       // conditional that indicates a key has been pressed
-       cond_have_key = g_cond_new();
-
-       window_thread = g_thread_new("OpenCV window update", icvWindowThreadLoop, NULL);
-    }
-    thread_started = window_thread!=NULL;
-    return thread_started;
 }
 
 gpointer icvWindowThreadLoop(gpointer /*data*/)
@@ -730,18 +712,6 @@ static CvWindow* icvWindowByWidget( GtkWidget* widget )
 
 static Rect getImageRect_(const std::shared_ptr<CvWindow>& window);
 
-CvRect cvGetWindowRect_GTK(const char* name)
-{
-    CV_Assert(name && "NULL name string");
-
-    CV_LOCK_MUTEX();
-    const auto window = icvFindWindowByName(name);
-    if (!window)
-        CV_Error( cv::Error::StsNullPtr, "NULL window" );
-
-    return cvRect(getImageRect_(window));
-}
-
 #if defined(GTK_VERSION2)
     #define gtk_widget_get_allocated_width(widget) (widget->allocation.width)
     #define gtk_widget_get_allocated_height(widget) (widget->allocation.height)
@@ -772,33 +742,7 @@ static Rect getImageRect_(const std::shared_ptr<CvWindow>& window)
     return Rect(-1, -1, -1, -1);
 }
 
-double cvGetModeWindow_GTK(const char* name)//YV
-{
-    CV_Assert(name && "NULL name string");
-
-    CV_LOCK_MUTEX();
-    const auto window = icvFindWindowByName(name);
-    if (!window)
-        CV_Error( cv::Error::StsNullPtr, "NULL window" );
-
-    double result = window->status;
-    return result;
-}
-
 static bool setModeWindow_(const std::shared_ptr<CvWindow>& window, int mode);
-void cvSetModeWindow_GTK( const char* name, double prop_value)//Yannick Verdie
-{
-    CV_Assert(name && "NULL name string");
-
-    CV_LOCK_MUTEX();
-
-    const auto window = icvFindWindowByName(name);
-    if (!window)
-        CV_Error( cv::Error::StsNullPtr, "NULL window" );
-
-    setModeWindow_(window, (int)prop_value);
-}
-
 static bool setModeWindow_(const std::shared_ptr<CvWindow>& window, int mode)
 {
     if (window->flags & cv::WINDOW_AUTOSIZE) //if the flag cv::WINDOW_AUTOSIZE is set
@@ -826,76 +770,13 @@ static bool setModeWindow_(const std::shared_ptr<CvWindow>& window, int mode)
     return false;
 }
 
-void setWindowTitle_GTK(const String& winname, const String& title)
-{
-    CV_LOCK_MUTEX();
-
-    auto window = icvFindWindowByName(winname.c_str());
-
-    if (!window)
-    {
-        namedWindow(winname);
-        window = icvFindWindowByName(winname.c_str());
-        CV_Assert(window);
-    }
-
-    gtk_window_set_title(GTK_WINDOW(window->frame), title.c_str());
-}
-
-double cvGetPropWindowAutoSize_GTK(const char* name)
-{
-    CV_Assert(name && "NULL name string");
-
-    CV_LOCK_MUTEX();
-
-    const auto window = icvFindWindowByName(name);
-    if (!window)
-        return -1; // keep silence here
-
-    double result = window->flags & cv::WINDOW_AUTOSIZE;
-    return result;
-}
-
 static double getRatioWindow_(const std::shared_ptr<CvWindow>& window);
-double cvGetRatioWindow_GTK(const char* name)
-{
-    CV_Assert(name && "NULL name string");
-
-    CV_LOCK_MUTEX();
-
-    const auto window = icvFindWindowByName(name);
-    if (!window)
-        return -1; // keep silence here
-
-    return getRatioWindow_(window);
-}
-
 static double getRatioWindow_(const std::shared_ptr<CvWindow>& window)
 {
     double result = static_cast<double>(
         gtk_widget_get_allocated_width(window->widget)) / gtk_widget_get_allocated_height(window->widget);
     return result;
 }
-
-double cvGetOpenGlProp_GTK(const char* name)
-{
-#ifdef HAVE_OPENGL
-    CV_Assert(name && "NULL name string");
-
-    CV_LOCK_MUTEX();
-
-    const auto window = icvFindWindowByName(name);
-    if (!window)
-        return -1; // keep silence here
-
-    double result = window->useGl;
-    return result;
-#else
-    (void)name;
-    return -1;
-#endif
-}
-
 
 // OpenGL support
 
@@ -1053,22 +934,6 @@ static gboolean cvImageWidget_draw(GtkWidget* widget, cairo_t *cr, gpointer data
 }
 
 static std::shared_ptr<CvWindow> namedWindow_(const std::string& name, int flags);
-CV_IMPL int cvNamedWindow( const char* name, int flags )
-{
-    cvInitSystem(name ? 1 : 0,(char**)&name);
-    CV_Assert(name && "NULL name string");
-
-    CV_LOCK_MUTEX();
-
-    // Check the name in the storage
-    if (icvFindWindowByName(name))
-    {
-        return 1;
-    }
-    auto window = namedWindow_(name, flags);
-    return window ? 1 : 0;
-}
-
 static std::shared_ptr<CvWindow> namedWindow_(const std::string& name, int flags)
 {
     cvInitSystem(0, NULL);
@@ -1174,7 +1039,7 @@ static std::shared_ptr<CvWindow> namedWindow_(const std::string& name, int flags
 
 #ifdef HAVE_OPENGL
 
-CV_IMPL void cvSetOpenGlContext(const char* name)
+void cvSetOpenGlContext(const char* name)
 {
     CV_Assert(name && "NULL name string");
 
@@ -1205,50 +1070,6 @@ CV_IMPL void cvSetOpenGlContext(const char* name)
 
 #endif
 
-}
-
-CV_IMPL void cvUpdateWindow(const char* name)
-{
-    CV_Assert(name && "NULL name string");
-
-    CV_LOCK_MUTEX();
-
-    auto window = icvFindWindowByName(name);
-    if (!window)
-        return;
-
-    // window does not refresh without this
-#ifdef GTK_VERSION3
-
-    if ( GTK_IS_GL_AREA(window->glArea) ){
-        gtk_gl_area_queue_render(GTK_GL_AREA(window->glArea));
-    } else {
-        gtk_widget_queue_draw( GTK_WIDGET(window->widget));
-    }
-
-#else
-
-    gtk_widget_queue_draw( GTK_WIDGET(window->widget) );
-
-#endif
-
-}
-
-CV_IMPL void cvSetOpenGlDrawCallback(const char* name, CvOpenGlDrawCallback callback, void* userdata)
-{
-    CV_Assert(name && "NULL name string");
-
-    CV_LOCK_MUTEX();
-
-    auto window = icvFindWindowByName(name);
-    if( !window )
-        return;
-
-    if (!window->useGl)
-        CV_Error( cv::Error::OpenGlNotSupported, "Window was created without OpenGL context" );
-
-    window->glDrawCallback = callback;
-    window->glDrawData = userdata;
 }
 
 #endif // HAVE_OPENGL
@@ -1313,31 +1134,8 @@ void icvDeleteWindow_( CvWindow* window )
     checkLastWindow();
 }
 
-CV_IMPL void cvDestroyWindow( const char* name )
-{
-    CV_Assert(name && "NULL name string");
-
-    CV_LOCK_MUTEX();
-    auto& g_windows = getGTKWindows();
-
-    bool found = false;
-    for (auto i = g_windows.begin(); i != g_windows.end(); ++i)
-    {
-        if (i->get()->name == name)
-        {
-            g_windows.erase(i);
-            found = true;
-            break;
-        }
-    }
-    CV_LOG_IF_ERROR(NULL, !found, "OpenCV/GTK: Can't destroy non-registered window: '" << name << "'");
-
-    checkLastWindow();
-}
-
-
-CV_IMPL void
-cvDestroyAllWindows( void )
+static void
+destroyAllWindows_( void )
 {
     CV_LOCK_MUTEX();
 
@@ -1357,50 +1155,7 @@ cvDestroyAllWindows( void )
 //     return window_size;
 // }
 
-CV_IMPL void
-cvShowImage( const char* name, const CvArr* arr )
-{
-    CV_Assert(name && "NULL name string");
-
-    CV_LOCK_MUTEX();
-
-    auto window = icvFindWindowByName(name);
-    if(!window)
-    {
-        cvNamedWindow(name, 1);
-        window = icvFindWindowByName(name);
-    }
-    CV_Assert(window);
-
-    if (arr)
-    {
-    #ifdef HAVE_OPENGL
-        if (window->useGl)
-        {
-            cv::imshow(name, cv::cvarrToMat(arr));
-            return;
-        }
-    #endif
-
-        CvImageWidget * image_widget = CV_IMAGE_WIDGET( window->widget );
-        cvImageWidgetSetImage( image_widget, arr );
-    }
-}
-
 static void resizeWindow_(const std::shared_ptr<CvWindow>& window, int width, int height);
-CV_IMPL void cvResizeWindow(const char* name, int width, int height )
-{
-    CV_Assert(name && "NULL name string");
-
-    CV_LOCK_MUTEX();
-
-    auto window = icvFindWindowByName(name);
-    if(!window)
-        return;
-
-    return resizeWindow_(window, width, height);
-}
-
 static
 void resizeWindow_(const std::shared_ptr<CvWindow>& window, int width, int height)
 {
@@ -1417,19 +1172,6 @@ void resizeWindow_(const std::shared_ptr<CvWindow>& window, int width, int heigh
     image_widget->flags &= ~CV_WINDOW_NO_IMAGE;
 }
 
-
-CV_IMPL void cvMoveWindow( const char* name, int x, int y )
-{
-    CV_Assert(name && "NULL name string");
-
-    CV_LOCK_MUTEX();
-
-    const auto window = icvFindWindowByName(name);
-    if(!window)
-        return;
-
-    gtk_window_move( GTK_WINDOW(window->frame), x, y );
-}
 
 static
 std::shared_ptr<CvTrackbar> icvFindTrackbarByName(const std::shared_ptr<CvWindow>& window, const std::string& name)
@@ -1517,23 +1259,6 @@ icvCreateTrackbar( const char* trackbar_name, const char* window_name,
     return 1;
 }
 
-CV_IMPL int
-cvCreateTrackbar( const char* trackbar_name, const char* window_name,
-                  int* val, int count, CvTrackbarCallback on_notify )
-{
-    return icvCreateTrackbar(trackbar_name, window_name, val, count,
-                             on_notify, 0, 0);
-}
-
-CV_IMPL int
-cvCreateTrackbar2( const char* trackbar_name, const char* window_name,
-                   int* val, int count, CvTrackbarCallback2 on_notify2,
-                   void* userdata )
-{
-    return icvCreateTrackbar(trackbar_name, window_name, val, count,
-                             0, on_notify2, userdata);
-}
-
 static
 std::shared_ptr<CvTrackbar> createTrackbar_(
     const std::shared_ptr<CvWindow>& window, const std::string& name,
@@ -1581,61 +1306,7 @@ std::shared_ptr<CvTrackbar> createTrackbar_(
 }
 
 
-CV_IMPL void
-cvSetMouseCallback( const char* window_name, CvMouseCallback on_mouse, void* param )
-{
-    CV_Assert(window_name && "NULL window name");
-
-    CV_LOCK_MUTEX();
-
-    const auto window = icvFindWindowByName(window_name);
-    if (!window)
-        return;
-
-    window->on_mouse = on_mouse;
-    window->on_mouse_param = param;
-}
-
-
-CV_IMPL int cvGetTrackbarPos( const char* trackbar_name, const char* window_name )
-{
-    CV_Assert(window_name && "NULL window name");
-    CV_Assert(trackbar_name && "NULL trackbar name");
-
-    CV_LOCK_MUTEX();
-
-    const auto window = icvFindWindowByName(window_name);
-    if (!window)
-        return -1;
-
-    const auto trackbar = icvFindTrackbarByName(window,trackbar_name);
-    if (!trackbar)
-        return -1;
-
-    return trackbar->pos;
-}
-
 static void setTrackbarPos_(const std::shared_ptr<CvTrackbar>& trackbar, int pos);
-CV_IMPL void cvSetTrackbarPos( const char* trackbar_name, const char* window_name, int pos )
-{
-    CV_Assert(window_name && "NULL window name");
-    CV_Assert(trackbar_name && "NULL trackbar name");
-
-    CV_LOCK_MUTEX();
-
-    const auto window = icvFindWindowByName(window_name);
-    if(!window)
-        return;
-
-    const auto trackbar = icvFindTrackbarByName(window, trackbar_name);
-    if (!trackbar)
-    {
-        CV_Error( cv::Error::StsNullPtr, "No trackbar found" );
-    }
-
-    return setTrackbarPos_(trackbar, pos);
-}
-
 static void setTrackbarPos_(const std::shared_ptr<CvTrackbar>& trackbar, int pos)
 {
     CV_Assert(trackbar);
@@ -1647,75 +1318,6 @@ static void setTrackbarPos_(const std::shared_ptr<CvTrackbar>& trackbar, int pos
     gtk_range_set_value( GTK_RANGE(trackbar->widget), pos );
 }
 
-
-CV_IMPL void cvSetTrackbarMax(const char* trackbar_name, const char* window_name, int maxval)
-{
-    CV_Assert(window_name && "NULL window name");
-    CV_Assert(trackbar_name && "NULL trackbar name");
-
-    CV_LOCK_MUTEX();
-
-    const auto window = icvFindWindowByName(window_name);
-    if(!window)
-        return;
-
-    const auto trackbar = icvFindTrackbarByName(window,trackbar_name);
-    if(!trackbar)
-        return;
-
-    trackbar->maxval = maxval;
-    if (trackbar->maxval >= trackbar->minval)
-        gtk_range_set_range(GTK_RANGE(trackbar->widget), trackbar->minval, trackbar->maxval);
-}
-
-
-CV_IMPL void cvSetTrackbarMin(const char* trackbar_name, const char* window_name, int minval)
-{
-    CV_Assert(window_name && "NULL window name");
-    CV_Assert(trackbar_name && "NULL trackbar name");
-
-    CV_LOCK_MUTEX();
-
-    const auto window = icvFindWindowByName(window_name);
-    if(!window)
-        return;
-
-    const auto trackbar = icvFindTrackbarByName(window,trackbar_name);
-    if(!trackbar)
-        return;
-
-    trackbar->minval = minval;
-    if (trackbar->maxval >= trackbar->minval)
-        gtk_range_set_range(GTK_RANGE(trackbar->widget), trackbar->minval, trackbar->maxval);
-}
-
-
-CV_IMPL void* cvGetWindowHandle( const char* window_name )
-{
-    CV_Assert(window_name && "NULL window name");
-
-    CV_LOCK_MUTEX();
-
-    const auto window = icvFindWindowByName(window_name);
-    if(!window)
-        return NULL;
-
-    return (void*)window->widget;
-}
-
-
-CV_IMPL const char* cvGetWindowName( void* window_handle )
-{
-    CV_Assert(window_handle && "NULL window handle");
-
-    CV_LOCK_MUTEX();
-
-    CvWindow* window = icvWindowByWidget( (GtkWidget*)window_handle );
-    if (window)
-        return window->name.c_str();
-
-    return ""; // FIXME: NULL?
-}
 
 static GtkFileFilter* icvMakeGtkFilter(const char* name, const char* patterns, GtkFileFilter* images)
 {
@@ -2036,7 +1638,7 @@ static gboolean icvAlarm( gpointer user_data )
 }
 
 
-CV_IMPL int cvWaitKey( int delay )
+static int waitKey_GTK( int delay )
 {
     if (thread_started && g_thread_self() != window_thread)
     {
@@ -2332,7 +1934,7 @@ public:
 
     void destroyAllWindows() CV_OVERRIDE
     {
-        cvDestroyAllWindows();
+        destroyAllWindows_();
     }
 
     // namedWindow
@@ -2349,11 +1951,11 @@ public:
 
     int waitKeyEx(int delay) CV_OVERRIDE
     {
-        return cvWaitKey(delay);
+        return waitKey_GTK(delay);
     }
     int pollKey() CV_OVERRIDE
     {
-        return cvWaitKey(1);  // TODO
+        return waitKey_GTK(1);  // TODO
     }
 
     const std::string getName() const CV_OVERRIDE

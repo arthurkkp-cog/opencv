@@ -309,12 +309,12 @@ static const char* const mainHighGUIclassName = "Main HighGUI class";
 
 static void icvCleanupHighgui()
 {
-    cvDestroyAllWindows();
+    destroyAllWindows_W32();
     UnregisterClass(highGUIclassName, hg_hinstance);
     UnregisterClass(mainHighGUIclassName, hg_hinstance);
 }
 
-CV_IMPL int cvInitSystem(int, char**)
+int cvInitSystem(int, char**)
 {
     static int wasInitialized = 0;
 
@@ -354,11 +354,6 @@ CV_IMPL int cvInitSystem(int, char**)
 
     return 0;
 }
-
-CV_IMPL int cvStartWindowThread(){
-    return 0;
-}
-
 
 static std::shared_ptr<CvWindow> icvWindowByHWND(HWND hwnd)
 {
@@ -522,25 +517,6 @@ icvSaveWindowPos(const char* name, CvRect rect)
 
 static Rect getImageRect_(CvWindow& window);
 
-CvRect cvGetWindowRect_W32(const char* name)
-{
-    CV_FUNCNAME("cvGetWindowRect_W32");
-
-    AutoLock lock(getWindowMutex());
-
-    if (!name)
-        CV_Error(Error::StsNullPtr, "NULL name string");
-
-    auto window = icvFindWindowByName(name);
-    if (!window)
-        CV_Error_(Error::StsNullPtr, ("NULL window: '%s'", name));
-
-    Rect r = getImageRect_(*window);
-
-    CvRect result = cvRect(r.x, r.y, r.width, r.height);
-    return result;
-}
-
 static Rect getImageRect_(CvWindow& window)
 {
     RECT rect = { 0 };
@@ -551,39 +527,7 @@ static Rect getImageRect_(CvWindow& window)
     return result;
 }
 
-double cvGetModeWindow_W32(const char* name)//YV
-{
-    CV_FUNCNAME("cvGetModeWindow_W32");
-
-    AutoLock lock(getWindowMutex());
-
-    if (!name)
-        CV_Error(Error::StsNullPtr, "NULL name string");
-
-    auto window = icvFindWindowByName(name);
-    if (!window)
-        CV_Error_(Error::StsNullPtr, ("NULL window: '%s'", name));
-
-    return window->status;
-}
-
 static bool setModeWindow_(CvWindow& window, int mode);
-
-void cvSetModeWindow_W32(const char* name, double prop_value)//Yannick Verdie
-{
-    CV_FUNCNAME("cvSetModeWindow_W32");
-
-    AutoLock lock(getWindowMutex());
-
-    if (!name)
-        CV_Error(Error::StsNullPtr, "NULL name string");
-
-    auto window = icvFindWindowByName(name);
-    if (!window)
-         CV_Error_(Error::StsNullPtr, ("NULL window: '%s'", name));
-
-    (void)setModeWindow_(*window, (int)prop_value);
-}
 
 static bool setModeWindow_(CvWindow& window, int mode)
 {
@@ -641,17 +585,6 @@ static bool setModeWindow_(CvWindow& window, int mode)
 
 static double getPropTopmost_(CvWindow& window);
 
-double cvGetPropTopmost_W32(const char* name)
-{
-    CV_Assert(name);
-
-    auto window = icvFindWindowByName(name);
-    if (!window)
-        CV_Error(Error::StsNullPtr, "NULL window");
-
-    return getPropTopmost_(*window);
-}
-
 static double getPropTopmost_(CvWindow& window)
 {
     LONG style = GetWindowLongA(window.frame, GWL_EXSTYLE); // -20
@@ -667,17 +600,6 @@ static double getPropTopmost_(CvWindow& window)
 }
 
 static bool setPropTopmost_(CvWindow& window, bool topmost);
-
-void cvSetPropTopmost_W32(const char* name, const bool topmost)
-{
-    CV_Assert(name);
-
-    auto window = icvFindWindowByName(name);
-    if (!window)
-        CV_Error(Error::StsNullPtr, "NULL window");
-
-    (void)setPropTopmost_(*window, topmost);
-}
 
 static bool setPropTopmost_(CvWindow& window, bool topmost)
 {
@@ -695,24 +617,6 @@ static bool setPropTopmost_(CvWindow& window, bool topmost)
 }
 
 static double getPropVsync_(CvWindow& window);
-
-double cvGetPropVsync_W32(const char* name)
-{
-#ifndef HAVE_OPENGL
-    CV_UNUSED(name);
-    CV_Error(Error::OpenGlNotSupported, "Library was built without OpenGL support");
-#else
-    if (!name)
-        CV_Error(Error::StsNullPtr, "'name' argument must not be NULL");
-
-    auto window = icvFindWindowByName(name);
-    if (!window)
-        CV_Error_(Error::StsBadArg, ("there is no window named '%s'", name));
-
-    double result = getPropVsync_(*window);
-    return cvIsNaN(result) ? -1.0 : result;
-#endif
-}
 
 static double getPropVsync_(CvWindow& window)
 {
@@ -752,24 +656,6 @@ static double getPropVsync_(CvWindow& window)
 
 static bool setPropVsync_(CvWindow& window, bool enable_vsync);
 
-void cvSetPropVsync_W32(const char* name, const bool enable_vsync)
-{
-#ifndef HAVE_OPENGL
-    CV_UNUSED(name);
-    CV_UNUSED(enable_vsync);
-    CV_Error(Error::OpenGlNotSupported, "Library was built without OpenGL support");
-#else
-    if (!name)
-        CV_Error(Error::StsNullPtr, "'name' argument must not be NULL");
-
-    auto window = icvFindWindowByName(name);
-    if (!window)
-        CV_Error_(Error::StsBadArg, ("there is no window named '%s'", name));
-
-    (void)setPropVsync_(*window, enable_vsync);
-#endif
-}
-
 static bool setPropVsync_(CvWindow& window, bool enable_vsync)
 {
 #ifndef HAVE_OPENGL
@@ -803,105 +689,6 @@ static bool setPropVsync_(CvWindow& window, bool enable_vsync)
     return true;
 #endif
 }
-
-void setWindowTitle_W32(const std::string& name, const std::string& title)
-{
-    auto window = icvFindWindowByName(name);
-
-    if (!window)
-    {
-        namedWindow(name);
-        window = icvFindWindowByName(name);
-    }
-
-    if (!window)
-        CV_Error(Error::StsNullPtr, "NULL window");
-
-    if (!SetWindowText(window->frame, title.c_str()))
-        CV_Error_(Error::StsError, ("Failed to set \"%s\" window title to \"%s\"", name.c_str(), title.c_str()));
-}
-
-double cvGetPropWindowAutoSize_W32(const char* name)
-{
-    double result = -1;
-
-    CV_FUNCNAME("cvSetCloseCallback");
-
-    AutoLock lock(getWindowMutex());
-
-    if (!name)
-        CV_Error(Error::StsNullPtr, "NULL name string");
-
-    auto window = icvFindWindowByName(name);
-    if (!window)
-        CV_Error_(Error::StsNullPtr, ("NULL window: '%s'", name));
-
-    result = window->flags & cv::WINDOW_AUTOSIZE;
-
-    return result;
-}
-
-double cvGetRatioWindow_W32(const char* name)
-{
-    double result = -1;
-
-    CV_FUNCNAME("cvGetRatioWindow_W32");
-
-    AutoLock lock(getWindowMutex());
-
-    if (!name)
-        CV_Error(Error::StsNullPtr, "NULL name string");
-
-    auto window = icvFindWindowByName(name);
-    if (!window)
-        CV_Error_(Error::StsNullPtr, ("NULL window: '%s'", name));
-
-    result = static_cast<double>(window->width) / window->height;
-
-    return result;
-}
-
-double cvGetOpenGlProp_W32(const char* name)
-{
-    double result = -1;
-
-#ifdef HAVE_OPENGL
-    CV_FUNCNAME("cvGetOpenGlProp_W32");
-
-    AutoLock lock(getWindowMutex());
-
-    if (!name)
-        CV_Error(Error::StsNullPtr, "NULL name string");
-
-    auto window = icvFindWindowByName(name);
-    if (!window)
-        return -1;
-
-    result = window->useGl;
-#endif
-
-    CV_UNUSED(name);
-
-    return result;
-}
-
-double cvGetPropVisible_W32(const char* name)
-{
-    double result = -1;
-
-    CV_FUNCNAME("cvGetPropVisible_W32");
-
-    AutoLock lock(getWindowMutex());
-
-    if (!name)
-        CV_Error(Error::StsNullPtr, "NULL name string");
-
-    auto window = icvFindWindowByName(name);
-    result = (bool)window ? 1.0 : 0.0;
-
-    return result;
-}
-
 
 // OpenGL support
 
@@ -1018,26 +805,6 @@ namespace
 
 static std::shared_ptr<CvWindow> namedWindow_(const std::string& name, int flags);
 
-CV_IMPL int cvNamedWindow(const char* name, int flags)
-{
-    CV_FUNCNAME("cvNamedWindow");
-
-    AutoLock lock(getWindowMutex());
-
-    if (!name)
-        CV_Error(Error::StsNullPtr, "NULL name string");
-
-    // Check the name in the storage
-    auto window = icvFindWindowByName(name);
-    if (window)
-    {
-        return 1;
-    }
-
-    window = namedWindow_(name, flags);
-    return (bool)window;
-}
-
 static std::shared_ptr<CvWindow> namedWindow_(const std::string& name, int flags)
 {
     AutoLock lock(getWindowMutex());
@@ -1136,7 +903,7 @@ static std::shared_ptr<CvWindow> namedWindow_(const std::string& name, int flags
 
 #ifdef HAVE_OPENGL
 
-CV_IMPL void cvSetOpenGlContext(const char* name)
+void cvSetOpenGlContext(const char* name)
 {
     CV_FUNCNAME("cvSetOpenGlContext");
 
@@ -1154,42 +921,6 @@ CV_IMPL void cvSetOpenGlContext(const char* name)
 
     if (!wglMakeCurrent(window->dc, window->hGLRC))
         CV_Error(Error::OpenGlApiCallError, "Can't Activate The GL Rendering Context");
-}
-
-CV_IMPL void cvUpdateWindow(const char* name)
-{
-    CV_FUNCNAME("cvUpdateWindow");
-
-    AutoLock lock(getWindowMutex());
-
-    if (!name)
-        CV_Error(Error::StsNullPtr, "NULL name string");
-
-    auto window = icvFindWindowByName(name);
-    if (!window)
-        CV_Error_(Error::StsNullPtr, ("NULL window: '%s'", name));
-
-    InvalidateRect(window->hwnd, 0, 0);
-}
-
-CV_IMPL void cvSetOpenGlDrawCallback(const char* name, CvOpenGlDrawCallback callback, void* userdata)
-{
-    CV_FUNCNAME("cvCreateOpenGLCallback");
-
-    AutoLock lock(getWindowMutex());
-
-    if (!name)
-        CV_Error(Error::StsNullPtr, "NULL name string");
-
-    auto window = icvFindWindowByName(name);
-    if (!window)
-        CV_Error_(Error::StsNullPtr, ("NULL window: '%s'", name));
-
-    if (!window->useGl)
-        CV_Error(Error::OpenGlNotSupported, "Window was created without OpenGL context");
-
-    window->glDrawCallback = callback;
-    window->glDrawData = userdata;
 }
 
 #endif // HAVE_OPENGL
@@ -1244,23 +975,6 @@ static void icvRemoveWindow(const std::shared_ptr<CvWindow>& window_)
             icvSetWindowLongPtr(trackbar->hwnd, CV_USERDATA, 0);
         }
     }
-}
-
-
-CV_IMPL void cvDestroyWindow(const char* name)
-{
-    CV_FUNCNAME("cvDestroyWindow");
-
-    AutoLock lock(getWindowMutex());
-
-    if (!name)
-        CV_Error(Error::StsNullPtr, "NULL name string");
-
-    auto window = icvFindWindowByName(name);
-    if (!window)
-        CV_Error_(Error::StsNullPtr, ("NULL window: '%s'", name));
-
-    window->destroy();
 }
 
 
@@ -1368,42 +1082,6 @@ static void icvUpdateWindowPos(CvWindow& window)
 
 static void showImage_(CvWindow& window, const Mat& image);
 
-CV_IMPL void
-cvShowImage(const char* name, const CvArr* arr)
-{
-    CV_FUNCNAME("cvShowImage");
-
-    if (!name)
-        CV_Error(Error::StsNullPtr, "NULL name");
-
-    std::shared_ptr<CvWindow> window;
-    {
-        AutoLock lock(getWindowMutex());
-
-        window = icvFindWindowByName(name);
-        if (!window)
-        {
-            cvNamedWindow(name, cv::WINDOW_AUTOSIZE);
-            window = icvFindWindowByName(name);
-        }
-    }
-
-    if (!window || !arr)
-        return; // keep silence here.
-
-    CvMat stub = {};
-    CvMat* image_c = cvGetMat(arr, &stub);
-    Mat image = cv::cvarrToMat(image_c);
-#ifdef HAVE_OPENGL
-    if (window->useGl)
-    {
-        cv::imshow(name, image);
-        return;
-    }
-#endif
-    return showImage_(*window, image);
-}
-
 static void showImage_(CvWindow& window, const Mat& image)
 {
     AutoLock lock(window.mutex);
@@ -1459,22 +1137,6 @@ static void showImage_(CvWindow& window, const Mat& image)
 
 static void resizeWindow_(CvWindow& window, const Size& size);
 
-CV_IMPL void cvResizeWindow(const char* name, int width, int height)
-{
-    CV_FUNCNAME("cvResizeWindow");
-
-    AutoLock lock(getWindowMutex());
-
-    if (!name)
-        CV_Error(Error::StsNullPtr, "NULL name");
-
-    auto window = icvFindWindowByName(name);
-    if (!window)
-        CV_Error_(Error::StsNullPtr, ("NULL window: '%s'", name));
-
-    return resizeWindow_(*window, Size(width, height));
-}
-
 static void resizeWindow_(CvWindow& window, const Size& size)
 {
     RECT rmw = { 0 }, rw = { 0 }, rect = { 0 };
@@ -1500,22 +1162,6 @@ static void resizeWindow_(CvWindow& window, const Size& size)
 }
 
 static void moveWindow_(CvWindow& window, const Point& pt);
-
-CV_IMPL void cvMoveWindow(const char* name, int x, int y)
-{
-    CV_FUNCNAME("cvMoveWindow");
-
-    AutoLock lock(getWindowMutex());
-
-    if (!name)
-        CV_Error(Error::StsNullPtr, "NULL name");
-
-    auto window = icvFindWindowByName(name);
-    if (!window)
-        CV_Error_(Error::StsNullPtr, ("NULL window: '%s'", name));
-
-    (void)moveWindow_(*window, Point(x, y));
-}
 
 static void moveWindow_(CvWindow& window, const Point& pt)
 {
@@ -2092,8 +1738,8 @@ static LRESULT CALLBACK HGToolbarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 }
 
 
-CV_IMPL void
-cvDestroyAllWindows(void)
+static void
+destroyAllWindows_W32(void)
 {
     std::vector< std::shared_ptr<CvWindow> > g_windows;
     {
@@ -2300,8 +1946,8 @@ int pollKey_W32()
     }
 }
 
-CV_IMPL int
-cvWaitKey(int delay)
+static int
+waitKey_W32(int delay)
 {
     int64 time0 = cv::getTickCount();
     int64 timeEnd = time0 + (int64)(delay * 0.001f * cv::getTickFrequency());
@@ -2520,199 +2166,7 @@ std::shared_ptr<CvTrackbar> createTrackbar_(CvWindow& window, const std::string&
     return trackbar;
 }
 
-CV_IMPL int
-cvCreateTrackbar(const char* trackbar_name, const char* window_name,
-                 int* val, int count, CvTrackbarCallback on_notify)
-{
-    return icvCreateTrackbar(trackbar_name, window_name, val, count,
-        on_notify, 0, 0);
-}
-
-CV_IMPL int
-cvCreateTrackbar2(const char* trackbar_name, const char* window_name,
-                  int* val, int count, CvTrackbarCallback2 on_notify2,
-                  void* userdata)
-{
-    return icvCreateTrackbar(trackbar_name, window_name, val, count,
-        0, on_notify2, userdata);
-}
-
-CV_IMPL void
-cvSetMouseCallback(const char* name, CvMouseCallback on_mouse, void* param)
-{
-    CV_FUNCNAME("cvSetMouseCallback");
-
-    if (!name)
-        CV_Error(Error::StsNullPtr, "NULL window name");
-
-    AutoLock lock(getWindowMutex());
-
-    auto window = icvFindWindowByName(name);
-    if (!window)
-        CV_Error_(Error::StsNullPtr, ("NULL window: '%s'", name));
-
-    window->on_mouse = on_mouse;
-    window->on_mouse_param = param;
-}
-
-
-CV_IMPL int cvGetTrackbarPos(const char* trackbar_name, const char* window_name)
-{
-    CV_FUNCNAME("cvGetTrackbarPos");
-
-    AutoLock lock(getWindowMutex());
-
-    if (trackbar_name == 0 || window_name == 0)
-        CV_Error(Error::StsNullPtr, "NULL trackbar or window name");
-
-    auto window = icvFindWindowByName(window_name);
-    if (!window)
-        CV_Error_(Error::StsNullPtr, ("NULL window: '%s'", window_name));
-
-    auto trackbar = icvFindTrackbarByName(*window, trackbar_name);
-    if (!trackbar)
-        CV_Error_(Error::StsNullPtr, ("NULL trackbar: '%s'", trackbar_name));
-
-    return trackbar->pos;
-}
-
-
-CV_IMPL void cvSetTrackbarPos(const char* trackbar_name, const char* window_name, int pos)
-{
-    CV_FUNCNAME("cvSetTrackbarPos");
-
-    AutoLock lock(getWindowMutex());
-
-    if (trackbar_name == 0 || window_name == 0)
-        CV_Error(Error::StsNullPtr, "NULL trackbar or window name");
-
-    auto window = icvFindWindowByName(window_name);
-    if (!window)
-        CV_Error_(Error::StsNullPtr, ("NULL window: '%s'", window_name));
-
-    auto trackbar = icvFindTrackbarByName(*window, trackbar_name);
-    if (!trackbar)
-        CV_Error_(Error::StsNullPtr, ("NULL trackbar: '%s'", trackbar_name));
-
-    {
-        if (pos < 0)
-            pos = 0;
-
-        if (pos > trackbar->maxval)
-            pos = trackbar->maxval;
-
-        SendMessage(trackbar->hwnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)pos);
-        icvUpdateTrackbar(*trackbar, pos);
-    }
-}
-
-
-CV_IMPL void cvSetTrackbarMax(const char* trackbar_name, const char* window_name, int maxval)
-{
-    CV_FUNCNAME("cvSetTrackbarMax");
-
-    if (trackbar_name == 0 || window_name == 0)
-    {
-        CV_Error(Error::StsNullPtr, "NULL trackbar or window name");
-    }
-
-    AutoLock lock(getWindowMutex());
-
-    auto window = icvFindWindowByName(window_name);
-    if (!window)
-        CV_Error_(Error::StsNullPtr, ("NULL window: '%s'", window_name));
-
-    auto trackbar = icvFindTrackbarByName(*window, trackbar_name);
-    if (!trackbar)
-        CV_Error_(Error::StsNullPtr, ("NULL trackbar: '%s'", trackbar_name));
-
-    // FIXIT
-    if (maxval >= 0)
-    {
-        // The position will be min(pos, maxval).
-        trackbar->maxval = (trackbar->minval>maxval)?trackbar->minval:maxval;
-        SendMessage(trackbar->hwnd, TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)maxval);
-    }
-}
-
-
-CV_IMPL void cvSetTrackbarMin(const char* trackbar_name, const char* window_name, int minval)
-{
-    CV_FUNCNAME("cvSetTrackbarMin");
-
-    if (trackbar_name == 0 || window_name == 0)
-    {
-        CV_Error(Error::StsNullPtr, "NULL trackbar or window name");
-    }
-
-    AutoLock lock(getWindowMutex());
-
-    auto window = icvFindWindowByName(window_name);
-    if (!window)
-        CV_Error_(Error::StsNullPtr, ("NULL window: '%s'", window_name));
-
-    auto trackbar = icvFindTrackbarByName(*window, trackbar_name);
-    if (!trackbar)
-        CV_Error_(Error::StsNullPtr, ("NULL trackbar: '%s'", trackbar_name));
-
-    // FIXIT
-    if (minval >= 0)
-    {
-        // The position will be min(pos, maxval).
-        trackbar->minval = (minval<trackbar->maxval)?minval:trackbar->maxval;
-        SendMessage(trackbar->hwnd, TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)minval);
-    }
-}
-
-
-CV_IMPL void* cvGetWindowHandle(const char* window_name)
-{
-    CV_FUNCNAME("cvGetWindowHandle");
-
-    AutoLock lock(getWindowMutex());
-
-    if (window_name == 0)
-        CV_Error(Error::StsNullPtr, "NULL window name");
-
-    auto window = icvFindWindowByName(window_name);
-    if (!window)
-        CV_Error_(Error::StsNullPtr, ("NULL window: '%s'", window_name));
-
-    return (void*)window->hwnd;
-}
-
 // FIXIT: result is not safe to use
-CV_IMPL const char* cvGetWindowName(void* window_handle)
-{
-    CV_FUNCNAME("cvGetWindowName");
-
-    AutoLock lock(getWindowMutex());
-
-    if (window_handle == 0)
-        CV_Error(Error::StsNullPtr, "NULL window handle");
-
-    auto window = icvWindowByHWND((HWND)window_handle);
-    if (!window)
-        CV_Error_(Error::StsNullPtr, ("NULL window: '%p'", window_handle));
-
-    return window->name.c_str();
-}
-
-
-CV_IMPL void
-cvSetPreprocessFuncWin32_(const void* callback)
-{
-    hg_on_preprocess = (CvWin32WindowCallback)callback;
-}
-
-CV_IMPL void
-cvSetPostprocessFuncWin32_(const void* callback)
-{
-    hg_on_postprocess = (CvWin32WindowCallback)callback;
-}
-
-
-
 namespace cv { namespace impl {
 
 using namespace cv::highgui_backend;
@@ -2990,7 +2444,7 @@ public:
 
     void destroyAllWindows() CV_OVERRIDE
     {
-        cvDestroyAllWindows();
+        destroyAllWindows_W32();
     }
 
     // namedWindow
@@ -3007,7 +2461,7 @@ public:
 
     int waitKeyEx(int delay) CV_OVERRIDE
     {
-        return cvWaitKey(delay);
+        return waitKey_W32(delay);
     }
     int pollKey() CV_OVERRIDE
     {
