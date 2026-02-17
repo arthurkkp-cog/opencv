@@ -572,7 +572,7 @@ CVAPI(void) cvBoxPoints( CvBox2D box, CvPoint2D32f pt[4] );
 
 /** @brief Initializes sequence header for a matrix (column or row vector) of points
 
-   a wrapper for cvMakeSeqHeaderForArray (it does not initialize bounding rectangle!!!) */
+   a wrapper for cv::makeSeqHeaderForArray (it does not initialize bounding rectangle!!!) */
 CVAPI(CvSeq*) cvPointSeqFromMat( int seq_kind, const CvArr* mat,
                                  CvContour* contour_header,
                                  CvSeqBlock* block );

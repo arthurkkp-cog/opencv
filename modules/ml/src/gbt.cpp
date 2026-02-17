@@ -74,11 +74,11 @@ void CvGBTrees::clear()
         //data->shared = false;
         for (int i=0; i<class_count; ++i)
         {
-            int weak_count = cvSliceLength( slice, weak[i] );
+            int weak_count = cv::sliceLength( slice, weak[i] );
             if ((weak[i]) && (weak_count))
             {
-                cvStartReadSeq( weak[i], &reader );
-                cvSetSeqReaderPos( &reader, slice.start_index );
+                cv::startReadSeq( weak[i], &reader );
+                cv::setSeqReaderPos( &reader, slice.start_index );
                 for (int j=0; j<weak_count; ++j)
                 {
                     CV_READ_SEQ_ELEM( tree, reader );
@@ -89,7 +89,7 @@ void CvGBTrees::clear()
             }
         }
         for (int i=0; i<class_count; ++i)
-            if (weak[i]) cvReleaseMemStorage( &(weak[i]->storage) );
+            if (weak[i]) cv::releaseMemStorage( &(weak[i]->storage) );
         delete[] weak;
     }
     if (data)
@@ -318,8 +318,8 @@ CvGBTrees::train( const CvMat* _train_data, int _tflag,
     weak = new pCvSeq[class_count];
     for (int i=0; i<class_count; ++i)
     {
-        storage = cvCreateMemStorage();
-        weak[i] = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvDTree*), storage );
+        storage = cv::createMemStorage();
+        weak[i] = cv::createSeq( 0, sizeof(CvSeq), sizeof(CvDTree*), storage );
         storage = 0;
     }
 
@@ -393,7 +393,7 @@ CvGBTrees::train( const CvMat* _train_data, int _tflag,
                 }
             }
 
-            cvSeqPush( weak[k], &tree );
+            cv::seqPush( weak[k], &tree );
             tree = 0;
         } // k=0..class_count
     CvMat* tmp;
@@ -811,7 +811,7 @@ float CvGBTrees::predict_serial( const CvMat* _sample, const CvMat* _missing,
     if (!weak) return 0.0f;
 
     CvSeqReader reader;
-    int weak_count = cvSliceLength( slice, weak[class_count-1] );
+    int weak_count = cv::sliceLength( slice, weak[class_count-1] );
     CvDTree* tree;
 
     if (weak_responses)
@@ -833,8 +833,8 @@ float CvGBTrees::predict_serial( const CvMat* _sample, const CvMat* _missing,
     {
         if ((weak[i]) && (weak_count))
         {
-            cvStartReadSeq( weak[i], &reader );
-            cvSetSeqReaderPos( &reader, slice.start_index );
+            cv::startReadSeq( weak[i], &reader );
+            cv::setSeqReaderPos( &reader, slice.start_index );
             for (int j=0; j<weak_count; ++j)
             {
                 CV_READ_SEQ_ELEM( tree, reader );
@@ -929,8 +929,8 @@ public:
             float tmp_sum = 0.0f;
             if ((weak[i]) && (weak_count))
             {
-                cvStartReadSeq( weak[i], &reader );
-                cvSetSeqReaderPos( &reader, begin );
+                cv::startReadSeq( weak[i], &reader );
+                cv::setSeqReaderPos( &reader, begin );
                 for (int j=0; j<weak_count; ++j)
                 {
                     CV_READ_SEQ_ELEM( tree, reader );
@@ -961,7 +961,7 @@ float CvGBTrees::predict( const CvMat* _sample, const CvMat* _missing,
         for (int i=0; i<class_count; ++i)
             sum[i] = 0.0f;
         int begin = slice.start_index;
-        int end = begin + cvSliceLength( slice, weak[0] );
+        int end = begin + cv::sliceLength( slice, weak[0] );
 
         pCvSeq* weak_seq = weak;
         Tree_predictor predictor = Tree_predictor(weak_seq, class_count,
@@ -1116,7 +1116,7 @@ void CvGBTrees::write( CvFileStorage* fs, const char* name ) const
         s = cv::format("trees_%d", j);
         cvStartWriteStruct( fs, s.c_str(), CV_NODE_SEQ );
 
-        cvStartReadSeq( weak[j], &reader );
+        cv::startReadSeq( weak[j], &reader );
 
         for( i = 0; i < weak[j]->total; i++ )
         {
@@ -1172,22 +1172,22 @@ void CvGBTrees::read( CvFileStorage* fs, CvFileNode* node )
         if( !trees_fnode || !CV_NODE_IS_SEQ(trees_fnode->tag) )
             CV_ERROR( cv::Error::StsParseError, "<trees_x> tag is missing" );
 
-        cvStartReadSeq( trees_fnode->data.seq, &reader );
+        cv::startReadSeq( trees_fnode->data.seq, &reader );
         ntrees = trees_fnode->data.seq->total;
 
         if( ntrees != params.weak_count )
             CV_ERROR( cv::Error::StsUnmatchedSizes,
             "The number of trees stored does not match <ntrees> tag value" );
 
-        CV_CALL( storage = cvCreateMemStorage() );
-        weak[j] = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvDTree*), storage );
+        CV_CALL( storage = cv::createMemStorage() );
+        weak[j] = cv::createSeq( 0, sizeof(CvSeq), sizeof(CvDTree*), storage );
 
         for( i = 0; i < ntrees; i++ )
         {
             CvDTree* tree = new CvDTree();
             CV_CALL(tree->read( fs, (CvFileNode*)reader.ptr, data ));
             CV_NEXT_SEQ_ELEM( reader.seq->elem_size, reader );
-            cvSeqPush( weak[j], &tree );
+            cv::seqPush( weak[j], &tree );
         }
     }
 

@@ -94,7 +94,7 @@ protected:
         RNG& rng = ts->get_rng();
         RNG rng0;
         int progress = 0;
-        MemStorage storage(cvCreateMemStorage(0));
+        MemStorage storage(cv::createMemStorage(0));
         const char * suffixs[3] = {".yml", ".xml", ".json" };
         test_case_count = 6;
 
@@ -103,7 +103,7 @@ protected:
             ts->update_context( this, idx, false );
             progress = update_progress( progress, idx, test_case_count, 0 );
 
-            cvClearMemStorage(storage);
+            cv::clearMemStorage(storage);
 
             bool mem = (idx % test_case_count) >= (test_case_count >> 1);
             string filename = tempfile(suffixs[idx % (test_case_count >> 1)]);

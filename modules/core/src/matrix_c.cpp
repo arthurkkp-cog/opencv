@@ -179,12 +179,12 @@ Mat cvarrToMat(const CvArr* arr, bool copyData,
         {
             abuf->allocate(((size_t)total*esz + sizeof(double)-1)/sizeof(double));
             double* bufdata = abuf->data();
-            cvCvtSeqToArray(seq, bufdata, CV_WHOLE_SEQ);
+            cv::cvtSeqToArray(seq, bufdata, CV_WHOLE_SEQ);
             return Mat(total, 1, type, bufdata);
         }
 
         Mat buf(total, 1, type);
-        cvCvtSeqToArray(seq, buf.ptr(), CV_WHOLE_SEQ);
+        cv::cvtSeqToArray(seq, buf.ptr(), CV_WHOLE_SEQ);
         return buf;
     }
     CV_Error(cv::Error::StsBadArg, "Unknown array type");

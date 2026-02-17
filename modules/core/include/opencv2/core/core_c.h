@@ -48,6 +48,13 @@
 #include "opencv2/core/types_c.h"
 
 #ifdef __cplusplus
+// Compatibility macros for internal sequence functions used in types_c.h macros
+#define cvChangeSeqBlock cv::changeSeqBlock
+#define cvCreateSeqBlock cv::createSeqBlock
+#define cvGetSeqElem cv::getSeqElem
+#endif
+
+#ifdef __cplusplus
 /* disable MSVC warning C4190 / clang-cl -Wreturn-type-c-linkage:
        'function' has C-linkage specified, but returns UDT 'typename'
        which is incompatible with C
@@ -62,6 +69,72 @@
      // then handle MSVC
 #    pragma warning(disable:4190)
 #  endif
+#endif
+
+
+#ifdef __cplusplus
+namespace cv {
+
+// Dynamic data structure functions (migrated from C API)
+CV_EXPORTS int sliceLength( CvSlice slice, const CvSeq* seq );
+CV_EXPORTS CvMemStorage* createMemStorage( int block_size = 0 );
+CV_EXPORTS CvMemStorage* createChildMemStorage( CvMemStorage* parent );
+CV_EXPORTS void releaseMemStorage( CvMemStorage** storage );
+CV_EXPORTS void clearMemStorage( CvMemStorage* storage );
+CV_EXPORTS void saveMemStoragePos( const CvMemStorage* storage, CvMemStoragePos* pos );
+CV_EXPORTS void restoreMemStoragePos( CvMemStorage* storage, CvMemStoragePos* pos );
+CV_EXPORTS void* memStorageAlloc( CvMemStorage* storage, size_t size );
+CV_EXPORTS CvSeq* createSeq( int seq_flags, size_t header_size, size_t elem_size, CvMemStorage* storage );
+CV_EXPORTS void setSeqBlockSize( CvSeq* seq, int delta_elems );
+CV_EXPORTS schar* seqPush( CvSeq* seq, const void* element = 0 );
+CV_EXPORTS schar* seqPushFront( CvSeq* seq, const void* element = 0 );
+CV_EXPORTS void seqPop( CvSeq* seq, void* element = 0 );
+CV_EXPORTS void seqPopFront( CvSeq* seq, void* element = 0 );
+CV_EXPORTS void seqPushMulti( CvSeq* seq, const void* elements, int count, int in_front = 0 );
+CV_EXPORTS void seqPopMulti( CvSeq* seq, void* elements, int count, int in_front = 0 );
+CV_EXPORTS schar* seqInsert( CvSeq* seq, int before_index, const void* element = 0 );
+CV_EXPORTS void seqRemove( CvSeq* seq, int index );
+CV_EXPORTS void clearSeq( CvSeq* seq );
+CV_EXPORTS schar* getSeqElem( const CvSeq* seq, int index );
+CV_EXPORTS int seqElemIdx( const CvSeq* seq, const void* element, CvSeqBlock** block = 0 );
+CV_EXPORTS void startAppendToSeq( CvSeq* seq, CvSeqWriter* writer );
+CV_EXPORTS void startWriteSeq( int seq_flags, int header_size, int elem_size, CvMemStorage* storage, CvSeqWriter* writer );
+CV_EXPORTS CvSeq* endWriteSeq( CvSeqWriter* writer );
+CV_EXPORTS void flushSeqWriter( CvSeqWriter* writer );
+CV_EXPORTS void startReadSeq( const CvSeq* seq, CvSeqReader* reader, int reverse = 0 );
+CV_EXPORTS int getSeqReaderPos( CvSeqReader* reader );
+CV_EXPORTS void setSeqReaderPos( CvSeqReader* reader, int index, int is_relative = 0 );
+CV_EXPORTS void* cvtSeqToArray( const CvSeq* seq, void* elements, CvSlice slice = CV_WHOLE_SEQ );
+CV_EXPORTS CvSeq* makeSeqHeaderForArray( int seq_type, int header_size, int elem_size, void* elements, int total, CvSeq* seq, CvSeqBlock* block );
+CV_EXPORTS CvSeq* seqSlice( const CvSeq* seq, CvSlice slice, CvMemStorage* storage = 0, int copy_data = 0 );
+CV_EXPORTS void seqRemoveSlice( CvSeq* seq, CvSlice slice );
+CV_EXPORTS void seqInsertSlice( CvSeq* seq, int before_index, const CvArr* from_arr );
+CV_EXPORTS void seqInvert( CvSeq* seq );
+CV_EXPORTS void changeSeqBlock( void* reader, int direction );
+CV_EXPORTS void createSeqBlock( CvSeqWriter* writer );
+CV_EXPORTS CvSet* createSet( int set_flags, int header_size, int elem_size, CvMemStorage* storage );
+CV_EXPORTS int setAdd( CvSet* set_header, CvSetElem* elem = 0, CvSetElem** inserted_elem = 0 );
+CV_EXPORTS void setRemove( CvSet* set_header, int index );
+CV_EXPORTS void clearSet( CvSet* set_header );
+CV_EXPORTS CvGraph* createGraph( int graph_flags, int header_size, int vtx_size, int edge_size, CvMemStorage* storage );
+CV_EXPORTS int graphAddVtx( CvGraph* graph, const CvGraphVtx* vtx = 0, CvGraphVtx** inserted_vtx = 0 );
+CV_EXPORTS int graphRemoveVtx( CvGraph* graph, int index );
+CV_EXPORTS int graphRemoveVtxByPtr( CvGraph* graph, CvGraphVtx* vtx );
+CV_EXPORTS int graphAddEdge( CvGraph* graph, int start_idx, int end_idx, const CvGraphEdge* edge = 0, CvGraphEdge** inserted_edge = 0 );
+CV_EXPORTS int graphAddEdgeByPtr( CvGraph* graph, CvGraphVtx* start_vtx, CvGraphVtx* end_vtx, const CvGraphEdge* edge = 0, CvGraphEdge** inserted_edge = 0 );
+CV_EXPORTS void graphRemoveEdge( CvGraph* graph, int start_idx, int end_idx );
+CV_EXPORTS void graphRemoveEdgeByPtr( CvGraph* graph, CvGraphVtx* start_vtx, CvGraphVtx* end_vtx );
+CV_EXPORTS CvGraphEdge* findGraphEdge( const CvGraph* graph, int start_idx, int end_idx );
+CV_EXPORTS CvGraphEdge* findGraphEdgeByPtr( const CvGraph* graph, const CvGraphVtx* start_vtx, const CvGraphVtx* end_vtx );
+CV_EXPORTS void clearGraph( CvGraph* graph );
+CV_EXPORTS int graphVtxDegree( const CvGraph* graph, int vtx_idx );
+CV_EXPORTS int graphVtxDegreeByPtr( const CvGraph* graph, const CvGraphVtx* vtx );
+CV_EXPORTS CvGraph* cloneGraph( const CvGraph* graph, CvMemStorage* storage );
+CV_EXPORTS void insertNodeIntoTree( void* node, void* parent, void* frame );
+CV_EXPORTS void removeNodeFromTree( void* node, void* frame );
+CV_EXPORTS CvSeq* treeToNodeSeq( const void* first, int header_size, CvMemStorage* storage );
+
+} // namespace cv
 #endif
 
 #ifdef __cplusplus
@@ -1544,199 +1617,74 @@ CVAPI(void)  cvDCT( const CvArr* src, CvArr* dst, int flags );
 *                              Dynamic data structures                                   *
 \****************************************************************************************/
 
-/** Calculates length of sequence slice (with support of negative indices). */
-CVAPI(int) cvSliceLength( CvSlice slice, const CvSeq* seq );
-
 
 /** Creates new memory storage.
    block_size == 0 means that default,
    somewhat optimal size, is used (currently, it is 64K) */
-CVAPI(CvMemStorage*)  cvCreateMemStorage( int block_size CV_DEFAULT(0));
-
-
-/** Creates a memory storage that will borrow memory blocks from parent storage */
-CVAPI(CvMemStorage*)  cvCreateChildMemStorage( CvMemStorage* parent );
 
 
 /** Releases memory storage. All the children of a parent must be released before
    the parent. A child storage returns all the blocks to parent when it is released */
-CVAPI(void)  cvReleaseMemStorage( CvMemStorage** storage );
 
 
-/** Clears memory storage. This is the only way(!!!) (besides cvRestoreMemStoragePos)
-   to reuse memory allocated for the storage - cvClearSeq,cvClearSet ...
+/** Clears memory storage. This is the only way(!!!) (besides restoreMemStoragePos)
+   to reuse memory allocated for the storage - clearSeq,clearSet ...
    do not free any memory.
    A child storage returns all the blocks to the parent when it is cleared */
-CVAPI(void)  cvClearMemStorage( CvMemStorage* storage );
-
-/** Remember a storage "free memory" position */
-CVAPI(void)  cvSaveMemStoragePos( const CvMemStorage* storage, CvMemStoragePos* pos );
-
-/** Restore a storage "free memory" position */
-CVAPI(void)  cvRestoreMemStoragePos( CvMemStorage* storage, CvMemStoragePos* pos );
-
-/** Allocates continuous buffer of the specified size in the storage */
-CVAPI(void*) cvMemStorageAlloc( CvMemStorage* storage, size_t size );
-
-/** Allocates string in memory storage */
-//CVAPI(CvString) cvMemStorageAllocString( CvMemStorage* storage, const char* ptr,
-//                                         int len CV_DEFAULT(-1) );
-
-/** Creates new empty sequence that will reside in the specified storage */
-CVAPI(CvSeq*)  cvCreateSeq( int seq_flags, size_t header_size,
-                            size_t elem_size, CvMemStorage* storage );
 
 /** Changes default size (granularity) of sequence blocks.
    The default size is ~1Kbyte */
-CVAPI(void)  cvSetSeqBlockSize( CvSeq* seq, int delta_elems );
-
-
-/** Adds new element to the end of sequence. Returns pointer to the element */
-CVAPI(schar*)  cvSeqPush( CvSeq* seq, const void* element CV_DEFAULT(NULL));
-
-
-/** Adds new element to the beginning of sequence. Returns pointer to it */
-CVAPI(schar*)  cvSeqPushFront( CvSeq* seq, const void* element CV_DEFAULT(NULL));
-
-
-/** Removes the last element from sequence and optionally saves it */
-CVAPI(void)  cvSeqPop( CvSeq* seq, void* element CV_DEFAULT(NULL));
-
-
-/** Removes the first element from sequence and optioanally saves it */
-CVAPI(void)  cvSeqPopFront( CvSeq* seq, void* element CV_DEFAULT(NULL));
 
 
 #define CV_FRONT 1
 #define CV_BACK 0
-/** Adds several new elements to the end of sequence */
-CVAPI(void)  cvSeqPushMulti( CvSeq* seq, const void* elements,
-                             int count, int in_front CV_DEFAULT(0) );
-
-/** Removes several elements from the end of sequence and optionally saves them */
-CVAPI(void)  cvSeqPopMulti( CvSeq* seq, void* elements,
-                            int count, int in_front CV_DEFAULT(0) );
 
 /** Inserts a new element in the middle of sequence.
-   cvSeqInsert(seq,0,elem) == cvSeqPushFront(seq,elem) */
-CVAPI(schar*)  cvSeqInsert( CvSeq* seq, int before_index,
-                            const void* element CV_DEFAULT(NULL));
-
-/** Removes specified sequence element */
-CVAPI(void)  cvSeqRemove( CvSeq* seq, int index );
+   seqInsert(seq,0,elem) == seqPushFront(seq,elem) */
 
 
 /** Removes all the elements from the sequence. The freed memory
-   can be reused later only by the same sequence unless cvClearMemStorage
-   or cvRestoreMemStoragePos is called */
-CVAPI(void)  cvClearSeq( CvSeq* seq );
+   can be reused later only by the same sequence unless clearMemStorage
+   or restoreMemStoragePos is called */
 
 
 /** Retrieves pointer to specified sequence element.
    Negative indices are supported and mean counting from the end
    (e.g -1 means the last sequence element) */
-CVAPI(schar*)  cvGetSeqElem( const CvSeq* seq, int index );
 
 /** Calculates index of the specified sequence element.
    Returns -1 if element does not belong to the sequence */
-CVAPI(int)  cvSeqElemIdx( const CvSeq* seq, const void* element,
-                         CvSeqBlock** block CV_DEFAULT(NULL) );
-
-/** Initializes sequence writer. The new elements will be added to the end of sequence */
-CVAPI(void)  cvStartAppendToSeq( CvSeq* seq, CvSeqWriter* writer );
-
-
-/** Combination of cvCreateSeq and cvStartAppendToSeq */
-CVAPI(void)  cvStartWriteSeq( int seq_flags, int header_size,
-                              int elem_size, CvMemStorage* storage,
-                              CvSeqWriter* writer );
 
 /** Closes sequence writer, updates sequence header and returns pointer
    to the resultant sequence
-   (which may be useful if the sequence was created using cvStartWriteSeq))
+   (which may be useful if the sequence was created using startWriteSeq))
 */
-CVAPI(CvSeq*)  cvEndWriteSeq( CvSeqWriter* writer );
 
 
 /** Updates sequence header. May be useful to get access to some of previously
-   written elements via cvGetSeqElem or sequence reader */
-CVAPI(void)   cvFlushSeqWriter( CvSeqWriter* writer );
+   written elements via getSeqElem or sequence reader */
 
 
 /** Initializes sequence reader.
    The sequence can be read in forward or backward direction */
-CVAPI(void) cvStartReadSeq( const CvSeq* seq, CvSeqReader* reader,
-                           int reverse CV_DEFAULT(0) );
-
-
-/** Returns current sequence reader position (currently observed sequence element) */
-CVAPI(int)  cvGetSeqReaderPos( CvSeqReader* reader );
 
 
 /** Changes sequence reader position. It may seek to an absolute or
    to relative to the current position */
-CVAPI(void)   cvSetSeqReaderPos( CvSeqReader* reader, int index,
-                                 int is_relative CV_DEFAULT(0));
-
-/** Copies sequence content to a continuous piece of memory */
-CVAPI(void*)  cvCvtSeqToArray( const CvSeq* seq, void* elements,
-                               CvSlice slice CV_DEFAULT(CV_WHOLE_SEQ) );
 
 /** Creates sequence header for array.
    After that all the operations on sequences that do not alter the content
    can be applied to the resultant sequence */
-CVAPI(CvSeq*) cvMakeSeqHeaderForArray( int seq_type, int header_size,
-                                       int elem_size, void* elements, int total,
-                                       CvSeq* seq, CvSeqBlock* block );
-
-/** Extracts sequence slice (with or without copying sequence elements) */
-CVAPI(CvSeq*) cvSeqSlice( const CvSeq* seq, CvSlice slice,
-                         CvMemStorage* storage CV_DEFAULT(NULL),
-                         int copy_data CV_DEFAULT(0));
 
 CV_INLINE CvSeq* cvCloneSeq( const CvSeq* seq, CvMemStorage* storage CV_DEFAULT(NULL))
 {
-    return cvSeqSlice( seq, CV_WHOLE_SEQ, storage, 1 );
+    return cv::seqSlice( seq, CV_WHOLE_SEQ, storage, 1 );
 }
-
-/** Removes sequence slice */
-CVAPI(void)  cvSeqRemoveSlice( CvSeq* seq, CvSlice slice );
-
-/** Inserts a sequence or array into another sequence */
-CVAPI(void)  cvSeqInsertSlice( CvSeq* seq, int before_index, const CvArr* from_arr );
 
 /** a < b ? -1 : a > b ? 1 : 0 */
 typedef int (CV_CDECL* CvCmpFunc)(const void* a, const void* b, void* userdata );
 
-/** Sorts sequence in-place given element comparison function */
-CVAPI(void) cvSeqSort( CvSeq* seq, CvCmpFunc func, void* userdata CV_DEFAULT(NULL) );
-
-/** Finds element in a [sorted] sequence */
-CVAPI(schar*) cvSeqSearch( CvSeq* seq, const void* elem, CvCmpFunc func,
-                           int is_sorted, int* elem_idx,
-                           void* userdata CV_DEFAULT(NULL) );
-
-/** Reverses order of sequence elements in-place */
-CVAPI(void) cvSeqInvert( CvSeq* seq );
-
-/** Splits sequence into one or more equivalence classes using the specified criteria */
-CVAPI(int)  cvSeqPartition( const CvSeq* seq, CvMemStorage* storage,
-                            CvSeq** labels, CvCmpFunc is_equal, void* userdata );
-
-/************ Internal sequence functions ************/
-CVAPI(void)  cvChangeSeqBlock( void* reader, int direction );
-CVAPI(void)  cvCreateSeqBlock( CvSeqWriter* writer );
-
-
-/** Creates a new set */
-CVAPI(CvSet*)  cvCreateSet( int set_flags, int header_size,
-                            int elem_size, CvMemStorage* storage );
-
-/** Adds new element to the set and returns pointer to it */
-CVAPI(int)  cvSetAdd( CvSet* set_header, CvSetElem* elem CV_DEFAULT(NULL),
-                      CvSetElem** inserted_elem CV_DEFAULT(NULL) );
-
-/** Fast variant of cvSetAdd */
+/** Fast variant of setAdd */
 CV_INLINE  CvSetElem* cvSetNew( CvSet* set_header )
 {
     CvSetElem* elem = set_header->free_elems;
@@ -1747,7 +1695,7 @@ CV_INLINE  CvSetElem* cvSetNew( CvSet* set_header )
         set_header->active_count++;
     }
     else
-        cvSetAdd( set_header, NULL, &elem );
+        cv::setAdd( set_header, NULL, &elem );
     return elem;
 }
 
@@ -1762,69 +1710,21 @@ CV_INLINE  void cvSetRemoveByPtr( CvSet* set_header, void* elem )
     set_header->active_count--;
 }
 
-/** Removes element from the set by its index  */
-CVAPI(void)   cvSetRemove( CvSet* set_header, int index );
-
 /** Returns a set element by index. If the element doesn't belong to the set,
    NULL is returned */
 CV_INLINE CvSetElem* cvGetSetElem( const CvSet* set_header, int idx )
 {
-    CvSetElem* elem = (CvSetElem*)(void *)cvGetSeqElem( (CvSeq*)set_header, idx );
+    CvSetElem* elem = (CvSetElem*)(void *)cv::getSeqElem( (CvSeq*)set_header, idx );
     return elem && CV_IS_SET_ELEM( elem ) ? elem : 0;
 }
-
-/** Removes all the elements from the set */
-CVAPI(void)  cvClearSet( CvSet* set_header );
-
-/** Creates new graph */
-CVAPI(CvGraph*)  cvCreateGraph( int graph_flags, int header_size,
-                                int vtx_size, int edge_size,
-                                CvMemStorage* storage );
-
-/** Adds new vertex to the graph */
-CVAPI(int)  cvGraphAddVtx( CvGraph* graph, const CvGraphVtx* vtx CV_DEFAULT(NULL),
-                           CvGraphVtx** inserted_vtx CV_DEFAULT(NULL) );
-
-
-/** Removes vertex from the graph together with all incident edges */
-CVAPI(int)  cvGraphRemoveVtx( CvGraph* graph, int index );
-CVAPI(int)  cvGraphRemoveVtxByPtr( CvGraph* graph, CvGraphVtx* vtx );
 
 
 /** Link two vertices specified by indices or pointers if they
    are not connected or return pointer to already existing edge
    connecting the vertices.
    Functions return 1 if a new edge was created, 0 otherwise */
-CVAPI(int)  cvGraphAddEdge( CvGraph* graph,
-                            int start_idx, int end_idx,
-                            const CvGraphEdge* edge CV_DEFAULT(NULL),
-                            CvGraphEdge** inserted_edge CV_DEFAULT(NULL) );
-
-CVAPI(int)  cvGraphAddEdgeByPtr( CvGraph* graph,
-                               CvGraphVtx* start_vtx, CvGraphVtx* end_vtx,
-                               const CvGraphEdge* edge CV_DEFAULT(NULL),
-                               CvGraphEdge** inserted_edge CV_DEFAULT(NULL) );
-
-/** Remove edge connecting two vertices */
-CVAPI(void)  cvGraphRemoveEdge( CvGraph* graph, int start_idx, int end_idx );
-CVAPI(void)  cvGraphRemoveEdgeByPtr( CvGraph* graph, CvGraphVtx* start_vtx,
-                                     CvGraphVtx* end_vtx );
-
-/** Find edge connecting two vertices */
-CVAPI(CvGraphEdge*)  cvFindGraphEdge( const CvGraph* graph, int start_idx, int end_idx );
-CVAPI(CvGraphEdge*)  cvFindGraphEdgeByPtr( const CvGraph* graph,
-                                           const CvGraphVtx* start_vtx,
-                                           const CvGraphVtx* end_vtx );
-#define cvGraphFindEdge cvFindGraphEdge
-#define cvGraphFindEdgeByPtr cvFindGraphEdgeByPtr
-
-/** Remove all vertices and edges from the graph */
-CVAPI(void)  cvClearGraph( CvGraph* graph );
-
-
-/** Count number of edges incident to the vertex */
-CVAPI(int)  cvGraphVtxDegree( const CvGraph* graph, int vtx_idx );
-CVAPI(int)  cvGraphVtxDegreeByPtr( const CvGraph* graph, const CvGraphVtx* vtx );
+#define cvGraphFindEdge cv::findGraphEdge
+#define cvGraphFindEdgeByPtr cv::findGraphEdgeByPtr
 
 
 /** Retrieves graph vertex by given index */
@@ -1873,20 +1773,6 @@ typedef struct CvGraphScanner
 }
 CvGraphScanner;
 
-/** Creates new graph scanner. */
-CVAPI(CvGraphScanner*)  cvCreateGraphScanner( CvGraph* graph,
-                                             CvGraphVtx* vtx CV_DEFAULT(NULL),
-                                             int mask CV_DEFAULT(CV_GRAPH_ALL_ITEMS));
-
-/** Releases graph scanner. */
-CVAPI(void) cvReleaseGraphScanner( CvGraphScanner** scanner );
-
-/** Get next graph element */
-CVAPI(int)  cvNextGraphItem( CvGraphScanner* scanner );
-
-/** Creates a copy of graph */
-CVAPI(CvGraph*) cvCloneGraph( const CvGraph* graph, CvMemStorage* storage );
-
 
 /** Does look-up transformation. Elements of the source array
    (that should be 8uC1 or 8sC1) are used as indexes in lutarr 256-element table */
@@ -1902,23 +1788,27 @@ typedef struct CvTreeNodeIterator
 }
 CvTreeNodeIterator;
 
-CVAPI(void) cvInitTreeNodeIterator( CvTreeNodeIterator* tree_iterator,
-                                   const void* first, int max_level );
-CVAPI(void*) cvNextTreeNode( CvTreeNodeIterator* tree_iterator );
-CVAPI(void*) cvPrevTreeNode( CvTreeNodeIterator* tree_iterator );
+#ifdef __cplusplus
+namespace cv {
+// Declarations requiring CvCmpFunc, CvGraphScanner, CvTreeNodeIterator
+CV_EXPORTS void seqSort( CvSeq* seq, CvCmpFunc func, void* userdata = 0 );
+CV_EXPORTS schar* seqSearch( CvSeq* seq, const void* elem, CvCmpFunc func, int is_sorted, int* elem_idx, void* userdata = 0 );
+CV_EXPORTS int seqPartition( const CvSeq* seq, CvMemStorage* storage, CvSeq** labels, CvCmpFunc is_equal, void* userdata );
+CV_EXPORTS CvGraphScanner* createGraphScanner( CvGraph* graph, CvGraphVtx* vtx = 0, int mask = CV_GRAPH_ALL_ITEMS );
+CV_EXPORTS void releaseGraphScanner( CvGraphScanner** scanner );
+CV_EXPORTS int nextGraphItem( CvGraphScanner* scanner );
+CV_EXPORTS void initTreeNodeIterator( CvTreeNodeIterator* tree_iterator, const void* first, int max_level );
+CV_EXPORTS void* nextTreeNode( CvTreeNodeIterator* tree_iterator );
+CV_EXPORTS void* prevTreeNode( CvTreeNodeIterator* tree_iterator );
+} // namespace cv
+#endif
 
 /** Inserts sequence into tree with specified "parent" sequence.
    If parent is equal to frame (e.g. the most external contour),
    then added contour will have null pointer to parent. */
-CVAPI(void) cvInsertNodeIntoTree( void* node, void* parent, void* frame );
-
-/** Removes contour from tree (together with the contour children). */
-CVAPI(void) cvRemoveNodeFromTree( void* node, void* frame );
 
 /** Gathers pointers to all the sequences,
    accessible from the `first`, to the single sequence */
-CVAPI(CvSeq*) cvTreeToNodeSeq( const void* first, int header_size,
-                              CvMemStorage* storage );
 
 /** The function implements the K-means algorithm for clustering an array of sample
    vectors in a specified number of classes */
@@ -2244,7 +2134,7 @@ Then, it is possible to get hashed "x" and "y" pointers to speed up decoding of 
             CvSeq* seq = points->data.seq;
             int i, total = seq->total;
             CvSeqReader reader;
-            cvStartReadSeq( seq, &reader, 0 );
+            startReadSeq( seq, &reader, 0 );
             for( i = 0; i < total; i++ )
             {
                 CvFileNode* pt = (CvFileNode*)reader.ptr;
@@ -2317,7 +2207,7 @@ CVAPI(CvFileNode*) cvGetFileNode( CvFileStorage* fs, CvFileNode* map,
 /** @brief Finds a node in a map or file storage.
 
 The function finds a file node by name. The node is searched either in map or, if the pointer is
-NULL, among the top-level file storage nodes. Using this function for maps and cvGetSeqElem (or
+NULL, among the top-level file storage nodes. Using this function for maps and getSeqElem (or
 sequence reader) for sequences, it is possible to navigate through the file storage. To speed up
 multiple queries for a certain key (e.g., in the case of an array of structures) one may use a
 combination of cvGetHashedKey and cvGetFileNode.
@@ -2471,7 +2361,7 @@ The function reads one or more elements from the file node, representing a seque
 user-specified array. The total number of read sequence elements is a product of total and the
 number of components in each array element. For example, if dt=2if, the function will read total\*3
 sequence elements. As with any sequence, some parts of the file node sequence can be skipped or read
-repeatedly by repositioning the reader using cvSetSeqReaderPos.
+repeatedly by repositioning the reader using setSeqReaderPos.
 @param fs File storage
 @param reader The sequence reader. Initialize it with cvStartReadRawData .
 @param count The number of elements to read
@@ -2899,18 +2789,7 @@ public:
 
 
 
-// bridge C++ => C Seq API
-CV_EXPORTS schar*  seqPush( CvSeq* seq, const void* element=0);
-CV_EXPORTS schar*  seqPushFront( CvSeq* seq, const void* element=0);
-CV_EXPORTS void  seqPop( CvSeq* seq, void* element=0);
-CV_EXPORTS void  seqPopFront( CvSeq* seq, void* element=0);
-CV_EXPORTS void  seqPopMulti( CvSeq* seq, void* elements,
-                              int count, int in_front=0 );
-CV_EXPORTS void  seqRemove( CvSeq* seq, int index );
-CV_EXPORTS void  clearSeq( CvSeq* seq );
-CV_EXPORTS schar*  getSeqElem( const CvSeq* seq, int index );
-CV_EXPORTS void  seqRemoveSlice( CvSeq* seq, CvSlice slice );
-CV_EXPORTS void  seqInsertSlice( CvSeq* seq, int before_index, const CvArr* from_arr );
+
 
 template<typename _Tp> inline Seq<_Tp>::Seq() : seq(0) {}
 template<typename _Tp> inline Seq<_Tp>::Seq( const CvSeq* _seq ) : seq((CvSeq*)_seq)
@@ -2922,7 +2801,7 @@ template<typename _Tp> inline Seq<_Tp>::Seq( MemStorage& storage,
                                              int headerSize )
 {
     CV_Assert(headerSize >= (int)sizeof(CvSeq));
-    seq = cvCreateSeq(DataType<_Tp>::type, headerSize, sizeof(_Tp), storage);
+    seq = createSeq(DataType<_Tp>::type, headerSize, sizeof(_Tp), storage);
 }
 
 template<typename _Tp> inline _Tp& Seq<_Tp>::operator [](int idx)
@@ -2953,19 +2832,19 @@ template<typename _Tp> inline size_t Seq<_Tp>::elemSize() const
 { return seq ? seq->elem_size : 0; }
 
 template<typename _Tp> inline size_t Seq<_Tp>::index(const _Tp& elem) const
-{ return cvSeqElemIdx(seq, &elem); }
+{ return seqElemIdx(seq, &elem); }
 
 template<typename _Tp> inline void Seq<_Tp>::push_back(const _Tp& elem)
-{ cvSeqPush(seq, &elem); }
+{ seqPush(seq, &elem); }
 
 template<typename _Tp> inline void Seq<_Tp>::push_front(const _Tp& elem)
-{ cvSeqPushFront(seq, &elem); }
+{ seqPushFront(seq, &elem); }
 
 template<typename _Tp> inline void Seq<_Tp>::push_back(const _Tp* elem, size_t count)
-{ cvSeqPushMulti(seq, elem, (int)count, 0); }
+{ seqPushMulti(seq, elem, (int)count, 0); }
 
 template<typename _Tp> inline void Seq<_Tp>::push_front(const _Tp* elem, size_t count)
-{ cvSeqPushMulti(seq, elem, (int)count, 1); }
+{ seqPushMulti(seq, elem, (int)count, 1); }
 
 template<typename _Tp> inline _Tp& Seq<_Tp>::back()
 { return *(_Tp*)getSeqElem(seq, -1); }
@@ -3017,7 +2896,7 @@ template<typename _Tp> inline void Seq<_Tp>::copyTo(std::vector<_Tp>& vec, const
     size_t len = !seq ? 0 : range == Range::all() ? seq->total : range.end - range.start;
     vec.resize(len);
     if( seq && len )
-        cvCvtSeqToArray(seq, &vec[0], cvSlice(range));
+        cvtSeqToArray(seq, &vec[0], cvSlice(range));
 }
 
 template<typename _Tp> inline Seq<_Tp>::operator std::vector<_Tp>() const
@@ -3032,13 +2911,13 @@ template<typename _Tp> inline SeqIterator<_Tp>::SeqIterator()
 
 template<typename _Tp> inline SeqIterator<_Tp>::SeqIterator(const Seq<_Tp>& _seq, bool seekEnd)
 {
-    cvStartReadSeq(_seq.seq, this);
+    startReadSeq(_seq.seq, this);
     index = seekEnd ? _seq.seq->total : 0;
 }
 
 template<typename _Tp> inline void SeqIterator<_Tp>::seek(size_t pos)
 {
-    cvSetSeqReaderPos(this, (int)pos, false);
+    setSeqReaderPos(this, (int)pos, false);
     index = pos;
 }
 
@@ -3083,7 +2962,7 @@ template<typename _Tp> inline SeqIterator<_Tp> SeqIterator<_Tp>::operator --(int
 
 template<typename _Tp> inline SeqIterator<_Tp>& SeqIterator<_Tp>::operator +=(int delta)
 {
-    cvSetSeqReaderPos(this, delta, 1);
+    setSeqReaderPos(this, delta, 1);
     index += delta;
     int n = seq->total*2;
     if( index < 0 )

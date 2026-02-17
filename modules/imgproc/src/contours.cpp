@@ -65,7 +65,7 @@ cvStartReadChainPoints( CvChain * chain, CvChainPtReader * reader )
     if( chain->elem_size != 1 || chain->header_size < (int)sizeof(CvChain))
         CV_Error( cv::Error::StsBadSize, "" );
 
-    cvStartReadSeq( (CvSeq *) chain, (CvSeqReader *) reader, 0 );
+    cv::startReadSeq( (CvSeq *) chain, (CvSeqReader *) reader, 0 );
 
     reader->pt = chain->origin;
     for( i = 0; i < 8; i++ )
@@ -92,7 +92,7 @@ cvReadChainPoint( CvChainPtReader * reader )
 
         if( ptr >= reader->block_max )
         {
-            cvChangeSeqBlock( (CvSeqReader *) reader, 1 );
+            cv::changeSeqBlock( (CvSeqReader *) reader, 1 );
             ptr = reader->ptr;
         }
 
@@ -268,17 +268,17 @@ cvStartFindContours_Impl( void* _img, CvMemStorage* storage,
     scanner->seq_type2 = scanner->approx_method2 == CV_CHAIN_CODE ?
         CV_SEQ_CHAIN_CONTOUR : CV_SEQ_POLYGON;
 
-    cvSaveMemStoragePos( storage, &(scanner->initial_pos) );
+    cv::saveMemStoragePos( storage, &(scanner->initial_pos) );
 
     if( method > CV_CHAIN_APPROX_SIMPLE )
     {
-        scanner->storage1 = cvCreateChildMemStorage( scanner->storage2 );
+        scanner->storage1 = cv::createChildMemStorage( scanner->storage2 );
     }
 
     if( mode > CV_RETR_LIST )
     {
-        scanner->cinfo_storage = cvCreateChildMemStorage( scanner->storage2 );
-        scanner->cinfo_set = cvCreateSet( 0, sizeof( CvSet ), sizeof( _CvContourInfo ),
+        scanner->cinfo_storage = cv::createChildMemStorage( scanner->storage2 );
+        scanner->cinfo_set = cv::createSet( 0, sizeof( CvSet ), sizeof( _CvContourInfo ),
                                           scanner->cinfo_storage );
     }
 
@@ -462,19 +462,19 @@ icvEndProcessContour( CvContourScanner scanner )
         {
             CvMemStoragePos temp;
 
-            cvSaveMemStoragePos( scanner->storage2, &temp );
+            cv::saveMemStoragePos( scanner->storage2, &temp );
 
             if( temp.top == scanner->backup_pos2.top &&
                 temp.free_space == scanner->backup_pos2.free_space )
             {
-                cvRestoreMemStoragePos( scanner->storage2, &scanner->backup_pos );
+                cv::restoreMemStoragePos( scanner->storage2, &scanner->backup_pos );
             }
             scanner->subst_flag = 0;
         }
 
         if( l_cinfo->contour )
         {
-            cvInsertNodeIntoTree( l_cinfo->contour, l_cinfo->parent->contour,
+            cv::insertNodeIntoTree( l_cinfo->contour, l_cinfo->parent->contour,
                                   &(scanner->frame) );
         }
         scanner->l_cinfo = 0;
@@ -528,7 +528,7 @@ icvFetchContour( schar                  *ptr,
     memcpy( deltas + 8, deltas, 8 * sizeof( deltas[0] ));
 
     /* initialize writer */
-    cvStartAppendToSeq( contour, &writer );
+    cv::startAppendToSeq( contour, &writer );
 
     if( method < 0 )
         ((CvChain *) contour)->origin = pt;
@@ -608,7 +608,7 @@ icvFetchContour( schar                  *ptr,
         }                       /* end of border following loop */
     }
 
-    cvEndWriteSeq( &writer );
+    cv::endWriteSeq( &writer );
 
     if( _method != CV_CHAIN_CODE )
         cvBoundingRect( contour, 1 );
@@ -727,7 +727,7 @@ icvFetchContourEx( schar*               ptr,
     memcpy( deltas + 8, deltas, 8 * sizeof( deltas[0] ));
 
     /* initialize writer */
-    cvStartAppendToSeq( contour, &writer );
+    cv::startAppendToSeq( contour, &writer );
 
     if( method < 0 )
         ((CvChain *)contour)->origin = pt;
@@ -822,7 +822,7 @@ icvFetchContourEx( schar*               ptr,
     rect.width -= rect.x - 1;
     rect.height -= rect.y - 1;
 
-    cvEndWriteSeq( &writer );
+    cv::endWriteSeq( &writer );
 
     if( _method != CV_CHAIN_CODE )
         ((CvContour*)contour)->rect = cvRect(rect);
@@ -920,7 +920,7 @@ icvFetchContourEx_32s( int*                 ptr,
     memcpy( deltas + 8, deltas, 8 * sizeof( deltas[0] ));
 
     /* initialize writer */
-    cvStartAppendToSeq( contour, &writer );
+    cv::startAppendToSeq( contour, &writer );
 
     if( method < 0 )
         ((CvChain *)contour)->origin = pt;
@@ -1012,7 +1012,7 @@ icvFetchContourEx_32s( int*                 ptr,
     rect.width -= rect.x - 1;
     rect.height -= rect.y - 1;
 
-    cvEndWriteSeq( &writer );
+    cv::endWriteSeq( &writer );
 
     if( _method != CV_CHAIN_CODE )
         ((CvContour*)contour)->rect = cvRect(rect);
@@ -1192,9 +1192,9 @@ cvFindNextContour( CvContourScanner scanner )
 
                 lnbd.x = x - is_hole;
 
-                cvSaveMemStoragePos( scanner->storage2, &(scanner->backup_pos) );
+                cv::saveMemStoragePos( scanner->storage2, &(scanner->backup_pos) );
 
-                seq = cvCreateSeq( scanner->seq_type1, scanner->header_size1,
+                seq = cv::createSeq( scanner->seq_type1, scanner->header_size1,
                                    scanner->elem_size1, scanner->storage1 );
                 seq->flags |= is_hole ? CV_SEQ_FLAG_HOLE : 0;
 
@@ -1210,7 +1210,7 @@ cvFindNextContour( CvContourScanner scanner )
                 }
                 else
                 {
-                    cvSetAdd(scanner->cinfo_set, 0, (CvSetElem**)&l_cinfo);
+                    cv::setAdd(scanner->cinfo_set, 0, (CvSetElem**)&l_cinfo);
                     CV_Assert(l_cinfo);
                     int lval;
 
@@ -1253,7 +1253,7 @@ cvFindNextContour( CvContourScanner scanner )
                                                       scanner->header_size2,
                                                       scanner->storage2,
                                                       scanner->approx_method2 );
-                    cvClearMemStorage( scanner->storage1 );
+                    cv::clearMemStorage( scanner->storage1 );
                 }
 
                 l_cinfo->contour->v_prev = l_cinfo->parent->contour;
@@ -1263,17 +1263,17 @@ cvFindNextContour( CvContourScanner scanner )
                     l_cinfo->contour = 0;
                     if( scanner->storage1 == scanner->storage2 )
                     {
-                        cvRestoreMemStoragePos( scanner->storage1, &(scanner->backup_pos) );
+                        cv::restoreMemStoragePos( scanner->storage1, &(scanner->backup_pos) );
                     }
                     else
                     {
-                        cvClearMemStorage( scanner->storage1 );
+                        cv::clearMemStorage( scanner->storage1 );
                     }
                     p = img[x];
                     goto resume_scan;
                 }
 
-                cvSaveMemStoragePos( scanner->storage2, &(scanner->backup_pos2) );
+                cv::saveMemStoragePos( scanner->storage2, &(scanner->backup_pos2) );
                 scanner->l_cinfo = l_cinfo;
                 scanner->pt.x = !img_i ? x + 1 : x + 1 - is_hole;
                 scanner->pt.y = y;
@@ -1322,10 +1322,10 @@ cvEndFindContours( CvContourScanner * _scanner )
         icvEndProcessContour( scanner );
 
         if( scanner->storage1 != scanner->storage2 )
-            cvReleaseMemStorage( &(scanner->storage1) );
+            cv::releaseMemStorage( &(scanner->storage1) );
 
         if( scanner->cinfo_storage )
-            cvReleaseMemStorage( &(scanner->cinfo_storage) );
+            cv::releaseMemStorage( &(scanner->cinfo_storage) );
 
         first = scanner->frame.v_next;
         cvFree( _scanner );
@@ -1447,8 +1447,8 @@ icvFindContoursInInterval( const CvArr* src,
     if( contourHeaderSize < (int)sizeof(CvContour))
         CV_Error( cv::Error::StsBadSize, "Contour header size must be >= sizeof(CvContour)" );
 
-    storage00.reset(cvCreateChildMemStorage(storage));
-    storage01.reset(cvCreateChildMemStorage(storage));
+    storage00.reset(cv::createChildMemStorage(storage));
+    storage01.reset(cv::createChildMemStorage(storage));
 
     CvMat stub, *mat;
 
@@ -1460,11 +1460,11 @@ icvFindContoursInInterval( const CvArr* src,
     img_size = cvGetMatSize(mat);
 
     // Create temporary sequences
-    runs = cvCreateSeq(0, sizeof(CvSeq), sizeof(CvLinkedRunPoint), storage00 );
-    cvStartAppendToSeq( runs, &writer );
+    runs = cv::createSeq(0, sizeof(CvSeq), sizeof(CvLinkedRunPoint), storage00 );
+    cv::startAppendToSeq( runs, &writer );
 
-    cvStartWriteSeq( 0, sizeof(CvSeq), sizeof(CvLinkedRunPoint*), storage01, &writer_ext );
-    cvStartWriteSeq( 0, sizeof(CvSeq), sizeof(CvLinkedRunPoint*), storage01, &writer_int );
+    cv::startWriteSeq( 0, sizeof(CvSeq), sizeof(CvLinkedRunPoint*), storage01, &writer_ext );
+    cv::startWriteSeq( 0, sizeof(CvSeq), sizeof(CvLinkedRunPoint*), storage01, &writer_int );
 
     tmp_prev = &(tmp);
     tmp_prev->next = 0;
@@ -1499,7 +1499,7 @@ icvFindContoursInInterval( const CvArr* src,
         CV_WRITE_SEQ_ELEM( tmp_prev, writer_ext );
         tmp_prev = tmp_prev->next;
     }
-    cvFlushSeqWriter( &writer );
+    cv::flushSeqWriter( &writer );
     upper_line = upper_line->next;
     upper_total = runs->total - 1;
     last_elem = tmp_prev;
@@ -1528,7 +1528,7 @@ icvFindContoursInInterval( const CvArr* src,
             CV_WRITE_SEQ_ELEM( tmp, writer );
             tmp_prev = tmp_prev->next = (CvLinkedRunPoint*)CV_GET_WRITTEN_ELEM( writer );
         }//j
-        cvFlushSeqWriter( &writer );
+        cv::flushSeqWriter( &writer );
         lower_line = last_elem->next;
         lower_total = runs->total - all_total;
         last_elem = tmp_prev;
@@ -1677,14 +1677,14 @@ icvFindContoursInInterval( const CvArr* src,
 
 //------//
 //------//Find end read contours
-    external_contours = cvEndWriteSeq( &writer_ext );
-    internal_contours = cvEndWriteSeq( &writer_int );
+    external_contours = cv::endWriteSeq( &writer_ext );
+    internal_contours = cv::endWriteSeq( &writer_int );
 
     for( k = 0; k < 2; k++ )
     {
         CvSeq* contours = k == 0 ? external_contours : internal_contours;
 
-        cvStartReadSeq( contours, &reader );
+        cv::startReadSeq( contours, &reader );
 
         for( j = 0; j < contours->total; j++, count++ )
         {
@@ -1699,7 +1699,7 @@ icvFindContoursInInterval( const CvArr* src,
             if( !p00->link )
                 continue;
 
-            cvStartWriteSeq( CV_SEQ_ELTYPE_POINT | CV_SEQ_POLYLINE | CV_SEQ_FLAG_CLOSED,
+            cv::startWriteSeq( CV_SEQ_ELTYPE_POINT | CV_SEQ_POLYLINE | CV_SEQ_FLAG_CLOSED,
                              contourHeaderSize, sizeof(CvPoint), storage, &writer );
             do
             {
@@ -1710,7 +1710,7 @@ icvFindContoursInInterval( const CvArr* src,
             }
             while( p00 != p01 );
 
-            contour = cvEndWriteSeq( &writer );
+            contour = cv::endWriteSeq( &writer );
             cvBoundingRect( contour, 1 );
 
             if( k != 0 )
@@ -1836,7 +1836,7 @@ void cv::findContours_legacy( InputArray _image, OutputArrayOfArrays _contours,
     {
         image = image0;
     }
-    MemStorage storage(cvCreateMemStorage());
+    MemStorage storage(cv::createMemStorage());
     CvMat _cimage = cvMat(image);
     CvSeq* _ccontours = 0;
     if( _hierarchy.needed() )
@@ -1847,7 +1847,7 @@ void cv::findContours_legacy( InputArray _image, OutputArrayOfArrays _contours,
         _contours.clear();
         return;
     }
-    Seq<CvSeq*> all_contours(cvTreeToNodeSeq( _ccontours, sizeof(CvSeq), storage ));
+    Seq<CvSeq*> all_contours(cv::treeToNodeSeq( _ccontours, sizeof(CvSeq), storage ));
     int i, total = (int)all_contours.size();
     _contours.create(total, 1, 0, -1, true);
     SeqIterator<CvSeq*> it = all_contours.begin();
@@ -1858,7 +1858,7 @@ void cv::findContours_legacy( InputArray _image, OutputArrayOfArrays _contours,
         _contours.create((int)c->total, 1, CV_32SC2, i, true);
         Mat ci = _contours.getMat(i);
         CV_Assert( ci.isContinuous() );
-        cvCvtSeqToArray(c, ci.ptr());
+        cv::cvtSeqToArray(c, ci.ptr());
     }
 
     if( _hierarchy.needed() )

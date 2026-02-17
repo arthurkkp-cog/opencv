@@ -80,7 +80,7 @@ void CV_WatershedTest::run( int /* start_from */)
     for(int i = 0; cnts != 0; cnts = cnts->h_next, ++i )
     {
         cvDrawContours( &iplmrks, cnts, cvScalar(Scalar::all(i + 1)), cvScalar(Scalar::all(i + 1)), -1, CV_FILLED);
-        Point* p = (Point*)cvGetSeqElem(cnts, 0);
+        Point* p = (Point*)cv::getSeqElem(cnts, 0);
 
         //expected image was added with 1 in order to save to png
         //so now we subtract 1 to get real color

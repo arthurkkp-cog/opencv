@@ -1257,7 +1257,7 @@ cvCopy( const void* srcarr, void* dstarr, const void* maskarr )
         memcpy( dst1->size, src1->size, src1->dims*sizeof(src1->size[0]));
         dst1->valoffset = src1->valoffset;
         dst1->idxoffset = src1->idxoffset;
-        cvClearSet( dst1->heap );
+        cv::clearSet( dst1->heap );
 
         if( src1->heap->active_count >= dst1->hashsize*CV_SPARSE_HASH_RATIO )
         {
@@ -1323,7 +1323,7 @@ cvSetZero( CvArr* arr )
     if( CV_IS_SPARSE_MAT(arr) )
     {
         CvSparseMat* mat1 = (CvSparseMat*)arr;
-        cvClearSet( mat1->heap );
+        cv::clearSet( mat1->heap );
         if( mat1->hashtable )
             memset( mat1->hashtable, 0, mat1->hashsize*sizeof(mat1->hashtable[0]));
         return;

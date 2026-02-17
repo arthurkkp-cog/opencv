@@ -562,8 +562,8 @@ cvCreateSparseMat( int dims, const int* sizes, int type )
     arr->idxoffset = (int)cvAlign(arr->valoffset + pix_size, sizeof(int));
     size = (int)cvAlign(arr->idxoffset + dims*sizeof(int), sizeof(CvSetElem));
 
-    storage = cvCreateMemStorage( CV_SPARSE_MAT_BLOCK );
-    arr->heap = cvCreateSet( 0, sizeof(CvSet), size, storage );
+    storage = cv::createMemStorage( CV_SPARSE_MAT_BLOCK );
+    arr->heap = cv::createSet( 0, sizeof(CvSet), size, storage );
 
     arr->hashsize = CV_SPARSE_HASH_SIZE0;
     size = arr->hashsize*sizeof(arr->hashtable[0]);
@@ -592,7 +592,7 @@ cvReleaseSparseMat( CvSparseMat** array )
         *array = 0;
 
         CvMemStorage* storage = arr->heap->storage;
-        cvReleaseMemStorage( &storage );
+        cv::releaseMemStorage( &storage );
         cvFree( &arr->hashtable );
         cvFree( &arr );
     }
@@ -3211,7 +3211,7 @@ void DefaultDeleter<CvMat>::operator ()(CvMat* obj) const { cvReleaseMat(&obj); 
 void DefaultDeleter<IplImage>::operator ()(IplImage* obj) const { cvReleaseImage(&obj); }
 void DefaultDeleter<CvMatND>::operator ()(CvMatND* obj) const { cvReleaseMatND(&obj); }
 void DefaultDeleter<CvSparseMat>::operator ()(CvSparseMat* obj) const { cvReleaseSparseMat(&obj); }
-void DefaultDeleter<CvMemStorage>::operator ()(CvMemStorage* obj) const { cvReleaseMemStorage(&obj); }
+void DefaultDeleter<CvMemStorage>::operator ()(CvMemStorage* obj) const { cv::releaseMemStorage(&obj); }
 
 } // cv::
 
