@@ -570,23 +570,23 @@ int Core_SeqBaseTest::test_multi_create()
 
                 if( cvtest::randInt(rng) % 2 )
                 {
-                    cvStartWriteSeq( 0, hdr_size, elem_size, storage, &writer[struct_idx] );
+                    cv::startWriteSeq( 0, hdr_size, elem_size, storage, &writer[struct_idx] );
                 }
                 else
                 {
                     CvSeq* s;
-                    s = cvCreateSeq( 0, hdr_size, elem_size, storage );
-                    cvStartAppendToSeq( s, &writer[struct_idx] );
+                    s = cv::createSeq( 0, hdr_size, elem_size, storage );
+                    cv::startAppendToSeq( s, &writer[struct_idx] );
                 }
 
-                cvSetSeqBlockSize( writer[struct_idx].seq, cvtest::randInt( rng ) % 10000 );
+                cv::setSeqBlockSize( writer[struct_idx].seq, cvtest::randInt( rng ) % 10000 );
                 pos[struct_idx] = 0;
             }
 
             update_progressbar();
             if( pos[struct_idx] == sseq->count )
             {
-                cxcore_struct[struct_idx] = cvEndWriteSeq( &writer[struct_idx] );
+                cxcore_struct[struct_idx] = cv::endWriteSeq( &writer[struct_idx] );
                 /* del index */
                 for( ; k < cur_count-1; k++ )
                     index[k] = index[k+1];
@@ -625,23 +625,23 @@ int  Core_SeqBaseTest::test_get_seq_elem( int _struct_idx, int iters )
         idx + sseq->count : idx - sseq->count;
         int bad_range = (unsigned)idx0 >= (unsigned)(sseq->count);
         schar* elem;
-         elem = cvGetSeqElem( seq, idx );
+         elem = cv::getSeqElem( seq, idx );
 
         if( bad_range )
         {
             CV_TS_SEQ_CHECK_CONDITION( elem == 0,
-                                      "cvGetSeqElem doesn't "
+                                      "cv::getSeqElem doesn't "
                                       "handle \"out of range\" properly" );
         }
         else
         {
             CV_TS_SEQ_CHECK_CONDITION( elem != 0 &&
                                       !memcmp( elem, cvTsSimpleSeqElem(sseq, idx0), sseq->elem_size ),
-                                      "cvGetSeqElem returns wrong element" );
+                                      "cv::getSeqElem returns wrong element" );
 
-             idx = cvSeqElemIdx(seq, elem );
+             idx = cv::seqElemIdx(seq, elem );
             CV_TS_SEQ_CHECK_CONDITION( idx >= 0 && idx == idx0,
-                                      "cvSeqElemIdx is incorrect" );
+                                      "cv::seqElemIdx is incorrect" );
         }
     }
 
@@ -664,7 +664,7 @@ int  Core_SeqBaseTest::test_get_seq_reading( int _struct_idx, int iters )
     this->struct_idx = _struct_idx;
 
     int pos = cvtest::randInt(rng) % 2;
-    cvStartReadSeq( seq, &reader, pos );
+    cv::startReadSeq( seq, &reader, pos );
 
     if( total == 0 )
     {
@@ -674,7 +674,7 @@ int  Core_SeqBaseTest::test_get_seq_reading( int _struct_idx, int iters )
 
     pos = pos ? seq->total - 1 : 0;
 
-    CV_TS_SEQ_CHECK_CONDITION( pos == cvGetSeqReaderPos(&reader),
+    CV_TS_SEQ_CHECK_CONDITION( pos == cv::getSeqReaderPos(&reader),
                               "initial reader position is wrong" );
 
     for( iter = 0; iter < iters; iter++ )
@@ -694,17 +694,17 @@ int  Core_SeqBaseTest::test_get_seq_reading( int _struct_idx, int iters )
             if( new_pos0 >= total ) new_pos0 -= total;
 
             bad_range = (unsigned)new_pos0 >= (unsigned)total;
-             cvSetSeqReaderPos( &reader, new_pos, is_relative );
+             cv::setSeqReaderPos( &reader, new_pos, is_relative );
 
             if( !bad_range )
             {
-                CV_TS_SEQ_CHECK_CONDITION( new_pos0 == cvGetSeqReaderPos( &reader ),
+                CV_TS_SEQ_CHECK_CONDITION( new_pos0 == cv::getSeqReaderPos( &reader ),
                                           "cvset reader position doesn't work" );
                 pos = new_pos0;
             }
             else
             {
-                CV_TS_SEQ_CHECK_CONDITION( pos == cvGetSeqReaderPos( &reader ),
+                CV_TS_SEQ_CHECK_CONDITION( pos == cv::getSeqReaderPos( &reader ),
                                           "reader doesn't stay at the current position after wrong positioning" );
             }
         }
@@ -728,7 +728,7 @@ int  Core_SeqBaseTest::test_get_seq_reading( int _struct_idx, int iters )
             if( -pos > 0 ) pos += total;
             if( pos >= total ) pos -= total;
 
-            CV_TS_SEQ_CHECK_CONDITION( pos == cvGetSeqReaderPos( &reader ),
+            CV_TS_SEQ_CHECK_CONDITION( pos == cv::getSeqReaderPos( &reader ),
                                       "reader doesn't move correctly after reading" );
         }
     }
@@ -775,21 +775,21 @@ int  Core_SeqBaseTest::test_seq_ops( int iters )
                 if( whence < 0 )
                 {
                     pos = 0;
-                    cvSeqPushFront( seq, elem );
+                    cv::seqPushFront( seq, elem );
                 }
                 else if( whence > 0 )
                 {
                     pos = sseq->count;
-                    cvSeqPush( seq, elem );
+                    cv::seqPush( seq, elem );
                 }
                 else
                 {
                     pos = cvtest::randInt(rng) % (sseq->count + 1);
-                    cvSeqInsert( seq, pos, elem );
+                    cv::seqInsert( seq, pos, elem );
                 }
 
                 cvTsSimpleSeqShiftAndCopy( sseq, pos, pos + 1, elem );
-                elem2 = cvGetSeqElem( seq, pos );
+                elem2 = cv::getSeqElem( seq, pos );
                 CV_TS_SEQ_CHECK_CONDITION( elem2 != 0, "The inserted element could not be retrieved" );
                 CV_TS_SEQ_CHECK_CONDITION( seq->total == sseq->count &&
                                           memcmp(elem2, cvTsSimpleSeqElem(sseq,pos), elem_size) == 0,
@@ -806,17 +806,17 @@ int  Core_SeqBaseTest::test_seq_ops( int iters )
                 if( whence < 0 )
                 {
                     pos = 0;
-                     cvSeqPopFront( seq, elem );
+                     cv::seqPopFront( seq, elem );
                 }
                 else if( whence > 0 )
                 {
                     pos = sseq->count-1;
-                     cvSeqPop( seq, elem );
+                     cv::seqPop( seq, elem );
                 }
                 else
                 {
                     pos = cvtest::randInt(rng) % sseq->count;
-                     cvSeqRemove( seq, pos );
+                     cv::seqRemove( seq, pos );
                 }
 
                 if( whence != 0 )
@@ -828,7 +828,7 @@ int  Core_SeqBaseTest::test_seq_ops( int iters )
 
                 if( sseq->count > 0 )
                 {
-                     elem2 = cvGetSeqElem( seq, pos < sseq->count ? pos : -1 );
+                     elem2 = cv::getSeqElem( seq, pos < sseq->count ? pos : -1 );
                     CV_TS_SEQ_CHECK_CONDITION( elem2 != 0, "GetSeqElem fails after removing the element" );
 
                     CV_TS_SEQ_CHECK_CONDITION( memcmp( elem2,
@@ -856,18 +856,18 @@ int  Core_SeqBaseTest::test_seq_ops( int iters )
                 pos = whence < 0 ? 0 : whence > 0 ? sseq->count : (int)(cvtest::randInt(rng) % (sseq->count+1));
                 if( whence != 0 )
                 {
-                     cvSeqPushMulti( seq, elem, count, whence < 0 );
+                     cv::seqPushMulti( seq, elem, count, whence < 0 );
                 }
                 else
                 {
                     CvSeq header;
                     CvSeqBlock block;
-                    cvMakeSeqHeaderForArray( CV_SEQ_KIND_GENERIC, sizeof(CvSeq),
+                    cv::makeSeqHeaderForArray( CV_SEQ_KIND_GENERIC, sizeof(CvSeq),
                                                      sseq->elem_size,
                                                      elem, count,
                                                      &header, &block );
 
-                    cvSeqInsertSlice( seq, pos, &header );
+                    cv::seqInsertSlice( seq, pos, &header );
                 }
                 cvTsSimpleSeqShiftAndCopy( sseq, pos, pos + count, elem );
 
@@ -875,7 +875,7 @@ int  Core_SeqBaseTest::test_seq_ops( int iters )
                 {
                     // choose the random element among the added
                     pos = count > 0 ? (int)(cvtest::randInt(rng) % count + pos) : MAX(pos-1,0);
-                    elem2 = cvGetSeqElem( seq, pos );
+                    elem2 = cv::getSeqElem( seq, pos );
                     CV_TS_SEQ_CHECK_CONDITION( elem2 != 0, "multi push operation doesn't add elements" );
                     CV_TS_SEQ_CHECK_CONDITION( seq->total == sseq->count &&
                                               memcmp( elem2, cvTsSimpleSeqElem(sseq,pos), elem_size) == 0,
@@ -901,7 +901,7 @@ int  Core_SeqBaseTest::test_seq_ops( int iters )
 
                 if( whence != 0 )
                 {
-                     cvSeqPopMulti( seq, elem, count, whence < 0 );
+                     cv::seqPopMulti( seq, elem, count, whence < 0 );
 
                     if( count > 0 )
                     {
@@ -912,7 +912,7 @@ int  Core_SeqBaseTest::test_seq_ops( int iters )
                 }
                 else
                 {
-                     cvSeqRemoveSlice( seq, cvSlice(pos, pos + count) );
+                     cv::seqRemoveSlice( seq, cvSlice(pos, pos + count) );
                 }
 
                 CV_TS_SEQ_CHECK_CONDITION( seq->total == sseq->count - count,
@@ -922,7 +922,7 @@ int  Core_SeqBaseTest::test_seq_ops( int iters )
                 if( sseq->count > 0 )
                 {
                     pos = whence < 0 ? 0 : MIN( pos, sseq->count - 1 );
-                    elem2 = cvGetSeqElem( seq, pos );
+                    elem2 = cv::getSeqElem( seq, pos );
                     CV_TS_SEQ_CHECK_CONDITION( elem2 &&
                                               memcmp( elem2, cvTsSimpleSeqElem(sseq,pos), elem_size) == 0,
                                               "The last sequence element is wrong after POP" );
@@ -936,21 +936,21 @@ int  Core_SeqBaseTest::test_seq_ops( int iters )
             case 12: // seqslice
             {
                 CvMemStoragePos storage_pos;
-                cvSaveMemStoragePos( storage, &storage_pos );
+                cv::saveMemStoragePos( storage, &storage_pos );
 
                 int copy_data = cvtest::randInt(rng) % 2;
                 count = cvtest::randInt(rng) % (seq->total + 1);
                 pos = cvtest::randInt(rng) % (seq->total - count + 1);
-                CvSeq* seq_slice = cvSeqSlice( seq, cvSlice(pos, pos + count), storage, copy_data );
+                CvSeq* seq_slice = cv::seqSlice( seq, cvSlice(pos, pos + count), storage, copy_data );
 
                 CV_TS_SEQ_CHECK_CONDITION( seq_slice && seq_slice->total == count,
-                                          "cvSeqSlice returned incorrect slice" );
+                                          "cv::seqSlice returned incorrect slice" );
 
                 if( count > 0 )
                 {
                     int test_idx = cvtest::randInt(rng) % count;
-                    elem2 = cvGetSeqElem( seq_slice, test_idx );
-                    schar* elem3 = cvGetSeqElem( seq, pos + test_idx );
+                    elem2 = cv::getSeqElem( seq_slice, test_idx );
+                    schar* elem3 = cv::getSeqElem( seq, pos + test_idx );
                     CV_TS_SEQ_CHECK_CONDITION( elem2 &&
                                               memcmp( elem2, cvTsSimpleSeqElem(sseq,pos + test_idx), elem_size) == 0,
                                               "The extracted slice elements are not correct" );
@@ -958,12 +958,12 @@ int  Core_SeqBaseTest::test_seq_ops( int iters )
                                               "copy_data flag is handled incorrectly" );
                 }
 
-                cvRestoreMemStoragePos( storage, &storage_pos );
+                cv::restoreMemStoragePos( storage, &storage_pos );
             }
                 break;
             case 13: // clear
                 cvTsClearSimpleSeq( sseq );
-                cvClearSeq( seq );
+                cv::clearSeq( seq );
                 CV_TS_SEQ_CHECK_CONDITION( seq->total == 0 && seq->first == 0,
                                           "The sequence doesn't become empty after clear" );
                 break;
@@ -1007,7 +1007,7 @@ void Core_SeqBaseTest::run( int )
             {
                 t = cvtest::randReal(rng)*(max_log_storage_block_size - min_log_storage_block_size)
                 + min_log_storage_block_size;
-                storage.reset(cvCreateMemStorage( cvRound( exp(t * CV_LOG2) ) ));
+                storage.reset(cv::createMemStorage( cvRound( exp(t * CV_LOG2) ) ));
             }
 
             iter = struct_idx = -1;
@@ -1033,7 +1033,7 @@ void Core_SeqBaseTest::run( int )
             if( cvtest::randInt(rng) % 2 )
                 storage.release();
             else
-                cvClearMemStorage( storage );
+                cv::clearMemStorage( storage );
         }
     }
     catch(const int &)
@@ -1095,7 +1095,7 @@ void Core_SeqSortInvTest::run( int )
             {
                 t = cvtest::randReal(rng)*(max_log_storage_block_size - min_log_storage_block_size)
                 + min_log_storage_block_size;
-                storage.reset(cvCreateMemStorage( cvRound( exp(t * CV_LOG2) ) ));
+                storage.reset(cv::createMemStorage( cvRound( exp(t * CV_LOG2) ) ));
             }
 
             for( iter = 0; iter < iterations/10; iter++ )
@@ -1119,7 +1119,7 @@ void Core_SeqSortInvTest::run( int )
 
                     //printf("%d. %d. %d-th size = %d\n", gen, iter, i, sseq->count );
 
-                    cvSeqInvert( seq );
+                    cv::seqInvert( seq );
                     cvTsSimpleSeqInvert( sseq );
 
                     if( test_seq_block_consistence( i, seq, sseq->count ) < 0 )
@@ -1132,31 +1132,31 @@ void Core_SeqSortInvTest::run( int )
                         slice.end_index += slice.start_index;
                     }
 
-                    cvCvtSeqToArray( seq, &buffer[0], slice );
+                    cv::cvtSeqToArray( seq, &buffer[0], slice );
 
                     slice.end_index = MIN( slice.end_index, sseq->count );
                     CV_TS_SEQ_CHECK_CONDITION( sseq->count == 0 || memcmp( &buffer[0],
                                                                           sseq->array + slice.start_index*sseq->elem_size,
                                                                           (slice.end_index - slice.start_index)*sseq->elem_size ) == 0,
-                                              "cvSeqInvert returned wrong result" );
+                                              "cv::seqInvert returned wrong result" );
 
                     for( k = 0; k < (sseq->count > 0 ? 10 : 0); k++ )
                     {
                         int idx0 = cvtest::randInt(rng) % sseq->count, idx = 0;
                         elem0 = cvTsSimpleSeqElem( sseq, idx0 );
-                        elem = cvGetSeqElem( seq, idx0 );
-                        elem2 = cvSeqSearch( seq, elem0, k % 2 ? icvCmpSeqElems : 0, 0, &idx, seq );
+                        elem = cv::getSeqElem( seq, idx0 );
+                        elem2 = cv::seqSearch( seq, elem0, k % 2 ? icvCmpSeqElems : 0, 0, &idx, seq );
 
                         CV_TS_SEQ_CHECK_CONDITION( elem != 0 &&
                                                   memcmp( elem0, elem, seq->elem_size ) == 0,
-                                                  "cvSeqInvert gives incorrect result" );
+                                                  "cv::seqInvert gives incorrect result" );
                         CV_TS_SEQ_CHECK_CONDITION( elem2 != 0 &&
                                                   memcmp( elem0, elem2, seq->elem_size ) == 0 &&
-                                                  elem2 == cvGetSeqElem( seq, idx ),
-                                                  "cvSeqSearch failed (linear search)" );
+                                                  elem2 == cv::getSeqElem( seq, idx ),
+                                                  "cv::seqSearch failed (linear search)" );
                     }
 
-                    cvSeqSort( seq, icvCmpSeqElems, seq );
+                    cv::seqSort( seq, icvCmpSeqElems, seq );
 
                     if( test_seq_block_consistence( i, seq, sseq->count ) < 0 )
                         return;
@@ -1175,30 +1175,30 @@ void Core_SeqSortInvTest::run( int )
                         }
                     }
 
-                    cvCvtSeqToArray( seq, &buffer[0], slice );
+                    cv::cvtSeqToArray( seq, &buffer[0], slice );
                     CV_TS_SEQ_CHECK_CONDITION( sseq->count == 0 || memcmp( &buffer[0],
                                                                           sseq->array + slice.start_index*sseq->elem_size,
                                                                           (slice.end_index - slice.start_index)*sseq->elem_size ) == 0,
-                                              "cvSeqSort returned wrong result" );
+                                              "cv::seqSort returned wrong result" );
 
                     for( k = 0; k < (sseq->count > 0 ? 10 : 0); k++ )
                     {
                         int idx0 = cvtest::randInt(rng) % sseq->count, idx = 0;
                         elem0 = cvTsSimpleSeqElem( sseq, idx0 );
-                        elem = cvGetSeqElem( seq, idx0 );
-                        elem2 = cvSeqSearch( seq, elem0, icvCmpSeqElems, 1, &idx, seq );
+                        elem = cv::getSeqElem( seq, idx0 );
+                        elem2 = cv::seqSearch( seq, elem0, icvCmpSeqElems, 1, &idx, seq );
 
                         CV_TS_SEQ_CHECK_CONDITION( elem != 0 &&
                                                   memcmp( elem0, elem, seq->elem_size ) == 0,
-                                                  "cvSeqSort gives incorrect result" );
+                                                  "cv::seqSort gives incorrect result" );
                         CV_TS_SEQ_CHECK_CONDITION( elem2 != 0 &&
                                                   memcmp( elem0, elem2, seq->elem_size ) == 0 &&
-                                                  elem2 == cvGetSeqElem( seq, idx ),
-                                                  "cvSeqSearch failed (binary search)" );
+                                                  elem2 == cv::getSeqElem( seq, idx ),
+                                                  "cv::seqSearch failed (binary search)" );
                     }
                 }
 
-                cvClearMemStorage( storage );
+                cv::clearMemStorage( storage );
             }
 
             storage.release();
@@ -1276,13 +1276,13 @@ int  Core_SetTest::test_set_ops( int iters )
         if( iter > iters/10 && cvtest::randInt(rng)%200 == 0 ) // clear set
         {
             prev_count = cvset->total;
-            cvClearSet( cvset );
+            cv::clearSet( cvset );
             cvTsClearSimpleSet( sset );
 
             CV_TS_SEQ_CHECK_CONDITION( cvset->active_count == 0 && cvset->total == 0 &&
                                       cvset->first == 0 && cvset->free_elems == 0 &&
                                       (cvset->free_blocks != 0 || prev_count == 0),
-                                      "cvClearSet doesn't remove all the elements" );
+                                      "cv::clearSet doesn't remove all the elements" );
             continue;
         }
         else if( op == 0 || op == 1 ) // add element
@@ -1302,9 +1302,9 @@ int  Core_SetTest::test_set_ops( int iters )
             else
             {
                 pass_data = cvtest::randInt(rng) % 2;
-                idx = cvSetAdd( cvset, pass_data ? elem : 0, &elem2 );
+                idx = cv::setAdd( cvset, pass_data ? elem : 0, &elem2 );
                 CV_TS_SEQ_CHECK_CONDITION( elem2 != 0 && elem2->flags == idx,
-                                          "cvSetAdd returned NULL pointer or a wrong index" );
+                                          "cv::setAdd returned NULL pointer or a wrong index" );
             }
 
             elem_data = (schar*)elem + sizeof(int);
@@ -1348,14 +1348,14 @@ int  Core_SetTest::test_set_ops( int iters )
             }
             else
             {
-                 cvSetRemove( cvset, idx );
+                 cv::setRemove( cvset, idx );
             }
 
             cvTsSimpleSetRemove( sset, idx );
 
             CV_TS_SEQ_CHECK_CONDITION( !CV_IS_SET_ELEM(elem) && !cvGetSetElem(cvset, idx) &&
                                       (elem->flags & CV_SET_ELEM_IDX_MASK) == idx,
-                                      "cvSetRemove[ByPtr] didn't release the element properly" );
+                                      "cv::setRemove[ByPtr] didn't release the element properly" );
 
             CV_TS_SEQ_CHECK_CONDITION( elem->next_free == first_free &&
                                       cvset->free_elems == elem &&
@@ -1397,7 +1397,7 @@ void Core_SetTest::run( int )
         {
             struct_idx = iter = -1;
             t = cvtest::randReal(rng)*(max_log_storage_block_size - min_log_storage_block_size) + min_log_storage_block_size;
-            storage.reset(cvCreateMemStorage( cvRound( exp(t * CV_LOG2) ) ));
+            storage.reset(cv::createMemStorage( cvRound( exp(t * CV_LOG2) ) ));
 
             for( int i = 0; i < struct_count; i++ )
             {
@@ -1411,7 +1411,7 @@ void Core_SetTest::run( int )
 
                 cvTsReleaseSimpleSet( (CvTsSimpleSet**)&simple_struct[i] );
                 simple_struct[i] = cvTsCreateSimpleSet( max_struct_size, pure_elem_size );
-                cxcore_struct[i] = cvCreateSet( 0, sizeof(CvSet), elem_size, storage );
+                cxcore_struct[i] = cv::createSet( 0, sizeof(CvSet), elem_size, storage );
             }
 
             if( test_set_ops( iterations*100 ) < 0 )
@@ -1502,7 +1502,7 @@ int  Core_GraphTest::test_graph_ops( int iters )
         {
             int prev_vtx_count2 = graph->total, prev_edge_count2 = graph->edges->total;
 
-            cvClearGraph( graph );
+            cv::clearGraph( graph );
             cvTsClearSimpleGraph( sgraph );
 
             CV_TS_SEQ_CHECK_CONDITION( graph->active_count == 0 && graph->total == 0 &&
@@ -1533,7 +1533,7 @@ int  Core_GraphTest::test_graph_ops( int iters )
             idx0 = cvTsSimpleGraphAddVertex( sgraph, vtx + 1 );
 
             pass_data = cvtest::randInt(rng) % 2;
-            idx = cvGraphAddVtx( graph, pass_data ? vtx : 0, &vtx2 );
+            idx = cv::graphAddVtx( graph, pass_data ? vtx : 0, &vtx2 );
 
             if( !pass_data && pure_vtx_size > 0 )
                 memcpy( vtx2 + 1, vtx + 1, pure_vtx_size );
@@ -1571,13 +1571,13 @@ int  Core_GraphTest::test_graph_ops( int iters )
 
             if( cvtest::randInt(rng) % 2 )
             {
-                 vtx_degree = cvGraphVtxDegreeByPtr( graph, vtx );
-                 cvGraphRemoveVtxByPtr( graph, vtx );
+                 vtx_degree = cv::graphVtxDegreeByPtr( graph, vtx );
+                 cv::graphRemoveVtxByPtr( graph, vtx );
             }
             else
             {
-                 vtx_degree = cvGraphVtxDegree( graph, idx );
-                 cvGraphRemoveVtx( graph, idx );
+                 vtx_degree = cv::graphVtxDegree( graph, idx );
+                 cv::graphRemoveVtx( graph, idx );
             }
 
             cvTsSimpleGraphRemoveVertex( sgraph, idx );
@@ -1587,10 +1587,10 @@ int  Core_GraphTest::test_graph_ops( int iters )
 
             CV_TS_SEQ_CHECK_CONDITION( !CV_IS_SET_ELEM(vtx) && !cvGetGraphVtx(graph, idx) &&
                                       (vtx->flags & CV_SET_ELEM_IDX_MASK) == idx,
-                                      "cvGraphRemoveVtx[ByPtr] didn't release the vertex properly" );
+                                      "cv::graphRemoveVtx[ByPtr] didn't release the vertex properly" );
 
             CV_TS_SEQ_CHECK_CONDITION( graph->edges->active_count == prev_edge_count - vtx_degree,
-                                      "cvGraphRemoveVtx[ByPtr] didn't remove all the incident edges "
+                                      "cv::graphRemoveVtx[ByPtr] didn't remove all the incident edges "
                                       "(or removed some extra)" );
 
             CV_TS_SEQ_CHECK_CONDITION( ((CvSetElem*)vtx)->next_free == first_free &&
@@ -1630,7 +1630,7 @@ int  Core_GraphTest::test_graph_ops( int iters )
             first_free = graph->edges->free_elems;
             next_free = first_free ? first_free->next_free : 0;
 
-            edge = cvFindGraphEdge( graph, v_idx[0], v_idx[1] );
+            edge = cv::findGraphEdge( graph, v_idx[0], v_idx[1] );
             CV_TS_SEQ_CHECK_CONDITION( edge == 0, "Extra edge appeared in the graph" );
 
             if( pure_edge_size > 0 )
@@ -1653,19 +1653,19 @@ int  Core_GraphTest::test_graph_ops( int iters )
 
             if( cvtest::randInt(rng) % 2 )
             {
-                 v_prev_degree[0] = cvGraphVtxDegreeByPtr( graph, vtx );
-                 v_prev_degree[1] = cvGraphVtxDegreeByPtr( graph, vtx2 );
-                 res = cvGraphAddEdgeByPtr(graph, vtx, vtx2, pass_data ? edge : 0, &edge2);
-                 v_degree[0] = cvGraphVtxDegreeByPtr( graph, vtx );
-                 v_degree[1] = cvGraphVtxDegreeByPtr( graph, vtx2 );
+                 v_prev_degree[0] = cv::graphVtxDegreeByPtr( graph, vtx );
+                 v_prev_degree[1] = cv::graphVtxDegreeByPtr( graph, vtx2 );
+                 res = cv::graphAddEdgeByPtr(graph, vtx, vtx2, pass_data ? edge : 0, &edge2);
+                 v_degree[0] = cv::graphVtxDegreeByPtr( graph, vtx );
+                 v_degree[1] = cv::graphVtxDegreeByPtr( graph, vtx2 );
             }
             else
             {
-                 v_prev_degree[0] = cvGraphVtxDegree( graph, v_idx[0] );
-                 v_prev_degree[1] = cvGraphVtxDegree( graph, v_idx[1] );
-                 res = cvGraphAddEdge(graph, v_idx[0], v_idx[1], pass_data ? edge : 0, &edge2);
-                 v_degree[0] = cvGraphVtxDegree( graph, v_idx[0] );
-                 v_degree[1] = cvGraphVtxDegree( graph, v_idx[1] );
+                 v_prev_degree[0] = cv::graphVtxDegree( graph, v_idx[0] );
+                 v_prev_degree[1] = cv::graphVtxDegree( graph, v_idx[1] );
+                 res = cv::graphAddEdge(graph, v_idx[0], v_idx[1], pass_data ? edge : 0, &edge2);
+                 v_degree[0] = cv::graphVtxDegree( graph, v_idx[0] );
+                 v_degree[1] = cv::graphVtxDegree( graph, v_idx[1] );
             }
 
             //edge3 = (CvGraphEdge*)cvGetSetElem( graph->edges, idx );
@@ -1736,15 +1736,15 @@ int  Core_GraphTest::test_graph_ops( int iters )
 
             if( by_ptr )
             {
-                 edge = cvFindGraphEdgeByPtr( graph, vtx, vtx2 );
-                 v_prev_degree[0] = cvGraphVtxDegreeByPtr( graph, vtx );
-                 v_prev_degree[1] = cvGraphVtxDegreeByPtr( graph, vtx2 );
+                 edge = cv::findGraphEdgeByPtr( graph, vtx, vtx2 );
+                 v_prev_degree[0] = cv::graphVtxDegreeByPtr( graph, vtx );
+                 v_prev_degree[1] = cv::graphVtxDegreeByPtr( graph, vtx2 );
             }
             else
             {
-                 edge = cvFindGraphEdge( graph, v_idx[0], v_idx[1] );
-                 v_prev_degree[0] = cvGraphVtxDegree( graph, v_idx[0] );
-                 v_prev_degree[1] = cvGraphVtxDegree( graph, v_idx[1] );
+                 edge = cv::findGraphEdge( graph, v_idx[0], v_idx[1] );
+                 v_prev_degree[0] = cv::graphVtxDegree( graph, v_idx[0] );
+                 v_prev_degree[1] = cv::graphVtxDegree( graph, v_idx[1] );
             }
 
             idx = edge->flags;
@@ -1757,17 +1757,17 @@ int  Core_GraphTest::test_graph_ops( int iters )
 
             if( by_ptr )
             {
-                 cvGraphRemoveEdgeByPtr( graph, vtx, vtx2 );
-                 edge2 = cvFindGraphEdgeByPtr( graph, vtx, vtx2 );
-                 v_degree[0] = cvGraphVtxDegreeByPtr( graph, vtx );
-                 v_degree[1] = cvGraphVtxDegreeByPtr( graph, vtx2 );
+                 cv::graphRemoveEdgeByPtr( graph, vtx, vtx2 );
+                 edge2 = cv::findGraphEdgeByPtr( graph, vtx, vtx2 );
+                 v_degree[0] = cv::graphVtxDegreeByPtr( graph, vtx );
+                 v_degree[1] = cv::graphVtxDegreeByPtr( graph, vtx2 );
             }
             else
             {
-                 cvGraphRemoveEdge(graph, v_idx[0], v_idx[1] );
-                 edge2 = cvFindGraphEdge( graph, v_idx[0], v_idx[1] );
-                 v_degree[0] = cvGraphVtxDegree( graph, v_idx[0] );
-                 v_degree[1] = cvGraphVtxDegree( graph, v_idx[1] );
+                 cv::graphRemoveEdge(graph, v_idx[0], v_idx[1] );
+                 edge2 = cv::findGraphEdge( graph, v_idx[0], v_idx[1] );
+                 v_degree[0] = cv::graphVtxDegree( graph, v_idx[0] );
+                 v_degree[1] = cv::graphVtxDegree( graph, v_idx[1] );
             }
 
             CV_TS_SEQ_CHECK_CONDITION( !edge2 && !CV_IS_SET_ELEM(edge),
@@ -1829,7 +1829,7 @@ void Core_GraphTest::run( int )
             int block_size = cvRound( exp(t * CV_LOG2) );
             block_size = MAX(block_size, (int)(sizeof(CvGraph) + sizeof(CvMemBlock) + sizeof(CvSeqBlock)));
 
-            storage.reset(cvCreateMemStorage(block_size));
+            storage.reset(cv::createMemStorage(block_size));
 
             for( i = 0; i < struct_count; i++ )
             {
@@ -1852,7 +1852,7 @@ void Core_GraphTest::run( int )
                 cvTsReleaseSimpleGraph( (CvTsSimpleGraph**)&simple_struct[i] );
                 simple_struct[i] = cvTsCreateSimpleGraph( max_struct_size/4, pure_elem_size[0],
                                                          pure_elem_size[1], is_oriented );
-                cxcore_struct[i] = cvCreateGraph( is_oriented ? CV_ORIENTED_GRAPH : CV_GRAPH,
+                cxcore_struct[i] = cv::createGraph( is_oriented ? CV_ORIENTED_GRAPH : CV_GRAPH,
                                                           sizeof(CvGraph), elem_size[0], elem_size[1],
                                                           storage );
             }
@@ -1900,12 +1900,12 @@ int Core_GraphScanTest::create_random_graph( int _struct_idx )
 
     struct_idx = _struct_idx;
     cxcore_struct[_struct_idx] = graph =
-        cvCreateGraph(is_oriented ? CV_ORIENTED_GRAPH : CV_GRAPH,
+        cv::createGraph(is_oriented ? CV_ORIENTED_GRAPH : CV_GRAPH,
                       sizeof(CvGraph), sizeof(CvGraphVtx),
                       sizeof(CvGraphEdge), storage );
 
     for( i = 0; i < vtx_count; i++ )
-         cvGraphAddVtx( graph );
+         cv::graphAddVtx( graph );
 
     CV_Assert( graph->active_count == vtx_count );
 
@@ -1915,7 +1915,7 @@ int Core_GraphScanTest::create_random_graph( int _struct_idx )
         int k = cvtest::randInt(rng) % vtx_count;
 
         if( j != k )
-             cvGraphAddEdge( graph, j, k );
+             cv::graphAddEdge( graph, j, k );
     }
 
     CV_Assert( graph->active_count == vtx_count && graph->edges->active_count <= edge_count );
@@ -1947,7 +1947,7 @@ void Core_GraphScanTest::run( int )
             storage_blocksize = MAX(storage_blocksize, (int)(sizeof(CvGraph) + sizeof(CvMemBlock) + sizeof(CvSeqBlock)));
             storage_blocksize = MAX(storage_blocksize, (int)(sizeof(CvGraphEdge) + sizeof(CvMemBlock) + sizeof(CvSeqBlock)));
             storage_blocksize = MAX(storage_blocksize, (int)(sizeof(CvGraphVtx) + sizeof(CvMemBlock) + sizeof(CvSeqBlock)));
-            storage.reset(cvCreateMemStorage(storage_blocksize));
+            storage.reset(cv::createMemStorage(storage_blocksize));
 
             if( gen == 0 )
             {
@@ -1962,7 +1962,7 @@ void Core_GraphScanTest::run( int )
                     {5,7,'t'}, {7,5,'b'}, {5,6,'t'}, {6,0,'c'}, {7,6,'c'}, {6,4,'c'}, {-1,-1,0}
                 };
 
-                CvGraph* graph = cvCreateGraph( CV_ORIENTED_GRAPH, sizeof(CvGraph),
+                CvGraph* graph = cv::createGraph( CV_ORIENTED_GRAPH, sizeof(CvGraph),
                                                sizeof(CvGraphVtx), sizeof(CvGraphEdge), storage );
 
                 for( i = 0; edges[i][0] >= 0; i++ )
@@ -1973,23 +1973,23 @@ void Core_GraphScanTest::run( int )
                 vtx_count++;
 
                 for( i = 0; i < vtx_count; i++ )
-                     cvGraphAddVtx( graph );
+                     cv::graphAddVtx( graph );
 
                 for( i = 0; edges[i][0] >= 0; i++ )
                 {
                     CvGraphEdge* edge;
-                     cvGraphAddEdge( graph, edges[i][0], edges[i][1], 0, &edge );
+                     cv::graphAddEdge( graph, edges[i][0], edges[i][1], 0, &edge );
                     edge->weight = (float)edges[i][2];
                 }
 
                 edge_count = i;
-                scanner = cvCreateGraphScanner( graph, 0, CV_GRAPH_ALL_ITEMS );
+                scanner = cv::createGraphScanner( graph, 0, CV_GRAPH_ALL_ITEMS );
 
                 for(;;)
                 {
                     int code, a = -1, b = -1;
                     const char* event = "";
-                     code = cvNextGraphItem( scanner );
+                     code = cv::nextGraphItem( scanner );
 
                     switch( code )
                     {
@@ -2063,7 +2063,7 @@ void Core_GraphScanTest::run( int )
                                           "Not every vertex/edge has been visited" );
                 update_progressbar();
 
-                cvReleaseGraphScanner( &scanner );
+                cv::releaseGraphScanner( &scanner );
             }
 
             // for a random graph the test just checks that every graph vertex and
@@ -2079,7 +2079,7 @@ void Core_GraphScanTest::run( int )
                     CvGraphVtx* start_vtx = cvtest::randInt(rng) % 2 || graph->active_count == 0 ? 0 :
                     cvGetGraphVtx( graph, cvtest::randInt(rng) % graph->active_count );
 
-                    scanner = cvCreateGraphScanner( graph, start_vtx, CV_GRAPH_ALL_ITEMS );
+                    scanner = cv::createGraphScanner( graph, start_vtx, CV_GRAPH_ALL_ITEMS );
 
                     vtx_mask.resize(0);
                     vtx_mask.resize(graph->active_count, 0);
@@ -2088,7 +2088,7 @@ void Core_GraphScanTest::run( int )
 
                     for(;;)
                     {
-                        int code = cvNextGraphItem( scanner );
+                        int code = cv::nextGraphItem( scanner );
 
                         if( code == CV_GRAPH_OVER )
                             break;
@@ -2112,14 +2112,14 @@ void Core_GraphScanTest::run( int )
                         }
                     }
 
-                    cvReleaseGraphScanner( &scanner );
+                    cv::releaseGraphScanner( &scanner );
 
                     CV_TS_SEQ_CHECK_CONDITION( cvtest::norm(Mat(vtx_mask),CV_L1) == graph->active_count &&
                                               cvtest::norm(Mat(edge_mask),CV_L1) == graph->edges->active_count,
                                               "Some vertices or edges have not been visited" );
                     update_progressbar();
                 }
-                cvClearMemStorage( storage );
+                cv::clearMemStorage( storage );
             }
 
             storage.release();

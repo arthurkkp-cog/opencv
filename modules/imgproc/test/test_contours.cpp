@@ -121,7 +121,7 @@ void CV_FindContourTest::clear()
     for( i = 0; i < NUM_IMG; i++ )
         cvReleaseImage( &img[i] );
 
-    cvReleaseMemStorage( &storage );
+    cv::releaseMemStorage( &storage );
 }
 
 
@@ -243,7 +243,7 @@ int CV_FindContourTest::prepare_test_case( int test_case_idx )
     approx_method = cvtest::randInt( rng ) % 4 + 1;
     retr_mode = cvtest::randInt( rng ) % 4;
 
-    storage = cvCreateMemStorage( 1 << 10 );
+    storage = cv::createMemStorage( 1 << 10 );
 
     for( i = 0; i < NUM_IMG; i++ )
         img[i] = cvCreateImage( cvSize(img_size), 8, 1 );
@@ -327,9 +327,9 @@ int CV_FindContourTest::validate_test_results( int /*test_case_idx*/ )
         for(int i = 0; i < 2; i++ )
         {
             CvTreeNodeIterator iterator;
-            cvInitTreeNodeIterator( &iterator, i == 0 ? contours : contours2, INT_MAX );
+            cv::initTreeNodeIterator( &iterator, i == 0 ? contours : contours2, INT_MAX );
 
-            for( count3 = 0; cvNextTreeNode( &iterator ) != 0; count3++ )
+            for( count3 = 0; cv::nextTreeNode( &iterator ) != 0; count3++ )
                 ;
 
             if( count3 != count )
@@ -343,13 +343,13 @@ int CV_FindContourTest::validate_test_results( int /*test_case_idx*/ )
             }
         }
 
-        cvInitTreeNodeIterator( &iterator1, contours, INT_MAX );
-        cvInitTreeNodeIterator( &iterator2, contours2, INT_MAX );
+        cv::initTreeNodeIterator( &iterator1, contours, INT_MAX );
+        cv::initTreeNodeIterator( &iterator2, contours2, INT_MAX );
 
         for( count3 = 0; count3 < count; count3++ )
         {
-            CvSeq* seq1 = (CvSeq*)cvNextTreeNode( &iterator1 );
-            CvSeq* seq2 = (CvSeq*)cvNextTreeNode( &iterator2 );
+            CvSeq* seq1 = (CvSeq*)cv::nextTreeNode( &iterator1 );
+            CvSeq* seq2 = (CvSeq*)cv::nextTreeNode( &iterator2 );
             CvSeqReader reader1;
             CvSeqReader reader2;
 
@@ -362,8 +362,8 @@ int CV_FindContourTest::validate_test_results( int /*test_case_idx*/ )
                 goto _exit_;
             }
 
-            cvStartReadSeq( seq1, &reader1 );
-            cvStartReadSeq( seq2, &reader2 );
+            cv::startReadSeq( seq1, &reader1 );
+            cv::startReadSeq( seq2, &reader2 );
 
             if( seq1->total != seq2->total )
             {

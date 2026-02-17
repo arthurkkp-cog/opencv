@@ -1005,7 +1005,7 @@ static double icvContourSecArea( CvSeq * contour, CvSlice slice )
 
     CV_Assert( contour != NULL && CV_IS_SEQ_POINT_SET( contour ));
 
-    lpt = cvSliceLength( slice, contour );
+    lpt = cv::sliceLength( slice, contour );
     /*if( n2 >= n1 )
         lpt = n2 - n1 + 1;
     else
@@ -1023,17 +1023,17 @@ static double icvContourSecArea( CvSeq * contour, CvSlice slice )
     p_are = p_are1;
     p_are2 = NULL;
 
-    cvStartReadSeq( contour, &reader, 0 );
-    cvSetSeqReaderPos( &reader, slice.start_index );
+    cv::startReadSeq( contour, &reader, 0 );
+    cv::setSeqReaderPos( &reader, slice.start_index );
     { CvPoint pt_s_ = CV_STRUCT_INITIALIZER; CV_READ_SEQ_ELEM(pt_s_, reader); pt_s = pt_s_; }
     p_ind = 0;
-    cvSetSeqReaderPos( &reader, slice.end_index );
+    cv::setSeqReaderPos( &reader, slice.end_index );
     { CvPoint pt_e_ = CV_STRUCT_INITIALIZER; CV_READ_SEQ_ELEM(pt_e_, reader); pt_e = pt_e_; }
 
 /*    normal coefficients    */
     nx = pt_s.y - pt_e.y;
     ny = pt_e.x - pt_s.x;
-    cvSetSeqReaderPos( &reader, slice.start_index );
+    cv::setSeqReaderPos( &reader, slice.start_index );
 
     while( lpt-- > 0 )
     {
@@ -1167,7 +1167,7 @@ cvContourArea( const void *array, CvSlice slice, int oriented )
         contour = cvPointSeqFromMat( CV_SEQ_KIND_CURVE, array, &contour_header, &block );
     }
 
-    if( cvSliceLength( slice, contour ) == contour->total )
+    if( cv::sliceLength( slice, contour ) == contour->total )
     {
         cv::AutoBuffer<double> abuf;
         cv::Mat points = cv::cvarrToMat(contour, false, false, 0, &abuf);
@@ -1217,9 +1217,9 @@ cvArcLength( const void *array, CvSlice slice, int is_closed )
     {
         int is_float = CV_SEQ_ELTYPE( contour ) == CV_32FC2;
 
-        cvStartReadSeq( contour, &reader, 0 );
-        cvSetSeqReaderPos( &reader, slice.start_index );
-        count = cvSliceLength( slice, contour );
+        cv::startReadSeq( contour, &reader, 0 );
+        cv::setSeqReaderPos( &reader, slice.start_index );
+        count = cv::sliceLength( slice, contour );
 
         count -= !is_closed && count == contour->total;
 
@@ -1253,7 +1253,7 @@ cvArcLength( const void *array, CvSlice slice, int is_closed )
             // Bugfix by Axel at rubico.com 2010-03-22, affects closed slices only
             // wraparound not handled by CV_NEXT_SEQ_ELEM
             if( is_closed && i == count - 2 )
-                cvSetSeqReaderPos( &reader, slice.start_index );
+                cv::setSeqReaderPos( &reader, slice.start_index );
 
             buffer.data.fl[j] = dx * dx + dy * dy;
             if( ++j == N || i == count - 1 )

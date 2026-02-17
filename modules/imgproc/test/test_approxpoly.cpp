@@ -136,7 +136,7 @@ bool CV_ApproxPolyTest::get_contour( int /*type*/, CvSeq** Seq, int* d,
     radius = cvtest::randInt( rng ) % 1000;
     angle = cvtest::randInt( rng ) % 360;
 
-    seq = cvCreateSeq( CV_SEQ_POLYGON, sizeof(CvContour), sizeof(CvPoint), storage );
+    seq = cv::createSeq( CV_SEQ_POLYGON, sizeof(CvContour), sizeof(CvPoint), storage );
 
     for( i = 0; i < total; i++ )
     {
@@ -146,7 +146,7 @@ bool CV_ApproxPolyTest::get_contour( int /*type*/, CvSeq** Seq, int* d,
         pt.y = cvRound( center.x - radius*sin(angle*deg_to_rad));
         radius += d_radius;
         angle += d_angle;
-        cvSeqPush( seq, &pt );
+        cv::seqPush( seq, &pt );
 
         max_x = MAX( max_x, pt.x );
         max_y = MAX( max_y, pt.y );
@@ -243,8 +243,8 @@ int CV_ApproxPolyTest::check( CvSeq* SrcSeq, CvSeq* DstSeq, float Eps )
     ////////// init ////////////////////
     Count = SrcSeq->total;
 
-    cvStartReadSeq( DstSeq, &DstReader, 0 );
-    cvStartReadSeq( SrcSeq, &SrcReader, 0 );
+    cv::startReadSeq( DstSeq, &DstReader, 0 );
+    cv::startReadSeq( SrcSeq, &SrcReader, 0 );
 
     CV_READ_SEQ_ELEM( StartPt, DstReader );
     for( i = 0 ; i < Count ;  )
@@ -303,9 +303,9 @@ void CV_ApproxPolyTest::run( int /*start_from*/ )
         while( sqrt(dDiam) / IntervalsCount == 0 )
         {
             if( storage != 0 )
-                cvReleaseMemStorage(&storage);
+                cv::releaseMemStorage(&storage);
 
-            storage = cvCreateMemStorage( 0 );
+            storage = cv::createMemStorage( 0 );
             if( get_contour( 0, &SrcSeq, &iDiam, storage ) )
                 dDiam = (float)iDiam;
         }
@@ -317,7 +317,7 @@ void CV_ApproxPolyTest::run( int /*start_from*/ )
         EpsStep = dDiam / IntervalsCount ;
         for( Eps = EpsStep ; Eps < dDiam ; Eps += EpsStep )
         {
-            cvSaveMemStoragePos( storage, &pos );
+            cv::saveMemStoragePos( storage, &pos );
 
             ////////// call function ////////////
             DstSeq = cvApproxPoly( SrcSeq, SrcSeq->header_size, storage,
@@ -340,15 +340,15 @@ void CV_ApproxPolyTest::run( int /*start_from*/ )
                 goto _exit_;
             }
 
-            cvRestoreMemStoragePos( storage, &pos );
+            cv::restoreMemStoragePos( storage, &pos );
         } // for( Eps = EpsStep ; Eps <= Diam ; Eps += EpsStep )
 
         ///////////// free memory  ///////////////////
-        cvReleaseMemStorage(&storage);
+        cv::releaseMemStorage(&storage);
     } // for( int i = 0; NULL != ( Cont = Contours[i] ) ; i++ )
 
 _exit_:
-    cvReleaseMemStorage(&storage);
+    cv::releaseMemStorage(&storage);
 
     if( code < 0 )
         ts->set_failed_test_info( code );

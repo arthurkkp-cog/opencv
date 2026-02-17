@@ -75,13 +75,13 @@ CvSeq* icvApproximateChainTC89( CvChain* chain, int header_size,
     CV_Assert( CV_IS_SEQ_CHAIN_CONTOUR( chain ));
     CV_Assert( header_size >= (int)sizeof(CvContour) );
 
-    cvStartWriteSeq( (chain->flags & ~CV_SEQ_ELTYPE_MASK) | CV_SEQ_ELTYPE_POINT,
+    cv::startWriteSeq( (chain->flags & ~CV_SEQ_ELTYPE_MASK) | CV_SEQ_ELTYPE_POINT,
                      header_size, sizeof( CvPoint ), storage, &writer );
 
     if( chain->total == 0 )
     {
         CV_WRITE_SEQ_ELEM( pt, writer );
-        return cvEndWriteSeq( &writer );
+        return cv::endWriteSeq( &writer );
     }
 
     reader.code = 0;
@@ -123,7 +123,7 @@ CvSeq* icvApproximateChainTC89( CvChain* chain, int header_size,
     //CV_Assert( pt.x == chain->origin.x && pt.y == chain->origin.y );
 
     if( method <= cv::CHAIN_APPROX_SIMPLE )
-        return cvEndWriteSeq( &writer );
+        return cv::endWriteSeq( &writer );
 
     current->next = 0;
 
@@ -372,7 +372,7 @@ copy_vect:
     }
     while( current != 0 );
 
-    return cvEndWriteSeq( &writer );
+    return cv::endWriteSeq( &writer );
 }
 
 
@@ -808,7 +808,7 @@ cvApproxPoly( const void* array, int header_size,
             if( src_seq->first->next == src_seq->first )
                 src = (cv::Point*)src_seq->first->data;
             else
-                cvCvtSeqToArray(src_seq, src);
+                cv::cvtSeqToArray(src_seq, src);
 
             if( CV_SEQ_ELTYPE(src_seq) == CV_32SC2 )
                 nout = cv::approxPolyDP_(src, npoints, dst, closed, parameter, stack);
@@ -818,9 +818,9 @@ cvApproxPoly( const void* array, int header_size,
             else
                 CV_Error( cv::Error::StsUnsupportedFormat, "" );
 
-            contour = cvCreateSeq( src_seq->flags, header_size,
+            contour = cv::createSeq( src_seq->flags, header_size,
                                     src_seq->elem_size, storage );
-            cvSeqPushMulti(contour, dst, nout);
+            cv::seqPushMulti(contour, dst, nout);
         }
 
         CV_Assert( contour );

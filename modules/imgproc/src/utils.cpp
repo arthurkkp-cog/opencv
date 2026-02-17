@@ -67,7 +67,7 @@ CV_IMPL CvSeq* cvPointSeqFromMat( int seq_kind, const CvArr* arr,
         "The matrix converted to point sequence must be "
         "1-dimensional and continuous" );
 
-    cvMakeSeqHeaderForArray(
+    cv::makeSeqHeaderForArray(
             (seq_kind & (CV_SEQ_KIND_MASK|CV_SEQ_FLAG_CLOSED)) | eltype,
             sizeof(CvContour), CV_ELEM_SIZE(eltype), mat->data.ptr,
             mat->width*mat->height, (CvSeq*)contour_header, block );

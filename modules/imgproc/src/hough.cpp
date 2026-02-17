@@ -2404,7 +2404,7 @@ cvHoughLines2( CvArr* src_image, void* lineStorage, int method,
 
     if( isStorage )
     {
-        lines = cvCreateSeq( lineType, sizeof(CvSeq), elemSize, (CvMemStorage*)lineStorage );
+        lines = cv::createSeq( lineType, sizeof(CvSeq), elemSize, (CvMemStorage*)lineStorage );
     }
     else
     {
@@ -2418,10 +2418,10 @@ cvHoughLines2( CvArr* src_image, void* lineStorage, int method,
             CV_Error( cv::Error::StsBadArg,
             "The destination matrix data type is inappropriate, see the manual" );
 
-        lines = cvMakeSeqHeaderForArray( lineType, sizeof(CvSeq), elemSize, mat->data.ptr,
+        lines = cv::makeSeqHeaderForArray( lineType, sizeof(CvSeq), elemSize, mat->data.ptr,
                                          mat->rows + mat->cols - 1, &lines_header, &lines_block );
         linesMax = lines->total;
-        cvClearSeq( lines );
+        cv::clearSeq( lines );
     }
 
     iparam1 = cvRound(param1);
@@ -2462,7 +2462,7 @@ cvHoughLines2( CvArr* src_image, void* lineStorage, int method,
 
         if (isStorage)
         {
-            cvSeqPushMulti(lines, lx.ptr(), nlines);
+            cv::seqPushMulti(lines, lx.ptr(), nlines);
         }
         else
         {
@@ -2494,7 +2494,7 @@ cvHoughCircles( CvArr* src_image, void* circle_storage,
 
     if(isStorage)
     {
-        circles = cvCreateSeq( CV_32FC3, sizeof(CvSeq),
+        circles = cv::createSeq( CV_32FC3, sizeof(CvSeq),
             sizeof(float)*3, (CvMemStorage*)circle_storage );
     }
     else
@@ -2508,14 +2508,14 @@ cvHoughCircles( CvArr* src_image, void* circle_storage,
             CV_Error( cv::Error::StsBadArg,
                       "The destination matrix should be continuous and have a single row or a single column" );
 
-        circles = cvMakeSeqHeaderForArray( CV_32FC3, sizeof(CvSeq), sizeof(float)*3,
+        circles = cv::makeSeqHeaderForArray( CV_32FC3, sizeof(CvSeq), sizeof(float)*3,
                 mat->data.ptr, mat->rows + mat->cols - 1, &circles_header, &circles_block );
         circles_max = circles->total;
-        cvClearSeq( circles );
+        cv::clearSeq( circles );
     }
 
     cv::HoughCircles(src, circles_mat, method, dp, min_dist, param1, param2, min_radius, max_radius, circles_max, 3);
-    cvSeqPushMulti(circles, circles_mat.data, (int)circles_mat.total());
+    cv::seqPushMulti(circles, circles_mat.data, (int)circles_mat.total());
     return circles;
 }
 

@@ -524,13 +524,13 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
     {
         if( return_points )
         {
-            hullseq = cvCreateSeq(CV_SEQ_KIND_CURVE|CV_SEQ_ELTYPE(ptseq)|
+            hullseq = cv::createSeq(CV_SEQ_KIND_CURVE|CV_SEQ_ELTYPE(ptseq)|
                                   CV_SEQ_FLAG_CLOSED|CV_SEQ_FLAG_CONVEX,
                                   sizeof(CvContour), sizeof(CvPoint),(CvMemStorage*)hull_storage );
         }
         else
         {
-            hullseq = cvCreateSeq(
+            hullseq = cv::createSeq(
                                   CV_SEQ_KIND_CURVE|CV_SEQ_ELTYPE_PPOINT|
                                   CV_SEQ_FLAG_CLOSED|CV_SEQ_FLAG_CONVEX,
                                   sizeof(CvContour), sizeof(CvPoint*), (CvMemStorage*)hull_storage );
@@ -552,11 +552,11 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
             CV_Error( cv::Error::StsUnsupportedFormat,
                      "The hull matrix must have the same type as input or 32sC1 (integers)" );
 
-        hullseq = cvMakeSeqHeaderForArray(
+        hullseq = cv::makeSeqHeaderForArray(
                                           CV_SEQ_KIND_CURVE|CV_MAT_TYPE(mat->type)|CV_SEQ_FLAG_CLOSED,
                                           sizeof(hull_header), CV_ELEM_SIZE(mat->type), mat->data.ptr,
                                           mat->cols + mat->rows - 1, &hull_header, &hullblock );
-        cvClearSeq( hullseq );
+        cv::clearSeq( hullseq );
     }
 
     int hulltype = CV_SEQ_ELTYPE(hullseq);
@@ -581,12 +581,12 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
         int ctotal = (int)h0.total();
         for( int i = 0; i < ctotal; i++ )
         {
-            void* ptr = cvGetSeqElem(ptseq, idx[i]);
-            cvSeqPush( hullseq, &ptr );
+            void* ptr = cv::getSeqElem(ptseq, idx[i]);
+            cv::seqPush( hullseq, &ptr );
         }
     }
     else
-        cvSeqPushMulti(hullseq, h0.ptr(), (int)h0.total());
+        cv::seqPushMulti(hullseq, h0.ptr(), (int)h0.total());
 
     if (isStorage)
     {
@@ -668,7 +668,7 @@ CV_IMPL CvSeq* cvConvexityDefects( const CvArr* array,
         if( mat->cols + mat->rows - 1 > ptseq->total )
             CV_Error( cv::Error::StsBadSize, "Convex hull is larger than the point sequence" );
 
-        hull = cvMakeSeqHeaderForArray(
+        hull = cv::makeSeqHeaderForArray(
                                        CV_SEQ_KIND_CURVE|CV_MAT_TYPE(mat->type)|CV_SEQ_FLAG_CLOSED,
                                        sizeof(hull_header), CV_ELEM_SIZE(mat->type), mat->data.ptr,
                                        mat->cols + mat->rows - 1, &hull_header, &hullblock );
@@ -679,7 +679,7 @@ CV_IMPL CvSeq* cvConvexityDefects( const CvArr* array,
     if( !storage )
         CV_Error( cv::Error::StsNullPtr, "NULL storage pointer" );
 
-    defects = cvCreateSeq( CV_SEQ_KIND_GENERIC, sizeof(CvSeq), sizeof(CvConvexityDefect), storage );
+    defects = cv::createSeq( CV_SEQ_KIND_GENERIC, sizeof(CvSeq), sizeof(CvConvexityDefect), storage );
 
     if( ptseq->total < 4 || hull->total < 3)
     {
@@ -696,13 +696,13 @@ CV_IMPL CvSeq* cvConvexityDefects( const CvArr* array,
         if( !is_index )
         {
             CvPoint* pos = *CV_SEQ_ELEM( hull, CvPoint*, 0 );
-            index1 = cvSeqElemIdx( ptseq, pos );
+            index1 = cv::seqElemIdx( ptseq, pos );
 
             pos = *CV_SEQ_ELEM( hull, CvPoint*, 1 );
-            index2 = cvSeqElemIdx( ptseq, pos );
+            index2 = cv::seqElemIdx( ptseq, pos );
 
             pos = *CV_SEQ_ELEM( hull, CvPoint*, 2 );
-            index3 = cvSeqElemIdx( ptseq, pos );
+            index3 = cv::seqElemIdx( ptseq, pos );
         }
         else
         {
@@ -718,21 +718,21 @@ CV_IMPL CvSeq* cvConvexityDefects( const CvArr* array,
         rev_orientation = (sign == 2) ? 0 : 1;
     }
 
-    cvStartReadSeq( ptseq, &ptseq_reader, 0 );
-    cvStartReadSeq( hull, &hull_reader, rev_orientation );
+    cv::startReadSeq( ptseq, &ptseq_reader, 0 );
+    cv::startReadSeq( hull, &hull_reader, rev_orientation );
 
     if( !is_index )
     {
         hull_cur = *(CvPoint**)hull_reader.prev_elem;
-        index = cvSeqElemIdx( ptseq, (char*)hull_cur, 0 );
+        index = cv::seqElemIdx( ptseq, (char*)hull_cur, 0 );
     }
     else
     {
         index = *(int*)hull_reader.prev_elem;
         hull_cur = CV_GET_SEQ_ELEM( CvPoint, ptseq, index );
     }
-    cvSetSeqReaderPos( &ptseq_reader, index );
-    cvStartAppendToSeq( defects, &writer );
+    cv::setSeqReaderPos( &ptseq_reader, index );
+    cv::startAppendToSeq( defects, &writer );
 
     /* cycle through ptseq and hull with computing defects */
     for( i = 0; i < hull->total; i++ )
@@ -803,7 +803,7 @@ CV_IMPL CvSeq* cvConvexityDefects( const CvArr* array,
         }
     }
 
-    return cvEndWriteSeq( &writer );
+    return cv::endWriteSeq( &writer );
 }
 
 

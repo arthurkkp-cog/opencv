@@ -238,9 +238,9 @@ cvTsFloodFill( CvMat* _img, CvPoint seed_pt, CvScalar new_val,
                double* comp, int connectivity, int range_type,
                int new_mask_val, bool mask_only )
 {
-    CvMemStorage* st = cvCreateMemStorage();
+    CvMemStorage* st = cv::createMemStorage();
     ff_offset_pair_t p0, p;
-    CvSeq* seq = cvCreateSeq( 0, sizeof(CvSeq), sizeof(p0), st );
+    CvSeq* seq = cv::createSeq( 0, sizeof(CvSeq), sizeof(p0), st );
     CvMat* tmp = _img;
     CvMat* mask;
     CvRect r = cvRect( 0, 0, -1, -1 );
@@ -285,7 +285,7 @@ cvTsFloodFill( CvMat* _img, CvPoint seed_pt, CvScalar new_val,
     if( m[p0.mofs] )
         goto _exit_;
 
-    cvSeqPush( seq, &p0 );
+    cv::seqPush( seq, &p0 );
     m[p0.mofs] = (ushort)new_mask_val;
 
     if( connectivity == 4 )
@@ -323,7 +323,7 @@ cvTsFloodFill( CvMat* _img, CvPoint seed_pt, CvScalar new_val,
 
         while( seq->total )
         {
-            cvSeqPop( seq, &p0 );
+            cv::seqPop( seq, &p0 );
             float a = a0, b = b0;
             float* ptr = img + p0.iofs;
             ushort* mptr = m + p0.mofs;
@@ -340,7 +340,7 @@ cvTsFloodFill( CvMat* _img, CvPoint seed_pt, CvScalar new_val,
                     mptr[md] = (ushort)new_mask_val;
                     p.mofs = p0.mofs + md;
                     p.iofs = p0.iofs + id;
-                    cvSeqPush( seq, &p );
+                    cv::seqPush( seq, &p );
                 }
             }
         }
@@ -367,7 +367,7 @@ cvTsFloodFill( CvMat* _img, CvPoint seed_pt, CvScalar new_val,
 
         while( seq->total )
         {
-            cvSeqPop( seq, &p0 );
+            cv::seqPop( seq, &p0 );
             float _a0 = a0, _a1 = a1, _a2 = a2;
             float _b0 = b0, _b1 = b1, _b2 = b2;
             float* ptr = img + p0.iofs;
@@ -392,7 +392,7 @@ cvTsFloodFill( CvMat* _img, CvPoint seed_pt, CvScalar new_val,
                     mptr[md] = (ushort)new_mask_val;
                     p.mofs = p0.mofs + md;
                     p.iofs = p0.iofs + id;
-                    cvSeqPush( seq, &p );
+                    cv::seqPush( seq, &p );
                 }
             }
         }
@@ -508,7 +508,7 @@ _exit_:
 #endif
     comp[8] = 0;
 
-    cvReleaseMemStorage(&st);
+    cv::releaseMemStorage(&st);
 }
 
 

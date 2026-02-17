@@ -2613,15 +2613,15 @@ cvDrawContours( void* _img, CvSeq* contour,
         maxLevel = -maxLevel+1;
     }
 
-    cvInitTreeNodeIterator( &iterator, contour, maxLevel );
-    while( (contour = (CvSeq*)cvNextTreeNode( &iterator )) != 0 )
+    cv::initTreeNodeIterator( &iterator, contour, maxLevel );
+    while( (contour = (CvSeq*)cv::nextTreeNode( &iterator )) != 0 )
     {
         CvSeqReader reader;
         int i, count = contour->total;
         int elem_type = CV_MAT_TYPE(contour->flags);
         void* clr = (contour->flags & CV_SEQ_FLAG_HOLE) == 0 ? ext_buf : hole_buf;
 
-        cvStartReadSeq( contour, &reader, 0 );
+        cv::startReadSeq( contour, &reader, 0 );
         CV_Assert(reader.ptr != NULL);
         if( thickness < 0 )
             pts.resize(0);
