@@ -144,8 +144,11 @@ int CV_DisTransTest::prepare_test_case( int test_case_idx )
 
 void CV_DisTransTest::run_func()
 {
-    cvDistTransform( test_array[INPUT][0], test_array[OUTPUT][0], dist_type, mask_size,
-                     dist_type == CV_DIST_USER ? mask : 0, test_array[OUTPUT][1] );
+    cv::Mat src = test_mat[INPUT][0];
+    cv::Mat dst = test_mat[OUTPUT][0];
+    cv::Mat labels = test_mat[OUTPUT][1];
+    cv::distanceTransform(src, dst, labels.empty() ? cv::_OutputArray() : cv::_OutputArray(labels),
+                          dist_type, mask_size, CV_DIST_LABEL_CCOMP);
 }
 
 

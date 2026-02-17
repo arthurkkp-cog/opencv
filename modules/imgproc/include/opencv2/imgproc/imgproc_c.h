@@ -138,37 +138,6 @@ CVAPI(void) cvIntegral( const CvArr* image, CvArr* sum,
                        CvArr* sqsum CV_DEFAULT(NULL),
                        CvArr* tilted_sum CV_DEFAULT(NULL));
 
-/** @brief Smoothes the input image with gaussian kernel and then down-samples it.
-
-   dst_width = floor(src_width/2)[+1],
-   dst_height = floor(src_height/2)[+1]
-   @see cv::pyrDown
-*/
-CVAPI(void)  cvPyrDown( const CvArr* src, CvArr* dst,
-                        int filter CV_DEFAULT(CV_GAUSSIAN_5x5) );
-
-/** @brief Up-samples image and smoothes the result with gaussian kernel.
-
-   dst_width = src_width*2,
-   dst_height = src_height*2
-   @see cv::pyrUp
-*/
-CVAPI(void)  cvPyrUp( const CvArr* src, CvArr* dst,
-                      int filter CV_DEFAULT(CV_GAUSSIAN_5x5) );
-
-/** @brief Builds pyramid for an image
-@see buildPyramid
-*/
-CVAPI(CvMat**) cvCreatePyramid( const CvArr* img, int extra_layers, double rate,
-                                const CvSize* layer_sizes CV_DEFAULT(0),
-                                CvArr* bufarr CV_DEFAULT(0),
-                                int calc CV_DEFAULT(1),
-                                int filter CV_DEFAULT(CV_GAUSSIAN_5x5) );
-
-/** @brief Releases pyramid */
-CVAPI(void)  cvReleasePyramid( CvMat*** pyramid, int extra_layers );
-
-
 /** @brief Filters image using meanshift algorithm
 @see cv::pyrMeanShiftFiltering
 */
@@ -208,78 +177,6 @@ CVAPI(void)  cvCvtColor( const CvArr* src, CvArr* dst, int code );
 */
 CVAPI(void)  cvResize( const CvArr* src, CvArr* dst,
                        int interpolation CV_DEFAULT( CV_INTER_LINEAR ));
-
-#ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable: 5054 )
-#endif
-/** @brief Warps image with affine transform
-@note ::cvGetQuadrangleSubPix is similar to ::cvWarpAffine, but the outliers are extrapolated using
-replication border mode.
-@see cv::warpAffine
-*/
-CVAPI(void)  cvWarpAffine( const CvArr* src, CvArr* dst, const CvMat* map_matrix,
-                           int flags CV_DEFAULT(+CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS),
-                           CvScalar fillval CV_DEFAULT(cvScalarAll(0)) );
-
-/** @brief Computes affine transform matrix for mapping src[i] to dst[i] (i=0,1,2)
-@see cv::getAffineTransform
-*/
-CVAPI(CvMat*) cvGetAffineTransform( const CvPoint2D32f * src,
-                                    const CvPoint2D32f * dst,
-                                    CvMat * map_matrix );
-
-/** @brief Computes rotation_matrix matrix
-@see cv::getRotationMatrix2D
-*/
-CVAPI(CvMat*)  cv2DRotationMatrix( CvPoint2D32f center, double angle,
-                                   double scale, CvMat* map_matrix );
-
-/** @brief Warps image with perspective (projective) transform
-@see cv::warpPerspective
-*/
-CVAPI(void)  cvWarpPerspective( const CvArr* src, CvArr* dst, const CvMat* map_matrix,
-                                int flags CV_DEFAULT(+CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS),
-                                CvScalar fillval CV_DEFAULT(cvScalarAll(0)) );
-
-/** @brief Computes perspective transform matrix for mapping src[i] to dst[i] (i=0,1,2,3)
-@see cv::getPerspectiveTransform
-*/
-CVAPI(CvMat*) cvGetPerspectiveTransform( const CvPoint2D32f* src,
-                                         const CvPoint2D32f* dst,
-                                         CvMat* map_matrix );
-
-/** @brief Performs generic geometric transformation using the specified coordinate maps
-@see cv::remap
-*/
-CVAPI(void)  cvRemap( const CvArr* src, CvArr* dst,
-                      const CvArr* mapx, const CvArr* mapy,
-                      int flags CV_DEFAULT(+CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS),
-                      CvScalar fillval CV_DEFAULT(cvScalarAll(0)) );
-
-/** @brief Converts mapx & mapy from floating-point to integer formats for cvRemap
-@see cv::convertMaps
-*/
-CVAPI(void)  cvConvertMaps( const CvArr* mapx, const CvArr* mapy,
-                            CvArr* mapxy, CvArr* mapalpha );
-
-/** @brief Performs forward or inverse log-polar image transform
-@see cv::warpPolar
-*/
-CVAPI(void)  cvLogPolar( const CvArr* src, CvArr* dst,
-                         CvPoint2D32f center, double M,
-                         int flags CV_DEFAULT(+CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS));
-
-/** Performs forward or inverse linear-polar image transform
-@see cv::warpPolar
-*/
-CVAPI(void)  cvLinearPolar( const CvArr* src, CvArr* dst,
-                         CvPoint2D32f center, double maxRadius,
-                         int flags CV_DEFAULT(+CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS));
-
-#ifdef _MSC_VER
-#pragma warning( pop )
-#endif
 
 /** @brief Returns a structuring element of the specified size and shape for morphological operations.
 
@@ -346,35 +243,6 @@ CVAPI(double)  cvGetNormalizedCentralMoment( CvMoments* moments,
 @see cv::HuMoments
 */
 CVAPI(void) cvGetHuMoments( CvMoments*  moments, CvHuMoments*  hu_moments );
-
-/*********************************** data sampling **************************************/
-
-/** @brief Fetches pixels that belong to the specified line segment and stores them to the buffer.
-
-   Returns the number of retrieved points.
-@see cv::LineSegmentDetector
-*/
-CVAPI(int)  cvSampleLine( const CvArr* image, CvPoint pt1, CvPoint pt2, void* buffer,
-                          int connectivity CV_DEFAULT(8));
-
-/** @brief Retrieves the rectangular image region with specified center from the input array.
-
- dst(x,y) <- src(x + center.x - dst_width/2, y + center.y - dst_height/2).
- Values of pixels with fractional coordinates are retrieved using bilinear interpolation
-@see cv::getRectSubPix
-*/
-CVAPI(void)  cvGetRectSubPix( const CvArr* src, CvArr* dst, CvPoint2D32f center );
-
-
-/** @brief Retrieves quadrangle from the input array.
-
-    matrixarr = ( a11  a12 | b1 )   dst(x,y) <- src(A[x y]' + b)
-                ( a21  a22 | b2 )   (bilinear interpolation is used to retrieve pixels
-                                     with fractional coordinates)
-@see cvWarpAffine
-*/
-CVAPI(void)  cvGetQuadrangleSubPix( const CvArr* src, CvArr* dst,
-                                    const CvMat* map_matrix );
 
 /** @brief Measures similarity between template and overlapped windows in the source image
    and fills the resultant image with the measurements
@@ -804,17 +672,6 @@ CVAPI(void)  cvCalcProbDensity( const CvHistogram* hist1, const CvHistogram* his
 @see cv::equalizeHist
 */
 CVAPI(void)  cvEqualizeHist( const CvArr* src, CvArr* dst );
-
-
-/** @brief Applies distance transform to binary image
-@see cv::distanceTransform
-*/
-CVAPI(void)  cvDistTransform( const CvArr* src, CvArr* dst,
-                              int distance_type CV_DEFAULT(CV_DIST_L2),
-                              int mask_size CV_DEFAULT(3),
-                              const float* mask CV_DEFAULT(NULL),
-                              CvArr* labels CV_DEFAULT(NULL),
-                              int labelType CV_DEFAULT(CV_DIST_LABEL_CCOMP));
 
 
 /** @brief Applies fixed-level threshold to grayscale image.
