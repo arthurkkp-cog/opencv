@@ -41,6 +41,7 @@
 
 #include "test_precomp.hpp"
 #include <opencv2/highgui.hpp>
+#include "../src/_geom.h"
 
 namespace opencv_test { namespace {
 
@@ -263,7 +264,7 @@ int CV_FindContourTest::prepare_test_case( int test_case_idx )
 void CV_FindContourTest::run_func()
 {
     contours = contours2 = chain = 0;
-    count = cvFindContours( img[2], storage, &contours, sizeof(CvContour), retr_mode, approx_method );
+    count = cvFindContours_Impl( img[2], storage, &contours, sizeof(CvContour), retr_mode, approx_method, cvPoint(0,0), 1 );
 
     cvZero( img[3] );
 
@@ -272,7 +273,7 @@ void CV_FindContourTest::run_func()
 
     cvCopy( img[0], img[2] );
 
-    count2 = cvFindContours( img[2], storage, &chain, sizeof(CvChain), retr_mode, CV_CHAIN_CODE );
+    count2 = cvFindContours_Impl( img[2], storage, &chain, sizeof(CvChain), retr_mode, CV_CHAIN_CODE, cvPoint(0,0), 1 );
 
     if( chain )
         contours2 = cvApproxChains( chain, storage, approx_method, 0, 0, 1 );

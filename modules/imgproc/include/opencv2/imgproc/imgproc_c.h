@@ -83,10 +83,6 @@ CVAPI(void)  cvRunningAvg( const CvArr* image, CvArr* acc, double alpha,
 *                                    Image Processing                                    *
 \****************************************************************************************/
 
-/** Copies source 2D array inside of the larger destination array and
-   makes a border of the specified type (IPL_BORDER_*) around the copied area. */
-CVAPI(void) cvCopyMakeBorder( const CvArr* src, CvArr* dst, CvPoint offset,
-                              int bordertype, CvScalar value CV_DEFAULT(cvScalarAll(0)));
 
 /** @brief Smooths the image in one of several ways.
 
@@ -169,17 +165,6 @@ CVAPI(CvMat**) cvCreatePyramid( const CvArr* img, int extra_layers, double rate,
 CVAPI(void)  cvReleasePyramid( CvMat*** pyramid, int extra_layers );
 
 
-/** @brief Filters image using meanshift algorithm
-@see cv::pyrMeanShiftFiltering
-*/
-CVAPI(void) cvPyrMeanShiftFiltering( const CvArr* src, CvArr* dst,
-    double sp, double sr, int max_level CV_DEFAULT(1),
-    CvTermCriteria termcrit CV_DEFAULT(cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS,5,1)));
-
-/** @brief Segments image using seed "markers"
-@see cv::watershed
-*/
-CVAPI(void) cvWatershed( const CvArr* image, CvArr* markers );
 
 /** @brief Calculates an image derivative using generalized Sobel
 
@@ -329,23 +314,6 @@ CVAPI(void)  cvMorphologyEx( const CvArr* src, CvArr* dst,
                              CvArr* temp, IplConvKernel* element,
                              int operation, int iterations CV_DEFAULT(1) );
 
-/** @brief Calculates all spatial and central moments up to the 3rd order
-@see cv::moments
-*/
-CVAPI(void) cvMoments( const CvArr* arr, CvMoments* moments, int binary CV_DEFAULT(0));
-
-/** @brief Retrieve spatial moments */
-CVAPI(double)  cvGetSpatialMoment( CvMoments* moments, int x_order, int y_order );
-/** @brief Retrieve central moments */
-CVAPI(double)  cvGetCentralMoment( CvMoments* moments, int x_order, int y_order );
-/** @brief Retrieve normalized central moments */
-CVAPI(double)  cvGetNormalizedCentralMoment( CvMoments* moments,
-                                             int x_order, int y_order );
-
-/** @brief Calculates 7 Hu's invariants from precalculated spatial and central moments
-@see cv::HuMoments
-*/
-CVAPI(void) cvGetHuMoments( CvMoments*  moments, CvHuMoments*  hu_moments );
 
 /*********************************** data sampling **************************************/
 
@@ -376,53 +344,11 @@ CVAPI(void)  cvGetRectSubPix( const CvArr* src, CvArr* dst, CvPoint2D32f center 
 CVAPI(void)  cvGetQuadrangleSubPix( const CvArr* src, CvArr* dst,
                                     const CvMat* map_matrix );
 
-/** @brief Measures similarity between template and overlapped windows in the source image
-   and fills the resultant image with the measurements
-@see cv::matchTemplate
-*/
-CVAPI(void)  cvMatchTemplate( const CvArr* image, const CvArr* templ,
-                              CvArr* result, int method );
-
-/** @brief Computes earth mover distance between
-   two weighted point sets (called signatures)
-@see cv::EMD
-*/
-CVAPI(float)  cvCalcEMD2( const CvArr* signature1,
-                          const CvArr* signature2,
-                          int distance_type,
-                          CvDistanceFunction distance_func CV_DEFAULT(NULL),
-                          const CvArr* cost_matrix CV_DEFAULT(NULL),
-                          CvArr* flow CV_DEFAULT(NULL),
-                          float* lower_bound CV_DEFAULT(NULL),
-                          void* userdata CV_DEFAULT(NULL));
 
 /****************************************************************************************\
 *                              Contours retrieving                                       *
 \****************************************************************************************/
 
-/** @brief Retrieves outer and optionally inner boundaries of white (non-zero) connected
-   components in the black (zero) background
-@see cv::findContours, cvStartFindContours, cvFindNextContour, cvSubstituteContour, cvEndFindContours
-*/
-CVAPI(int)  cvFindContours( CvArr* image, CvMemStorage* storage, CvSeq** first_contour,
-                            int header_size CV_DEFAULT(sizeof(CvContour)),
-                            int mode CV_DEFAULT(CV_RETR_LIST),
-                            int method CV_DEFAULT(CV_CHAIN_APPROX_SIMPLE),
-                            CvPoint offset CV_DEFAULT(cvPoint(0,0)));
-
-/** @brief Initializes contour retrieving process.
-
-   Calls cvStartFindContours.
-   Calls cvFindNextContour until null pointer is returned
-   or some other condition becomes true.
-   Calls cvEndFindContours at the end.
-@see cvFindContours
-*/
-CVAPI(CvContourScanner)  cvStartFindContours( CvArr* image, CvMemStorage* storage,
-                            int header_size CV_DEFAULT(sizeof(CvContour)),
-                            int mode CV_DEFAULT(CV_RETR_LIST),
-                            int method CV_DEFAULT(CV_CHAIN_APPROX_SIMPLE),
-                            CvPoint offset CV_DEFAULT(cvPoint(0,0)));
 
 /** @brief Retrieves next contour
 @see cvFindContours
@@ -430,162 +356,13 @@ CVAPI(CvContourScanner)  cvStartFindContours( CvArr* image, CvMemStorage* storag
 CVAPI(CvSeq*)  cvFindNextContour( CvContourScanner scanner );
 
 
-/** @brief Substitutes the last retrieved contour with the new one
 
-   (if the substitutor is null, the last retrieved contour is removed from the tree)
-@see cvFindContours
-*/
-CVAPI(void)   cvSubstituteContour( CvContourScanner scanner, CvSeq* new_contour );
-
-
-/** @brief Releases contour scanner and returns pointer to the first outer contour
-@see cvFindContours
-*/
-CVAPI(CvSeq*)  cvEndFindContours( CvContourScanner* scanner );
-
-/** @brief Approximates Freeman chain(s) with a polygonal curve.
-
-This is a standalone contour approximation routine, not represented in the new interface. When
-cvFindContours retrieves contours as Freeman chains, it calls the function to get approximated
-contours, represented as polygons.
-
-@param src_seq Pointer to the approximated Freeman chain that can refer to other chains.
-@param storage Storage location for the resulting polylines.
-@param method Approximation method (see the description of the function :ocvFindContours ).
-@param parameter Method parameter (not used now).
-@param minimal_perimeter Approximates only those contours whose perimeters are not less than
-minimal_perimeter . Other chains are removed from the resulting structure.
-@param recursive Recursion flag. If it is non-zero, the function approximates all chains that can
-be obtained from chain by using the h_next or v_next links. Otherwise, the single input chain is
-approximated.
-@see cvStartReadChainPoints, cvReadChainPoint
- */
-CVAPI(CvSeq*) cvApproxChains( CvSeq* src_seq, CvMemStorage* storage,
-                            int method CV_DEFAULT(CV_CHAIN_APPROX_SIMPLE),
-                            double parameter CV_DEFAULT(0),
-                            int  minimal_perimeter CV_DEFAULT(0),
-                            int  recursive CV_DEFAULT(0));
-
-/** @brief Initializes Freeman chain reader.
-
-   The reader is used to iteratively get coordinates of all the chain points.
-   If the Freeman codes should be read as is, a simple sequence reader should be used
-@see cvApproxChains
-*/
-CVAPI(void) cvStartReadChainPoints( CvChain* chain, CvChainPtReader* reader );
-
-/** @brief Retrieves the next chain point
-@see cvApproxChains
-*/
-CVAPI(CvPoint) cvReadChainPoint( CvChainPtReader* reader );
 
 
 /****************************************************************************************\
 *                            Contour Processing and Shape Analysis                       *
 \****************************************************************************************/
 
-/** @brief Approximates a single polygonal curve (contour) or
-   a tree of polygonal curves (contours)
-@see cv::approxPolyDP
-*/
-CVAPI(CvSeq*)  cvApproxPoly( const void* src_seq,
-                             int header_size, CvMemStorage* storage,
-                             int method, double eps,
-                             int recursive CV_DEFAULT(0));
-
-/** @brief Calculates perimeter of a contour or length of a part of contour
-@see cv::arcLength
-*/
-CVAPI(double)  cvArcLength( const void* curve,
-                            CvSlice slice CV_DEFAULT(CV_WHOLE_SEQ),
-                            int is_closed CV_DEFAULT(-1));
-
-/** same as cvArcLength for closed contour
-*/
-CV_INLINE double cvContourPerimeter( const void* contour )
-{
-    return cvArcLength( contour, CV_WHOLE_SEQ, 1 );
-}
-
-
-/** @brief Calculates contour bounding rectangle (update=1) or
-   just retrieves pre-calculated rectangle (update=0)
-@see cv::boundingRect
-*/
-CVAPI(CvRect)  cvBoundingRect( CvArr* points, int update CV_DEFAULT(0) );
-
-/** @brief Calculates area of a contour or contour segment
-@see cv::contourArea
-*/
-CVAPI(double)  cvContourArea( const CvArr* contour,
-                              CvSlice slice CV_DEFAULT(CV_WHOLE_SEQ),
-                              int oriented CV_DEFAULT(0));
-
-/** @brief Finds minimum area rotated rectangle bounding a set of points
-@see cv::minAreaRect
-*/
-CVAPI(CvBox2D)  cvMinAreaRect2( const CvArr* points,
-                                CvMemStorage* storage CV_DEFAULT(NULL));
-
-/** @brief Finds minimum enclosing circle for a set of points
-@see cv::minEnclosingCircle
-*/
-CVAPI(int)  cvMinEnclosingCircle( const CvArr* points,
-                                  CvPoint2D32f* center, float* radius );
-
-/** @brief Compares two contours by matching their moments
-@see cv::matchShapes
-*/
-CVAPI(double)  cvMatchShapes( const void* object1, const void* object2,
-                              int method, double parameter CV_DEFAULT(0));
-
-/** @brief Calculates exact convex hull of 2d point set
-@see cv::convexHull
-*/
-CVAPI(CvSeq*) cvConvexHull2( const CvArr* input,
-                             void* hull_storage CV_DEFAULT(NULL),
-                             int orientation CV_DEFAULT(CV_CLOCKWISE),
-                             int return_points CV_DEFAULT(0));
-
-/** @brief Checks whether the contour is convex or not (returns 1 if convex, 0 if not)
-@see cv::isContourConvex
-*/
-CVAPI(int)  cvCheckContourConvexity( const CvArr* contour );
-
-
-/** @brief Finds convexity defects for the contour
-@see cv::convexityDefects
-*/
-CVAPI(CvSeq*)  cvConvexityDefects( const CvArr* contour, const CvArr* convexhull,
-                                   CvMemStorage* storage CV_DEFAULT(NULL));
-
-/** @brief Fits ellipse into a set of 2d points
-@see cv::fitEllipse
-*/
-CVAPI(CvBox2D) cvFitEllipse2( const CvArr* points );
-
-/** @brief Finds minimum rectangle containing two given rectangles */
-CVAPI(CvRect)  cvMaxRect( const CvRect* rect1, const CvRect* rect2 );
-
-/** @brief Finds coordinates of the box vertices */
-CVAPI(void) cvBoxPoints( CvBox2D box, CvPoint2D32f pt[4] );
-
-/** @brief Initializes sequence header for a matrix (column or row vector) of points
-
-   a wrapper for cvMakeSeqHeaderForArray (it does not initialize bounding rectangle!!!) */
-CVAPI(CvSeq*) cvPointSeqFromMat( int seq_kind, const CvArr* mat,
-                                 CvContour* contour_header,
-                                 CvSeqBlock* block );
-
-/** @brief Checks whether the point is inside polygon, outside, on an edge (at a vertex).
-
-   Returns positive, negative or zero value, correspondingly.
-   Optionally, measures a signed distance between
-   the point and the nearest polygon edge (measure_dist=1)
-@see cv::pointPolygonTest
-*/
-CVAPI(double) cvPointPolygonTest( const CvArr* contour,
-                                  CvPoint2D32f pt, int measure_dist );
 
 /****************************************************************************************\
 *                                  Histogram functions                                   *
@@ -840,15 +617,6 @@ CVAPI(void)  cvAdaptiveThreshold( const CvArr* src, CvArr* dst, double max_value
                                   int block_size CV_DEFAULT(3),
                                   double param1 CV_DEFAULT(5));
 
-/** @brief Fills the connected component until the color difference gets large enough
-@see cv::floodFill
-*/
-CVAPI(void)  cvFloodFill( CvArr* image, CvPoint seed_point,
-                          CvScalar new_val, CvScalar lo_diff CV_DEFAULT(cvScalarAll(0)),
-                          CvScalar up_diff CV_DEFAULT(cvScalarAll(0)),
-                          CvConnectedComp* comp CV_DEFAULT(NULL),
-                          int flags CV_DEFAULT(4),
-                          CvArr* mask CV_DEFAULT(NULL));
 
 /****************************************************************************************\
 *                                  Feature detection                                     *
@@ -860,88 +628,6 @@ CVAPI(void)  cvFloodFill( CvArr* image, CvPoint seed_point,
 CVAPI(void)  cvCanny( const CvArr* image, CvArr* edges, double threshold1,
                       double threshold2, int  aperture_size CV_DEFAULT(3) );
 
-/** @brief Calculates constraint image for corner detection
-
-   Dx^2 * Dyy + Dxx * Dy^2 - 2 * Dx * Dy * Dxy.
-   Applying threshold to the result gives coordinates of corners
-@see cv::preCornerDetect
-*/
-CVAPI(void) cvPreCornerDetect( const CvArr* image, CvArr* corners,
-                               int aperture_size CV_DEFAULT(3) );
-
-/** @brief Calculates eigen values and vectors of 2x2
-   gradient covariation matrix at every image pixel
-@see cv::cornerEigenValsAndVecs
-*/
-CVAPI(void)  cvCornerEigenValsAndVecs( const CvArr* image, CvArr* eigenvv,
-                                       int block_size, int aperture_size CV_DEFAULT(3) );
-
-/** @brief Calculates minimal eigenvalue for 2x2 gradient covariation matrix at
-   every image pixel
-@see cv::cornerMinEigenVal
-*/
-CVAPI(void)  cvCornerMinEigenVal( const CvArr* image, CvArr* eigenval,
-                                  int block_size, int aperture_size CV_DEFAULT(3) );
-
-/** @brief Harris corner detector:
-
-   Calculates det(M) - k*(trace(M)^2), where M is 2x2 gradient covariation matrix for each pixel
-@see cv::cornerHarris
-*/
-CVAPI(void)  cvCornerHarris( const CvArr* image, CvArr* harris_response,
-                             int block_size, int aperture_size CV_DEFAULT(3),
-                             double k CV_DEFAULT(0.04) );
-
-/** @brief Adjust corner position using some sort of gradient search
-@see cv::cornerSubPix
-*/
-CVAPI(void)  cvFindCornerSubPix( const CvArr* image, CvPoint2D32f* corners,
-                                 int count, CvSize win, CvSize zero_zone,
-                                 CvTermCriteria  criteria );
-
-/** @brief Finds a sparse set of points within the selected region
-   that seem to be easy to track
-@see cv::goodFeaturesToTrack
-*/
-CVAPI(void)  cvGoodFeaturesToTrack( const CvArr* image, CvArr* eig_image,
-                                    CvArr* temp_image, CvPoint2D32f* corners,
-                                    int* corner_count, double  quality_level,
-                                    double  min_distance,
-                                    const CvArr* mask CV_DEFAULT(NULL),
-                                    int block_size CV_DEFAULT(3),
-                                    int use_harris CV_DEFAULT(0),
-                                    double k CV_DEFAULT(0.04) );
-
-/** @brief Finds lines on binary image using one of several methods.
-
-   line_storage is either memory storage or 1 x _max number of lines_ CvMat, its
-   number of columns is changed by the function.
-   method is one of CV_HOUGH_*;
-   rho, theta and threshold are used for each of those methods;
-   param1 ~ line length, param2 ~ line gap - for probabilistic,
-   param1 ~ srn, param2 ~ stn - for multi-scale
-@see cv::HoughLines
-*/
-CVAPI(CvSeq*)  cvHoughLines2( CvArr* image, void* line_storage, int method,
-                              double rho, double theta, int threshold,
-                              double param1 CV_DEFAULT(0), double param2 CV_DEFAULT(0),
-                              double min_theta CV_DEFAULT(0), double max_theta CV_DEFAULT(CV_PI));
-
-/** @brief Finds circles in the image
-@see cv::HoughCircles
-*/
-CVAPI(CvSeq*) cvHoughCircles( CvArr* image, void* circle_storage,
-                              int method, double dp, double min_dist,
-                              double param1 CV_DEFAULT(100),
-                              double param2 CV_DEFAULT(100),
-                              int min_radius CV_DEFAULT(0),
-                              int max_radius CV_DEFAULT(0));
-
-/** @brief Fits a line into set of 2d or 3d points in a robust way (M-estimator technique)
-@see cv::fitLine
-*/
-CVAPI(void)  cvFitLine( const CvArr* points, int dist_type, double param,
-                        double reps, double aeps, float* line );
 
 /****************************************************************************************\
 *                                     Drawing                                            *

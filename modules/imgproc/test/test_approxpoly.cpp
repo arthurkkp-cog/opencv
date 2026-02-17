@@ -320,16 +320,26 @@ void CV_ApproxPolyTest::run( int /*start_from*/ )
             cvSaveMemStoragePos( storage, &pos );
 
             ////////// call function ////////////
-            DstSeq = cvApproxPoly( SrcSeq, SrcSeq->header_size, storage,
-                CV_POLY_APPROX_DP, Eps );
+            {
+                int npoints = SrcSeq->total;
+                std::vector<cv::Point> srcPts(npoints);
+                cvCvtSeqToArray(SrcSeq, &srcPts[0]);
+                std::vector<cv::Point> dstPts;
+                bool closed = (SrcSeq->flags & CV_SEQ_FLAG_CLOSED) != 0;
+                cv::approxPolyDP(srcPts, dstPts, Eps, closed);
+                DstSeq = cvCreateSeq(SrcSeq->flags, SrcSeq->header_size,
+                    SrcSeq->elem_size, storage);
+                if (!dstPts.empty())
+                    cvSeqPushMulti(DstSeq, &dstPts[0], (int)dstPts.size());
+            }
 
-            if( DstSeq == NULL )
+            if( DstSeq == NULL || DstSeq->total == 0 )
             {
                 ts->printf( cvtest::TS::LOG,
-                    "cvApproxPoly returned NULL for contour #%d, epsilon = %g\n", i, Eps );
+                    "approxPolyDP returned empty result for contour #%d, epsilon = %g\n", i, Eps );
                 code = cvtest::TS::FAIL_INVALID_OUTPUT;
                 goto _exit_;
-            } // if( DstSeq == NULL )
+            }
 
             code = check( SrcSeq, DstSeq, Eps );
             if( code != 0 )

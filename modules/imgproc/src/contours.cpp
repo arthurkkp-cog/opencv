@@ -54,7 +54,7 @@ using namespace cv;
 static const CvPoint icvCodeDeltas[8] =
     { {1, 0}, {1, -1}, {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1} };
 
-CV_IMPL void
+void
 cvStartReadChainPoints( CvChain * chain, CvChainPtReader * reader )
 {
     int i;
@@ -77,8 +77,8 @@ cvStartReadChainPoints( CvChain * chain, CvChainPtReader * reader )
 
 
 /* retrieves next point of the chain curve and updates reader */
-CV_IMPL CvPoint
-cvReadChainPoint( CvChainPtReader * reader )
+static CvPoint
+icvReadChainPoint( CvChainPtReader * reader )
 {
     if( !reader )
         CV_Error( cv::Error::StsNullPtr, "" );
@@ -307,13 +307,6 @@ cvStartFindContours_Impl( void* _img, CvMemStorage* storage,
     return scanner;
 }
 
-CV_IMPL CvContourScanner
-cvStartFindContours( void* _img, CvMemStorage* storage,
-                     int  header_size, int mode,
-                     int  method, CvPoint offset )
-{
-    return cvStartFindContours_Impl(_img, storage, header_size, mode, method, offset, 1);
-}
 
 /*
    Final stage of contour processing.
@@ -481,22 +474,6 @@ icvEndProcessContour( CvContourScanner scanner )
     }
 }
 
-/* replaces one contour with another */
-CV_IMPL void
-cvSubstituteContour( CvContourScanner scanner, CvSeq * new_contour )
-{
-    _CvContourInfo *l_cinfo;
-
-    if( !scanner )
-        CV_Error( cv::Error::StsNullPtr, "" );
-
-    l_cinfo = scanner->l_cinfo;
-    if( l_cinfo && l_cinfo->contour && l_cinfo->contour != new_contour )
-    {
-        l_cinfo->contour = new_contour;
-        scanner->subst_flag = 1;
-    }
-}
 
 static const int MAX_SIZE = 16;
 
@@ -1307,7 +1284,7 @@ cvFindNextContour( CvContourScanner scanner )
    The function add to tree the last retrieved/substituted contour,
    releases temp_storage, restores state of dst_storage (if needed), and
    returns pointer to root of the contour tree */
-CV_IMPL CvSeq *
+static CvSeq *
 cvEndFindContours( CvContourScanner * _scanner )
 {
     CvContourScanner scanner;
@@ -1735,7 +1712,7 @@ icvFindContoursInInterval( const CvArr* src,
     return count;
 }
 
-static int
+int
 cvFindContours_Impl( void*  img,  CvMemStorage*  storage,
                 CvSeq**  firstContour, int  cntHeaderSize,
                 int  mode,
@@ -1805,14 +1782,6 @@ cvFindContours_Impl( void*  img,  CvMemStorage*  storage,
 //      CV_OK or error code
 //    Notes:
 //F*/
-CV_IMPL int
-cvFindContours( void*  img,  CvMemStorage*  storage,
-                CvSeq**  firstContour, int  cntHeaderSize,
-                int  mode,
-                int  method, CvPoint offset )
-{
-    return cvFindContours_Impl(img, storage, firstContour, cntHeaderSize, mode, method, offset, 1);
-}
 
 void cv::findContours_legacy( InputArray _image, OutputArrayOfArrays _contours,
                    OutputArray _hierarchy, int mode, int method, Point offset )

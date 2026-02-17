@@ -191,22 +191,6 @@ void CV_FloodFillTest::run_func()
         (range_type == 1 ? CV_FLOODFILL_FIXED_RANGE : 0) + (new_mask_val << 8);
     double* odata = test_mat[OUTPUT][0].ptr<double>();
 
-    if(!test_cpp)
-    {
-        CvConnectedComp comp;
-        cvFloodFill( test_array[INPUT_OUTPUT][0], cvPoint(seed_pt), cvScalar(new_val), cvScalar(l_diff), cvScalar(u_diff), &comp,
-                     flags, test_array[INPUT_OUTPUT][1] );
-        odata[0] = comp.area;
-        odata[1] = comp.rect.x;
-        odata[2] = comp.rect.y;
-        odata[3] = comp.rect.width;
-        odata[4] = comp.rect.height;
-        odata[5] = comp.value.val[0];
-        odata[6] = comp.value.val[1];
-        odata[7] = comp.value.val[2];
-        odata[8] = comp.value.val[3];
-    }
-    else
     {
         cv::Mat img = cv::cvarrToMat(test_array[INPUT_OUTPUT][0]),
             mask = test_array[INPUT_OUTPUT][1] ? cv::cvarrToMat(test_array[INPUT_OUTPUT][1]) : cv::Mat();

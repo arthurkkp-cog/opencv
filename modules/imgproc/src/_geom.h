@@ -45,6 +45,12 @@
 /* curvature: 0 - 1-curvature, 1 - k-cosine curvature. */
 CvSeq* icvApproximateChainTC89( CvChain* chain, int header_size, CvMemStorage* storage, int method );
 
+void cvStartReadChainPoints( CvChain* chain, CvChainPtReader* reader );
+CvSeq* cvPointSeqFromMat( int seq_kind, const CvArr* arr, CvContour* contour_header, CvSeqBlock* block );
+CvRect cvBoundingRect( CvArr* array, int update CV_DEFAULT(0) );
+CV_EXPORTS int cvFindContours_Impl( void* img, CvMemStorage* storage, CvSeq** firstContour, int cntHeaderSize, int mode, int method, CvPoint offset, int needFillBorder );
+CV_EXPORTS CvSeq* cvApproxChains( CvSeq* src_seq, CvMemStorage* storage, int method CV_DEFAULT(CV_CHAIN_APPROX_SIMPLE), double parameter CV_DEFAULT(0), int minimal_perimeter CV_DEFAULT(0), int recursive CV_DEFAULT(0) );
+
 #endif /*_IPCVGEOM_H_*/
 
 /* End of file. */

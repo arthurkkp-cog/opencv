@@ -147,6 +147,7 @@ void CV_MomentsTest::run_func()
 {
     CvMoments* m = (CvMoments*)test_mat[OUTPUT][0].ptr<double>();
     double* others = (double*)(m + 1);
+    Moments new_m;
     if (try_umat_)
     {
         UMat u;
@@ -156,23 +157,25 @@ void CV_MomentsTest::run_func()
             static int ncalls = 0;
             moments(u, is_binary != 0);
             double t = (double)getTickCount());
-        Moments new_m = moments(u, is_binary != 0);
+        new_m = moments(u, is_binary != 0);
         OCL_TUNING_MODE_ONLY(
             ttime += (double)getTickCount() - t;
             ncalls++;
             printf("%g\n", ttime/ncalls/u.total()));
-        *m = cvMoments(new_m);
     }
     else
-        cvMoments( test_array[INPUT][0], m, is_binary );
+    {
+        new_m = cv::moments(cv::cvarrToMat(test_array[INPUT][0]), is_binary != 0);
+    }
+    *m = cvMoments(new_m);
 
-    others[0] = cvGetNormalizedCentralMoment( m, 2, 0 );
-    others[1] = cvGetNormalizedCentralMoment( m, 1, 1 );
-    others[2] = cvGetNormalizedCentralMoment( m, 0, 2 );
-    others[3] = cvGetNormalizedCentralMoment( m, 3, 0 );
-    others[4] = cvGetNormalizedCentralMoment( m, 2, 1 );
-    others[5] = cvGetNormalizedCentralMoment( m, 1, 2 );
-    others[6] = cvGetNormalizedCentralMoment( m, 0, 3 );
+    others[0] = new_m.nu20;
+    others[1] = new_m.nu11;
+    others[2] = new_m.nu02;
+    others[3] = new_m.nu30;
+    others[4] = new_m.nu21;
+    others[5] = new_m.nu12;
+    others[6] = new_m.nu03;
 }
 
 
@@ -367,8 +370,19 @@ int CV_HuMomentsTest::prepare_test_case( int test_case_idx )
 
 void CV_HuMomentsTest::run_func()
 {
-    cvGetHuMoments( test_mat[INPUT][0].ptr<CvMoments>(),
-                    test_mat[OUTPUT][0].ptr<CvHuMoments>() );
+    CvMoments* cm = test_mat[INPUT][0].ptr<CvMoments>();
+    CvHuMoments* hu = test_mat[OUTPUT][0].ptr<CvHuMoments>();
+    cv::Moments cvtm(cm->m00, cm->m10, cm->m01, cm->m20, cm->m11, cm->m02,
+                     cm->m30, cm->m21, cm->m12, cm->m03);
+    double h[7];
+    cv::HuMoments(cvtm, h);
+    hu->hu1 = h[0];
+    hu->hu2 = h[1];
+    hu->hu3 = h[2];
+    hu->hu4 = h[3];
+    hu->hu5 = h[4];
+    hu->hu6 = h[5];
+    hu->hu7 = h[6];
 }
 
 

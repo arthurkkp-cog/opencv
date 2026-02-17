@@ -1512,8 +1512,9 @@ CV_MinEigenValTest::CV_MinEigenValTest() : CV_FeatureSelBaseTest( 1 )
 
 void CV_MinEigenValTest::run_func()
 {
-    cvCornerMinEigenVal( test_array[INPUT][0], test_array[OUTPUT][0],
-                         block_size, aperture_size );
+    cv::Mat src = cv::cvarrToMat(test_array[INPUT][0]);
+    cv::Mat dst = cv::cvarrToMat(test_array[OUTPUT][0]);
+    cv::cornerMinEigenVal(src, dst, block_size, aperture_size);
 }
 
 
@@ -1543,8 +1544,9 @@ CV_EigenValVecTest::CV_EigenValVecTest() : CV_FeatureSelBaseTest( 6 )
 
 void CV_EigenValVecTest::run_func()
 {
-    cvCornerEigenValsAndVecs( test_array[INPUT][0], test_array[OUTPUT][0],
-                              block_size, aperture_size );
+    cv::Mat src = cv::cvarrToMat(test_array[INPUT][0]);
+    cv::Mat dst = cv::cvarrToMat(test_array[OUTPUT][0]);
+    cv::cornerEigenValsAndVecs(src, dst, block_size, aperture_size);
 }
 
 
