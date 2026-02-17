@@ -866,7 +866,29 @@ CvSparseMat* cvCreateSparseMat(const cv::SparseMat& sm)
     if( !sm.hdr || sm.hdr->dims > (int)cv::SparseMat::MAX_DIM)
         return 0;
 
-    CvSparseMat* m = cvCreateSparseMat(sm.hdr->dims, sm.hdr->size, sm.type());
+    int dims = sm.hdr->dims;
+    int type = CV_MAT_TYPE(sm.type());
+    int pix_size1 = CV_ELEM_SIZE1(type);
+    int pix_size = pix_size1*CV_MAT_CN(type);
+
+    CvSparseMat* m = (CvSparseMat*)cvAlloc(sizeof(*m)+MAX(0,dims-CV_MAX_DIM)*(int)sizeof(m->size[0]));
+    m->type = CV_SPARSE_MAT_MAGIC_VAL | type;
+    m->dims = dims;
+    m->refcount = 0;
+    m->hdr_refcount = 1;
+    memcpy(m->size, sm.hdr->size, dims*sizeof(int));
+
+    m->valoffset = (int)cvAlign(sizeof(CvSparseNode), pix_size1);
+    m->idxoffset = (int)cvAlign(m->valoffset + pix_size, sizeof(int));
+    int nodesize = (int)cvAlign(m->idxoffset + dims*(int)sizeof(int), sizeof(CvSetElem));
+
+    CvMemStorage* storage = cvCreateMemStorage( CV_SPARSE_MAT_BLOCK );
+    m->heap = cvCreateSet( 0, sizeof(CvSet), nodesize, storage );
+
+    m->hashsize = CV_SPARSE_HASH_SIZE0;
+    int hashrawsize = m->hashsize*(int)sizeof(m->hashtable[0]);
+    m->hashtable = (void**)cvAlloc( hashrawsize );
+    memset( m->hashtable, 0, hashrawsize );
 
     cv::SparseMatConstIterator from = sm.begin();
     size_t i, N = sm.nzcount(), esz = sm.elemSize();
@@ -874,7 +896,57 @@ CvSparseMat* cvCreateSparseMat(const cv::SparseMat& sm)
     for( i = 0; i < N; i++, ++from )
     {
         const cv::SparseMat::Node* n = from.node();
-        uchar* to = cvPtrND(m, n->idx, 0, -2, 0);
+        const int* idx = n->idx;
+
+        unsigned hashval = 0;
+        for( int j = 0; j < dims; j++ )
+            hashval = hashval * cv::SparseMat::HASH_SCALE + idx[j];
+        int tabidx = hashval & (m->hashsize - 1);
+        hashval &= INT_MAX;
+
+        if( m->heap->active_count >= m->hashsize*CV_SPARSE_HASH_RATIO )
+        {
+            void** newtable;
+            int newsize = MAX( m->hashsize*2, CV_SPARSE_HASH_SIZE0);
+            int newrawsize = newsize*(int)sizeof(newtable[0]);
+
+            newtable = (void**)cvAlloc( newrawsize );
+            memset( newtable, 0, newrawsize );
+
+            CvSparseMatIterator iterator;
+            iterator.mat = m;
+            iterator.node = 0;
+            CvSparseNode* nd = 0;
+            for( int ii = 0; ii < m->hashsize; ii++ )
+            {
+                if( m->hashtable[ii] )
+                {
+                    iterator.curidx = ii;
+                    nd = iterator.node = (CvSparseNode*)m->hashtable[ii];
+                    break;
+                }
+            }
+            while( nd )
+            {
+                CvSparseNode* next = cvGetNextSparseNode( &iterator );
+                int newidx = nd->hashval & (newsize - 1);
+                nd->next = (CvSparseNode*)newtable[newidx];
+                newtable[newidx] = nd;
+                nd = next;
+            }
+
+            cvFree( &m->hashtable );
+            m->hashtable = newtable;
+            m->hashsize = newsize;
+            tabidx = hashval & (newsize - 1);
+        }
+
+        CvSparseNode* node = (CvSparseNode*)cvSetNew( m->heap );
+        node->hashval = hashval;
+        node->next = (CvSparseNode*)m->hashtable[tabidx];
+        m->hashtable[tabidx] = node;
+        memcpy(CV_NODE_IDX(m, node), idx, dims*sizeof(idx[0]));
+        uchar* to = (uchar*)CV_NODE_VAL(m, node);
         cv::copyElem(from.ptr, to, esz);
     }
     return m;
@@ -885,13 +957,25 @@ void CvSparseMat::copyToSparseMat(cv::SparseMat& m) const
     m.create( dims, &size[0], type );
 
     CvSparseMatIterator it;
-    CvSparseNode* n = cvInitSparseMatIterator(this, &it);
+    it.mat = (CvSparseMat*)this;
+    it.node = 0;
+    CvSparseNode* n = 0;
+    for( int idx = 0; idx < hashsize; idx++ )
+    {
+        if( hashtable[idx] )
+        {
+            it.curidx = idx;
+            n = it.node = (CvSparseNode*)hashtable[idx];
+            break;
+        }
+    }
+
     size_t esz = m.elemSize();
 
     for( ; n != 0; n = cvGetNextSparseNode(&it) )
     {
-        const int* idx = CV_NODE_IDX(this, n);
-        uchar* to = m.newNode(idx, m.hash(idx));
+        const int* nidx = CV_NODE_IDX(this, n);
+        uchar* to = m.newNode(nidx, m.hash(nidx));
         cv::copyElem((const uchar*)CV_NODE_VAL(this, n), to, esz);
     }
 }

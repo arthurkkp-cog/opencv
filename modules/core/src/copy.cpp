@@ -1269,8 +1269,22 @@ cvCopy( const void* srcarr, void* dstarr, const void* maskarr )
 
         memset( dst1->hashtable, 0, dst1->hashsize*sizeof(dst1->hashtable[0]));
 
-        for( node = cvInitSparseMatIterator( src1, &iterator );
-             node != 0; node = cvGetNextSparseNode( &iterator ))
+        node = 0;
+        if( src1->heap->active_count > 0 )
+        {
+            iterator.mat = (CvSparseMat*)src1;
+            iterator.node = 0;
+            for( int idx = 0; idx < src1->hashsize; idx++ )
+            {
+                if( src1->hashtable[idx] )
+                {
+                    iterator.curidx = idx;
+                    node = iterator.node = (CvSparseNode*)src1->hashtable[idx];
+                    break;
+                }
+            }
+        }
+        for( ; node != 0; node = cvGetNextSparseNode( &iterator ))
         {
             CvSparseNode* node_copy = (CvSparseNode*)cvSetNew( dst1->heap );
             int tabidx = node->hashval & (dst1->hashsize - 1);
@@ -1285,9 +1299,15 @@ cvCopy( const void* srcarr, void* dstarr, const void* maskarr )
 
     int coi1 = 0, coi2 = 0;
     if( CV_IS_IMAGE(srcarr) )
-        coi1 = cvGetImageCOI((const IplImage*)srcarr);
+    {
+        const IplImage* _img = (const IplImage*)srcarr;
+        coi1 = _img->roi ? _img->roi->coi : 0;
+    }
     if( CV_IS_IMAGE(dstarr) )
-        coi2 = cvGetImageCOI((const IplImage*)dstarr);
+    {
+        const IplImage* _img = (const IplImage*)dstarr;
+        coi2 = _img->roi ? _img->roi->coi : 0;
+    }
 
     if( coi1 || coi2 )
     {
