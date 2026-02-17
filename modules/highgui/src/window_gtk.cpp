@@ -148,7 +148,7 @@ void cvImageWidgetSetImage(CvImageWidget * widget, const CvArr *arr)
         cvReleaseMat( &widget->original_image );
     }
     if(!widget->original_image){
-        widget->original_image = cvCreateMat( mat->rows, mat->cols, CV_8UC3 );
+        widget->original_image = cvCreateMat( mat->rows, mat->cols, CV_8UC3, 1 );
         gtk_widget_queue_resize( GTK_WIDGET( widget ) );
     }
     CV_Assert(origin == 0);
@@ -365,7 +365,7 @@ static void cvImageWidget_set_size(GtkWidget * widget, int max_width, int max_he
         cvReleaseMat( &image_widget->scaled_image );
     }
     if( !image_widget->scaled_image ){
-        image_widget->scaled_image = cvCreateMat( scaled_image_size.height, scaled_image_size.width, CV_8UC3 );
+        image_widget->scaled_image = cvCreateMat( scaled_image_size.height, scaled_image_size.width, CV_8UC3, 1 );
 
 
     }
