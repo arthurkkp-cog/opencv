@@ -90,66 +90,7 @@
 #define CV_WINDOW_MAGIC_VAL     0x00420042
 #define CV_TRACKBAR_MAGIC_VAL   0x00420043
 
-//Yannick Verdie 2010, Max Kostin 2015
-void cvSetModeWindow_W32(const char* name, double prop_value);
-void cvSetModeWindow_GTK(const char* name, double prop_value);
-void cvSetModeWindow_COCOA(const char* name, double prop_value);
-void cvSetModeWindow_WinRT(const char* name, double prop_value);
-
-CvRect cvGetWindowRect_W32(const char* name);
-CvRect cvGetWindowRect_GTK(const char* name);
-CvRect cvGetWindowRect_COCOA(const char* name);
-CvRect cvGetWindowRect_WAYLAND(const char* name);
-
-double cvGetModeWindow_W32(const char* name);
-double cvGetModeWindow_GTK(const char* name);
-double cvGetModeWindow_COCOA(const char* name);
-double cvGetModeWindow_WinRT(const char* name);
-
-double cvGetPropWindowAutoSize_W32(const char* name);
-double cvGetPropWindowAutoSize_GTK(const char* name);
-
-double cvGetRatioWindow_W32(const char* name);
-double cvGetRatioWindow_GTK(const char* name);
-
-double cvGetOpenGlProp_W32(const char* name);
-double cvGetOpenGlProp_GTK(const char* name);
-
-double cvGetPropVisible_W32(const char* name);
-double cvGetPropVisible_COCOA(const char* name);
-
-double cvGetPropTopmost_W32(const char* name);
-double cvGetPropTopmost_COCOA(const char* name);
-
-void cvSetPropTopmost_W32(const char* name, const bool topmost);
-void cvSetPropTopmost_COCOA(const char* name, const bool topmost);
-
-double cvGetPropVsync_W32(const char* name);
-void cvSetPropVsync_W32(const char* name, const bool enabled);
-
-void setWindowTitle_W32(const cv::String& name, const cv::String& title);
-void setWindowTitle_GTK(const cv::String& name, const cv::String& title);
-void setWindowTitle_QT(const cv::String& name, const cv::String& title);
-void setWindowTitle_COCOA(const cv::String& name, const cv::String& title);
-void setWindowTitle_WAYLAND(const cv::String& name, const cv::String& title);
-
 int pollKey_W32();
-
-//for QT
-#if defined (HAVE_QT)
-CvRect cvGetWindowRect_QT(const char* name);
-double cvGetModeWindow_QT(const char* name);
-void cvSetModeWindow_QT(const char* name, double prop_value);
-
-double cvGetPropWindow_QT(const char* name);
-void cvSetPropWindow_QT(const char* name,double prop_value);
-
-double cvGetRatioWindow_QT(const char* name);
-void cvSetRatioWindow_QT(const char* name,double prop_value);
-
-double cvGetOpenGlProp_QT(const char* name);
-double cvGetPropVisible_QT(const char* name);
-#endif
 
 inline void convertToShow(const cv::Mat &src, cv::Mat &dst, bool toRGB = true)
 {
