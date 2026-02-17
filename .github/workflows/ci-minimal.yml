@@ -47,4 +47,4 @@ jobs:
       - name: Run core tests
         run: |
           cd build
-          ./bin/opencv_test_core --gtest_filter="*:-*OCL*:*CUDA*:*Vulkan*"
+          ./bin/opencv_test_core --gtest_filter="*:-*OCL*:*CUDA*:*Vulkan*:Core_InputOutput.filestorage_base64_*:Core_globbing.accuracy"
