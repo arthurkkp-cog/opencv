@@ -134,8 +134,9 @@ double CV_ThreshTest::get_success_error_level( int /*test_case_idx*/, int /*i*/,
 
 void CV_ThreshTest::run_func()
 {
-    cvThreshold( test_array[INPUT][0], test_array[OUTPUT][0],
-                 thresh_val, max_val, thresh_type | extra_type);
+    cv::Mat src = cv::cvarrToMat(test_array[INPUT][0]);
+    cv::Mat dst = cv::cvarrToMat(test_array[OUTPUT][0]);
+    cv::threshold(src, dst, thresh_val, max_val, thresh_type | extra_type);
 }
 
 

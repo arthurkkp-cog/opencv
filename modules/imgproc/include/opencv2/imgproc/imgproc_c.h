@@ -53,32 +53,6 @@ extern "C" {
 @{
 */
 
-/*********************** Background statistics accumulation *****************************/
-
-/** @brief Adds image to accumulator
-@see cv::accumulate
-*/
-CVAPI(void)  cvAcc( const CvArr* image, CvArr* sum,
-                   const CvArr* mask CV_DEFAULT(NULL) );
-
-/** @brief Adds squared image to accumulator
-@see cv::accumulateSquare
-*/
-CVAPI(void)  cvSquareAcc( const CvArr* image, CvArr* sqsum,
-                         const CvArr* mask CV_DEFAULT(NULL) );
-
-/** @brief Adds a product of two images to accumulator
-@see cv::accumulateProduct
-*/
-CVAPI(void)  cvMultiplyAcc( const CvArr* image1, const CvArr* image2, CvArr* acc,
-                           const CvArr* mask CV_DEFAULT(NULL) );
-
-/** @brief Adds image to accumulator with weights: acc = acc*(1-alpha) + image*alpha
-@see cv::accumulateWeighted
-*/
-CVAPI(void)  cvRunningAvg( const CvArr* image, CvArr* acc, double alpha,
-                          const CvArr* mask CV_DEFAULT(NULL) );
-
 /****************************************************************************************\
 *                                    Image Processing                                    *
 \****************************************************************************************/
@@ -87,56 +61,6 @@ CVAPI(void)  cvRunningAvg( const CvArr* image, CvArr* acc, double alpha,
    makes a border of the specified type (IPL_BORDER_*) around the copied area. */
 CVAPI(void) cvCopyMakeBorder( const CvArr* src, CvArr* dst, CvPoint offset,
                               int bordertype, CvScalar value CV_DEFAULT(cvScalarAll(0)));
-
-/** @brief Smooths the image in one of several ways.
-
-@param src The source image
-@param dst The destination image
-@param smoothtype Type of the smoothing, see SmoothMethod_c
-@param size1 The first parameter of the smoothing operation, the aperture width. Must be a
-positive odd number (1, 3, 5, ...)
-@param size2 The second parameter of the smoothing operation, the aperture height. Ignored by
-CV_MEDIAN and CV_BILATERAL methods. In the case of simple scaled/non-scaled and Gaussian blur if
-size2 is zero, it is set to size1. Otherwise it must be a positive odd number.
-@param sigma1 In the case of a Gaussian parameter this parameter may specify Gaussian \f$\sigma\f$
-(standard deviation). If it is zero, it is calculated from the kernel size:
-\f[\sigma  = 0.3 (n/2 - 1) + 0.8  \quad   \text{where}   \quad  n= \begin{array}{l l} \mbox{\texttt{size1} for horizontal kernel} \\ \mbox{\texttt{size2} for vertical kernel} \end{array}\f]
-Using standard sigma for small kernels ( \f$3\times 3\f$ to \f$7\times 7\f$ ) gives better speed. If
-sigma1 is not zero, while size1 and size2 are zeros, the kernel size is calculated from the
-sigma (to provide accurate enough operation).
-@param sigma2 additional parameter for bilateral filtering
-
-@see cv::GaussianBlur, cv::blur, cv::medianBlur, cv::bilateralFilter.
- */
-CVAPI(void) cvSmooth( const CvArr* src, CvArr* dst,
-                      int smoothtype CV_DEFAULT(CV_GAUSSIAN),
-                      int size1 CV_DEFAULT(3),
-                      int size2 CV_DEFAULT(0),
-                      double sigma1 CV_DEFAULT(0),
-                      double sigma2 CV_DEFAULT(0));
-
-/** @brief Convolves an image with the kernel.
-
-@param src input image.
-@param dst output image of the same size and the same number of channels as src.
-@param kernel convolution kernel (or rather a correlation kernel), a single-channel floating point
-matrix; if you want to apply different kernels to different channels, split the image into
-separate color planes using split and process them individually.
-@param anchor anchor of the kernel that indicates the relative position of a filtered point within
-the kernel; the anchor should lie within the kernel; default value (-1,-1) means that the anchor
-is at the kernel center.
-
-@see cv::filter2D
- */
-CVAPI(void) cvFilter2D( const CvArr* src, CvArr* dst, const CvMat* kernel,
-                        CvPoint anchor CV_DEFAULT(cvPoint(-1,-1)));
-
-/** @brief Finds integral image: SUM(X,Y) = sum(x<X,y<Y)I(x,y)
-@see cv::integral
-*/
-CVAPI(void) cvIntegral( const CvArr* image, CvArr* sum,
-                       CvArr* sqsum CV_DEFAULT(NULL),
-                       CvArr* tilted_sum CV_DEFAULT(NULL));
 
 /** @brief Smoothes the input image with gaussian kernel and then down-samples it.
 
@@ -180,34 +104,6 @@ CVAPI(void) cvPyrMeanShiftFiltering( const CvArr* src, CvArr* dst,
 @see cv::watershed
 */
 CVAPI(void) cvWatershed( const CvArr* image, CvArr* markers );
-
-/** @brief Calculates an image derivative using generalized Sobel
-
-   (aperture_size = 1,3,5,7) or Scharr (aperture_size = -1) operator.
-   Scharr can be used only for the first dx or dy derivative
-@see cv::Sobel
-*/
-CVAPI(void) cvSobel( const CvArr* src, CvArr* dst,
-                    int xorder, int yorder,
-                    int aperture_size CV_DEFAULT(3));
-
-/** @brief Calculates the image Laplacian: (d2/dx + d2/dy)I
-@see cv::Laplacian
-*/
-CVAPI(void) cvLaplace( const CvArr* src, CvArr* dst,
-                      int aperture_size CV_DEFAULT(3) );
-
-/** @brief Converts input array pixels from one color space to another
-@see cv::cvtColor
-*/
-CVAPI(void)  cvCvtColor( const CvArr* src, CvArr* dst, int code );
-
-
-/** @brief Resizes image (input array is resized to fit the destination array)
-@see cv::resize
-*/
-CVAPI(void)  cvResize( const CvArr* src, CvArr* dst,
-                       int interpolation CV_DEFAULT( CV_INTER_LINEAR ));
 
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -280,54 +176,6 @@ CVAPI(void)  cvLinearPolar( const CvArr* src, CvArr* dst,
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
-
-/** @brief Returns a structuring element of the specified size and shape for morphological operations.
-
-@note the created structuring element IplConvKernel\* element must be released in the end using
-`cvReleaseStructuringElement(&element)`.
-
-@param cols Width of the structuring element
-@param rows Height of the structuring element
-@param anchor_x x-coordinate of the anchor
-@param anchor_y y-coordinate of the anchor
-@param shape element shape that could be one of the cv::MorphShapes_c
-@param values integer array of cols*rows elements that specifies the custom shape of the
-structuring element, when shape=CV_SHAPE_CUSTOM.
-
-@see cv::getStructuringElement
- */
- CVAPI(IplConvKernel*)  cvCreateStructuringElementEx(
-            int cols, int  rows, int  anchor_x, int  anchor_y,
-            int shape, int* values CV_DEFAULT(NULL) );
-
-/** @brief releases structuring element
-@see cvCreateStructuringElementEx
-*/
-CVAPI(void)  cvReleaseStructuringElement( IplConvKernel** element );
-
-/** @brief erodes input image (applies minimum filter) one or more times.
-   If element pointer is NULL, 3x3 rectangular element is used
-@see cv::erode
-*/
-CVAPI(void)  cvErode( const CvArr* src, CvArr* dst,
-                      IplConvKernel* element CV_DEFAULT(NULL),
-                      int iterations CV_DEFAULT(1) );
-
-/** @brief dilates input image (applies maximum filter) one or more times.
-
-   If element pointer is NULL, 3x3 rectangular element is used
-@see cv::dilate
-*/
-CVAPI(void)  cvDilate( const CvArr* src, CvArr* dst,
-                       IplConvKernel* element CV_DEFAULT(NULL),
-                       int iterations CV_DEFAULT(1) );
-
-/** @brief Performs complex morphological transformation
-@see cv::morphologyEx
-*/
-CVAPI(void)  cvMorphologyEx( const CvArr* src, CvArr* dst,
-                             CvArr* temp, IplConvKernel* element,
-                             int operation, int iterations CV_DEFAULT(1) );
 
 /** @brief Calculates all spatial and central moments up to the 3rd order
 @see cv::moments
@@ -816,29 +664,6 @@ CVAPI(void)  cvDistTransform( const CvArr* src, CvArr* dst,
                               CvArr* labels CV_DEFAULT(NULL),
                               int labelType CV_DEFAULT(CV_DIST_LABEL_CCOMP));
 
-
-/** @brief Applies fixed-level threshold to grayscale image.
-
-   This is a basic operation applied before retrieving contours
-@see cv::threshold
-*/
-CVAPI(double)  cvThreshold( const CvArr*  src, CvArr*  dst,
-                            double  threshold, double  max_value,
-                            int threshold_type );
-
-/** @brief Applies adaptive threshold to grayscale image.
-
-   The two parameters for methods CV_ADAPTIVE_THRESH_MEAN_C and
-   CV_ADAPTIVE_THRESH_GAUSSIAN_C are:
-   neighborhood size (3, 5, 7 etc.),
-   and a constant subtracted from mean (...,-3,-2,-1,0,1,2,3,...)
-@see cv::adaptiveThreshold
-*/
-CVAPI(void)  cvAdaptiveThreshold( const CvArr* src, CvArr* dst, double max_value,
-                                  int adaptive_method CV_DEFAULT(CV_ADAPTIVE_THRESH_MEAN_C),
-                                  int threshold_type CV_DEFAULT(CV_THRESH_BINARY),
-                                  int block_size CV_DEFAULT(3),
-                                  double param1 CV_DEFAULT(5));
 
 /** @brief Fills the connected component until the color difference gets large enough
 @see cv::floodFill

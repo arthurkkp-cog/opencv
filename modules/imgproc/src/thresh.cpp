@@ -1971,28 +1971,4 @@ void cv::adaptiveThreshold( InputArray _src, OutputArray _dst, double maxValue,
     }
 }
 
-CV_IMPL double
-cvThreshold( const void* srcarr, void* dstarr, double thresh, double maxval, int type )
-{
-    cv::Mat src = cv::cvarrToMat(srcarr), dst = cv::cvarrToMat(dstarr), dst0 = dst;
-
-    CV_Assert( src.size == dst.size && src.channels() == dst.channels() &&
-        (src.depth() == dst.depth() || dst.depth() == CV_8U));
-
-    thresh = cv::threshold( src, dst, thresh, maxval, type );
-    if( dst0.data != dst.data )
-        dst.convertTo( dst0, dst0.depth() );
-    return thresh;
-}
-
-
-CV_IMPL void
-cvAdaptiveThreshold( const void *srcIm, void *dstIm, double maxValue,
-                     int method, int type, int blockSize, double delta )
-{
-    cv::Mat src = cv::cvarrToMat(srcIm), dst = cv::cvarrToMat(dstIm);
-    CV_Assert( src.size == dst.size && src.type() == dst.type() );
-    cv::adaptiveThreshold( src, dst, maxValue, method, type, blockSize, delta );
-}
-
 /* End of file. */

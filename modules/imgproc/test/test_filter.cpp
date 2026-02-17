@@ -184,14 +184,14 @@ protected:
     double get_success_error_level( int test_case_idx, int i, int j );
     int optype, optype_min, optype_max;
     int shape;
-    IplConvKernel* element;
+    cv::Mat element;
+    cv::Point element_anchor;
 };
 
 
 CV_MorphologyBaseTest::CV_MorphologyBaseTest() : CV_FilterBaseTest( false )
 {
     shape = -1;
-    element = 0;
     optype = optype_min = optype_max = -1;
 }
 
@@ -251,9 +251,17 @@ int CV_MorphologyBaseTest::prepare_test_case( int test_case_idx )
             eldata[anchor.y*aperture_size.width + anchor.x] = 1;
     }
 
-    cvReleaseStructuringElement( &element );
-    element = cvCreateStructuringElementEx( aperture_size.width, aperture_size.height,
-                                           anchor.x, anchor.y, shape, eldata.empty() ? 0 : &eldata[0] );
+    if( shape == CV_SHAPE_CUSTOM )
+    {
+        element.create(aperture_size.height, aperture_size.width, CV_8U);
+        for( int idx = 0; idx < aperture_size.height * aperture_size.width; idx++ )
+            element.ptr()[idx] = (uchar)(eldata[idx] != 0);
+    }
+    else
+    {
+        element = cv::getStructuringElement(shape, aperture_size, anchor);
+    }
+    element_anchor = anchor;
     return code;
 }
 
@@ -261,10 +269,8 @@ int CV_MorphologyBaseTest::prepare_test_case( int test_case_idx )
 void CV_MorphologyBaseTest::prepare_to_validation( int /*test_case_idx*/ )
 {
     Mat& src = test_mat[INPUT][0], &dst = test_mat[REF_OUTPUT][0];
-    Mat _ielement(element->nRows, element->nCols, CV_32S, element->values);
-    Mat _element;
-    _ielement.convertTo(_element, CV_8U);
-    Point _anchor(element->anchorX, element->anchorY);
+    Mat _element = element;
+    Point _anchor = element_anchor;
     int _border = BORDER_REPLICATE;
 
     if( optype == CV_MOP_ERODE )
@@ -310,7 +316,7 @@ void CV_MorphologyBaseTest::prepare_to_validation( int /*test_case_idx*/ )
             CV_Error( cv::Error::StsBadArg, "Unknown operation" );
     }
 
-    cvReleaseStructuringElement( &element );
+    element.release();
 }
 
 
@@ -333,8 +339,9 @@ CV_ErodeTest::CV_ErodeTest()
 
 void CV_ErodeTest::run_func()
 {
-    cvErode( inplace ? test_array[OUTPUT][0] : test_array[INPUT][0],
-             test_array[OUTPUT][0], element, 1 );
+    cv::Mat src = cv::cvarrToMat(inplace ? test_array[OUTPUT][0] : test_array[INPUT][0]);
+    cv::Mat dst = cv::cvarrToMat(test_array[OUTPUT][0]);
+    cv::erode(src, dst, element, element_anchor, 1, cv::BORDER_REPLICATE);
 }
 
 
@@ -357,8 +364,9 @@ CV_DilateTest::CV_DilateTest()
 
 void CV_DilateTest::run_func()
 {
-    cvDilate( inplace ? test_array[OUTPUT][0] : test_array[INPUT][0],
-             test_array[OUTPUT][0], element, 1 );
+    cv::Mat src = cv::cvarrToMat(inplace ? test_array[OUTPUT][0] : test_array[INPUT][0]);
+    cv::Mat dst = cv::cvarrToMat(test_array[OUTPUT][0]);
+    cv::dilate(src, dst, element, element_anchor, 1, cv::BORDER_REPLICATE);
 }
 
 /////////////// morphEx ///////////////
@@ -381,8 +389,9 @@ CV_MorphExTest::CV_MorphExTest()
 
 void CV_MorphExTest::run_func()
 {
-    cvMorphologyEx( test_array[inplace ? OUTPUT : INPUT][0],
-             test_array[OUTPUT][0], 0, element, optype, 1 );
+    cv::Mat src = cv::cvarrToMat(test_array[inplace ? OUTPUT : INPUT][0]);
+    cv::Mat dst = cv::cvarrToMat(test_array[OUTPUT][0]);
+    cv::morphologyEx(src, dst, optype, element, element_anchor, 1, cv::BORDER_REPLICATE);
 }
 
 /////////////// generic filter ///////////////
@@ -427,9 +436,9 @@ double CV_FilterTest::get_success_error_level( int /*test_case_idx*/, int /*i*/,
 
 void CV_FilterTest::run_func()
 {
-    CvMat kernel = cvMat(test_mat[INPUT][1]);
-    cvFilter2D( test_array[inplace ? OUTPUT : INPUT][0],
-                test_array[OUTPUT][0], &kernel, cvPoint(anchor));
+    cv::Mat src = cv::cvarrToMat(test_array[inplace ? OUTPUT : INPUT][0]);
+    cv::Mat dst = cv::cvarrToMat(test_array[OUTPUT][0]);
+    cv::filter2D(src, dst, dst.depth(), test_mat[INPUT][1], anchor, 0, cv::BORDER_REPLICATE);
 }
 
 
@@ -848,9 +857,9 @@ void CV_GaussianBlurTest::get_test_array_types_and_sizes( int test_case_idx,
 
 void CV_GaussianBlurTest::run_func()
 {
-    cvSmooth( test_array[inplace ? OUTPUT : INPUT][0],
-              test_array[OUTPUT][0], CV_GAUSSIAN,
-              param1, param2, sigma, sigma );
+    cv::Mat src = cv::cvarrToMat(test_array[inplace ? OUTPUT : INPUT][0]);
+    cv::Mat dst = cv::cvarrToMat(test_array[OUTPUT][0]);
+    cv::GaussianBlur(src, dst, cv::Size(param1, param2), sigma, sigma, cv::BORDER_REPLICATE);
 }
 
 
@@ -969,8 +978,9 @@ double CV_MedianBlurTest::get_success_error_level( int /*test_case_idx*/, int /*
 
 void CV_MedianBlurTest::run_func()
 {
-    cvSmooth( test_array[INPUT][0], test_array[OUTPUT][0],
-              CV_MEDIAN, aperture_size.width );
+    cv::Mat src = cv::cvarrToMat(test_array[INPUT][0]);
+    cv::Mat dst = cv::cvarrToMat(test_array[OUTPUT][0]);
+    cv::medianBlur(src, dst, aperture_size.width);
 }
 
 
@@ -1746,8 +1756,17 @@ int CV_IntegralTest::prepare_test_case( int test_case_idx )
 
 void CV_IntegralTest::run_func()
 {
-    cvIntegral( test_array[INPUT][0], test_array[OUTPUT][0],
-                test_array[OUTPUT][1], test_array[OUTPUT][2] );
+    cv::Mat src = cv::cvarrToMat(test_array[INPUT][0]);
+    cv::Mat sum = cv::cvarrToMat(test_array[OUTPUT][0]);
+    cv::Mat sqsum, tilted;
+    if( test_array[OUTPUT][1] )
+        sqsum = cv::cvarrToMat(test_array[OUTPUT][1]);
+    if( test_array[OUTPUT][2] )
+        tilted = cv::cvarrToMat(test_array[OUTPUT][2]);
+    cv::integral( src, sum,
+                  test_array[OUTPUT][1] ? sqsum : cv::noArray(),
+                  test_array[OUTPUT][2] ? tilted : cv::noArray(),
+                  sum.depth(), sqsum.empty() ? CV_64F : sqsum.depth() );
 }
 
 

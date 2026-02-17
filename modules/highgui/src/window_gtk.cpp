@@ -154,7 +154,10 @@ void cvImageWidgetSetImage(CvImageWidget * widget, const CvArr *arr)
     CV_Assert(origin == 0);
     convertToShow(cv::cvarrToMat(arr), widget->original_image);
     if(widget->scaled_image){
-        cvResize( widget->original_image, widget->scaled_image, CV_INTER_AREA );
+        cv::Mat src_img = cv::cvarrToMat(widget->original_image);
+        cv::Mat dst_img = cv::cvarrToMat(widget->scaled_image);
+        cv::resize(src_img, dst_img, dst_img.size(), (double)dst_img.cols/src_img.cols,
+            (double)dst_img.rows/src_img.rows, cv::INTER_AREA);
     }
 
     // window does not refresh without this
@@ -400,7 +403,12 @@ cvImageWidget_size_allocate (GtkWidget     *widget,
       else{
           cvImageWidget_set_size( widget, allocation->width, allocation->height );
       }
-      cvResize( image_widget->original_image, image_widget->scaled_image, CV_INTER_AREA );
+      {
+          cv::Mat src_img = cv::cvarrToMat(image_widget->original_image);
+          cv::Mat dst_img = cv::cvarrToMat(image_widget->scaled_image);
+          cv::resize(src_img, dst_img, dst_img.size(), (double)dst_img.cols/src_img.cols,
+              (double)dst_img.rows/src_img.rows, cv::INTER_AREA);
+      }
   }
 
   if (gtk_widget_get_realized (widget))
