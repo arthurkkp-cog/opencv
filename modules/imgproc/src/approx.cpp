@@ -376,9 +376,7 @@ copy_vect:
 }
 
 
-/*Applies some approximation algorithm to chain-coded contour(s) and
-  converts it/them to polygonal representation */
-CV_IMPL CvSeq*
+CvSeq*
 cvApproxChains( CvSeq*              src_seq,
                 CvMemStorage*       storage,
                 int                 method,
@@ -386,35 +384,32 @@ cvApproxChains( CvSeq*              src_seq,
                 int                 minimal_perimeter,
                 int                 recursive )
 {
-    CvSeq *prev_contour = 0, *parent = 0;
-    CvSeq *dst_seq = 0;
+    CvSeq *prev_contour = 0, *parent = 0, *result = 0;
 
-    if( !src_seq || !storage )
-        CV_Error( cv::Error::StsNullPtr, "" );
-    if( method > cv::CHAIN_APPROX_TC89_KCOS || method <= 0 || minimal_perimeter < 0 )
-        CV_Error( cv::Error::StsOutOfRange, "" );
+    CV_Assert( src_seq != NULL && storage != NULL );
 
-    while( src_seq != 0 )
+    CvSeq* src = src_seq;
+    while( src != NULL )
     {
-        int len = src_seq->total;
+        int len = src->total;
+        CvSeq *contour = NULL;
 
-        if( len >= minimal_perimeter )
+        if( CV_IS_SEQ_CHAIN( src ) )
         {
-            CvSeq *contour = 0;
+            contour = icvApproximateChainTC89( (CvChain*)src,
+                sizeof(CvContour), storage, method );
+        }
+        else if( CV_IS_SEQ_POLYLINE( src ) )
+        {
+            contour = cvCreateSeq( src->flags, sizeof(CvContour),
+                src->elem_size, storage );
+            cvSeqPushMulti( contour, 0, src->total );
+            cvCvtSeqToArray( src, contour->first->data );
+        }
 
-            switch( method )
-            {
-            case cv::CHAIN_APPROX_NONE:
-            case cv::CHAIN_APPROX_SIMPLE:
-            case cv::CHAIN_APPROX_TC89_L1:
-            case cv::CHAIN_APPROX_TC89_KCOS:
-                contour = icvApproximateChainTC89( (CvChain *) src_seq, sizeof( CvContour ), storage, method );
-                break;
-            default:
-                CV_Error( cv::Error::StsOutOfRange, "" );
-            }
-
-            if( contour->total > 0 )
+        if( contour )
+        {
+            if( contour->total >= 2 || (len >= 2 && minimal_perimeter <= 0) )
             {
                 cvBoundingRect( contour, 1 );
 
@@ -426,42 +421,37 @@ cvApproxChains( CvSeq*              src_seq,
                 else if( parent )
                     parent->v_next = contour;
                 prev_contour = contour;
-                if( !dst_seq )
-                    dst_seq = prev_contour;
-            }
-            else                /* if resultant contour has zero length, skip it */
-            {
-                len = -1;
+                if( !result )
+                    result = contour;
             }
         }
 
         if( !recursive )
             break;
 
-        if( src_seq->v_next && len >= minimal_perimeter )
+        if( src->v_next )
         {
-            CV_Assert( prev_contour != 0 );
             parent = prev_contour;
             prev_contour = 0;
-            src_seq = src_seq->v_next;
+            src = src->v_next;
         }
         else
         {
-            while( src_seq->h_next == 0 )
+            while( src->h_next == 0 )
             {
-                src_seq = src_seq->v_prev;
-                if( src_seq == 0 )
+                src = src->v_prev;
+                if( src == 0 )
                     break;
                 prev_contour = parent;
                 if( parent )
                     parent = parent->v_prev;
             }
-            if( src_seq )
-                src_seq = src_seq->h_next;
+            if( src )
+                src = src->h_next;
         }
     }
 
-    return dst_seq;
+    return result;
 }
 
 
@@ -724,149 +714,6 @@ void cv::approxPolyDP( InputArray _curve, OutputArray _approxCurve,
     Mat(nout, 1, CV_MAKETYPE(depth, 2), buf).copyTo(_approxCurve);
 }
 
-
-CV_IMPL CvSeq*
-cvApproxPoly( const void* array, int header_size,
-             CvMemStorage* storage, int method,
-             double parameter, int parameter2 )
-{
-    cv::AutoBuffer<cv::Point> _buf;
-    cv::AutoBuffer<cv::Range> stack(100);
-    CvSeq* dst_seq = 0;
-    CvSeq *prev_contour = 0, *parent = 0;
-    CvContour contour_header;
-    CvSeq* src_seq = 0;
-    CvSeqBlock block;
-    int recursive = 0;
-
-    if( CV_IS_SEQ( array ))
-    {
-        src_seq = (CvSeq*)array;
-        if( !CV_IS_SEQ_POLYLINE( src_seq ))
-            CV_Error( cv::Error::StsBadArg, "Unsupported sequence type" );
-
-        recursive = parameter2;
-
-        if( !storage )
-            storage = src_seq->storage;
-    }
-    else
-    {
-        src_seq = cvPointSeqFromMat(
-                                    CV_SEQ_KIND_CURVE | (parameter2 ? CV_SEQ_FLAG_CLOSED : 0),
-                                    array, &contour_header, &block );
-    }
-
-    if( !storage )
-        CV_Error( cv::Error::StsNullPtr, "NULL storage pointer " );
-
-    if( header_size < 0 )
-        CV_Error( cv::Error::StsOutOfRange, "header_size is negative. "
-                 "Pass 0 to make the destination header_size == input header_size" );
-
-    if( header_size == 0 )
-        header_size = src_seq->header_size;
-
-    if( !CV_IS_SEQ_POLYLINE( src_seq ))
-    {
-        if( CV_IS_SEQ_CHAIN( src_seq ))
-        {
-            CV_Error( cv::Error::StsBadArg, "Input curves are not polygonal. "
-                     "Use cvApproxChains first" );
-        }
-        else
-        {
-            CV_Error( cv::Error::StsBadArg, "Input curves have unknown type" );
-        }
-    }
-
-    if( header_size == 0 )
-        header_size = src_seq->header_size;
-
-    if( header_size < (int)sizeof(CvContour) )
-        CV_Error( cv::Error::StsBadSize, "New header size must be non-less than sizeof(CvContour)" );
-
-    if( method != CV_POLY_APPROX_DP )
-        CV_Error( cv::Error::StsOutOfRange, "Unknown approximation method" );
-
-    while( src_seq != 0 )
-    {
-        CvSeq *contour = 0;
-
-        if( parameter < 0 )
-            CV_Error( cv::Error::StsOutOfRange, "Accuracy must be non-negative" );
-
-        CV_Assert( CV_SEQ_ELTYPE(src_seq) == CV_32SC2 ||
-                    CV_SEQ_ELTYPE(src_seq) == CV_32FC2 );
-
-        {
-            int npoints = src_seq->total, nout = 0;
-            _buf.allocate(npoints*2);
-            cv::Point *src = _buf.data(), *dst = src + npoints;
-            bool closed = CV_IS_SEQ_CLOSED(src_seq);
-
-            if( src_seq->first->next == src_seq->first )
-                src = (cv::Point*)src_seq->first->data;
-            else
-                cvCvtSeqToArray(src_seq, src);
-
-            if( CV_SEQ_ELTYPE(src_seq) == CV_32SC2 )
-                nout = cv::approxPolyDP_(src, npoints, dst, closed, parameter, stack);
-            else if( CV_SEQ_ELTYPE(src_seq) == CV_32FC2 )
-                nout = cv::approxPolyDP_((cv::Point2f*)src, npoints,
-                                            (cv::Point2f*)dst, closed, parameter, stack);
-            else
-                CV_Error( cv::Error::StsUnsupportedFormat, "" );
-
-            contour = cvCreateSeq( src_seq->flags, header_size,
-                                    src_seq->elem_size, storage );
-            cvSeqPushMulti(contour, dst, nout);
-        }
-
-        CV_Assert( contour );
-
-        if( header_size >= (int)sizeof(CvContour))
-            cvBoundingRect( contour, 1 );
-
-        contour->v_prev = parent;
-        contour->h_prev = prev_contour;
-
-        if( prev_contour )
-            prev_contour->h_next = contour;
-        else if( parent )
-            parent->v_next = contour;
-        prev_contour = contour;
-        if( !dst_seq )
-            dst_seq = prev_contour;
-
-        if( !recursive )
-            break;
-
-        if( src_seq->v_next )
-        {
-            CV_Assert( prev_contour != 0 );
-            parent = prev_contour;
-            prev_contour = 0;
-            src_seq = src_seq->v_next;
-        }
-        else
-        {
-            while( src_seq->h_next == 0 )
-            {
-                src_seq = src_seq->v_prev;
-                if( src_seq == 0 )
-                    break;
-                prev_contour = parent;
-                if( parent )
-                    parent = parent->v_prev;
-            }
-            if( src_seq )
-                src_seq = src_seq->h_next;
-        }
-    }
-
-    return dst_seq;
-}
 
 enum class PointStatus : int8_t
 {
