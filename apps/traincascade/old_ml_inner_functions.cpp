@@ -158,7 +158,10 @@ CvMat* icvGenerateRandomClusterCenters ( int seed, const CvMat* data,
     for (i = 0; i < dim; i++)
     {
         CV_CALL(cvGetCol (data, &data_comp, i));
-        CV_CALL(cvMinMaxLoc (&data_comp, &minVal, &maxVal, &minLoc, &maxLoc));
+        cv::Point _minLoc, _maxLoc;
+        CV_CALL( cv::minMaxLoc(cv::cvarrToMat(&data_comp), &minVal, &maxVal, &_minLoc, &_maxLoc) );
+        minLoc = cvPoint(_minLoc.x, _minLoc.y);
+        maxLoc = cvPoint(_maxLoc.x, _maxLoc.y);
         CV_CALL(cvGetCol (centers, &centers_comp, i));
         CV_CALL(cvRandArr (&rng, &centers_comp, CV_RAND_UNI, cvScalarAll(minVal), cvScalarAll(maxVal)));
     }
@@ -1361,7 +1364,7 @@ cvStatModelMultiPredict( const CvStatModel* stat_model,
         if( sample_idx && CV_MAT_TYPE(sample_idx->type) == CV_32SC1 )
         {
             CV_CALL( sample_idx_buffer = cvCreateMat( 1, samples_all, CV_8UC1 ));
-            cvZero( sample_idx_buffer );
+            cv::cvarrToMat(sample_idx_buffer).setTo(cv::Scalar(0));
             for( i = 0; i < samples_selected; i++ )
                 sample_idx_buffer->data.ptr[sample_idx->data.i[i*sample_idx_step]] = 1;
             samples_selected = samples_all;
@@ -1636,14 +1639,14 @@ void icvFindClusterLabels( const CvMat* probs, float outlier_thresh, float r,
     CV_ASSERT( nsamples == labels->cols );
 
     CV_CALL( counts = cvCreateMat( 1, nclusters + 1, CV_32SC1 ) );
-    CV_CALL( cvSetZero( counts ));
+    CV_CALL( cv::cvarrToMat(counts).setTo(cv::Scalar(0)) );
     for( i = 0; i < nsamples; i++ )
     {
         labels->data.i[i] = icvGetNumberOfCluster( probs->data.db + i*probs->cols,
             nclusters, r, outlier_thresh, 1 );
         counts->data.i[labels->data.i[i] + 1]++;
     }
-    CV_ASSERT((int)cvSum(counts).val[0] == nsamples);
+    CV_ASSERT((int)cv::sum(cv::cvarrToMat(counts))[0] == nsamples);
     // Filling empty clusters with the vector, that has the maximal probability
     for( j = 0; j < nclusters; j++ ) // outliers are ignored
     {

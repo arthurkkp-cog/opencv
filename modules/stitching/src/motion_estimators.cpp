@@ -260,7 +260,7 @@ bool BundleAdjusterBase::estimate(const std::vector<ImageFeatures> &features,
 
     Mat err, jac;
     CvMat matParams = cvMat(cam_params_);
-    cvCopy(&matParams, solver.param);
+    cv::cvarrToMat(&matParams).copyTo(cv::cvarrToMat(solver.param));
 
 #if ENABLE_LOG
     int iter = 0;
@@ -273,7 +273,7 @@ bool BundleAdjusterBase::estimate(const std::vector<ImageFeatures> &features,
 
         bool proceed = solver.update(_param, _jac, _err);
 
-        cvCopy(_param, &matParams);
+        cv::cvarrToMat(_param).copyTo(cv::cvarrToMat(&matParams));
 
         if (!proceed || !_err)
             break;
@@ -282,7 +282,7 @@ bool BundleAdjusterBase::estimate(const std::vector<ImageFeatures> &features,
         {
             calcJacobian(jac);
             CvMat tmp = cvMat(jac);
-            cvCopy(&tmp, _jac);
+            cv::cvarrToMat(&tmp).copyTo(cv::cvarrToMat(_jac));
         }
 
         if (_err)
@@ -293,7 +293,7 @@ bool BundleAdjusterBase::estimate(const std::vector<ImageFeatures> &features,
             iter++;
 #endif
             CvMat tmp = cvMat(err);
-            cvCopy(&tmp, _err);
+            cv::cvarrToMat(&tmp).copyTo(cv::cvarrToMat(_err));
         }
     }
 

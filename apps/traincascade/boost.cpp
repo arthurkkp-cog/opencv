@@ -360,7 +360,7 @@ CvDTreeNode* CvCascadeBoostTrainData::subsample_data( const CvMat* _subsample_id
         root = new_node( 0, count, 1, 0 );
 
         CV_Assert( (subsample_co = cvCreateMat( 1, sample_count*2, CV_32SC1 )) != 0);
-        cvZero( subsample_co );
+        cv::cvarrToMat(subsample_co).setTo(cv::Scalar(0));
         co = subsample_co->data.i;
         for( int i = 0; i < count; i++ )
             co[sidx[i]*2]++;
@@ -659,7 +659,7 @@ void CvCascadeBoostTrainData::setData( const CvFeatureEvaluator* _featureEvaluat
     split_heap = cvCreateSet( 0, sizeof(*split_heap), maxSplitSize, tree_storage );
 
     priors = cvCreateMat( 1, get_num_classes(), CV_64F );
-    cvSet(priors, cvScalar(1));
+    cv::cvarrToMat(priors).setTo(cv::Scalar(1));
     priors_mult = cvCloneMat( priors );
     counts = cvCreateMat( 1, get_num_classes(), CV_32SC1 );
     direction = cvCreateMat( 1, sample_count, CV_8UC1 );
@@ -1342,7 +1342,7 @@ bool CvCascadeBoost::train( const CvFeatureEvaluator* _featureEvaluator,
         cvSeqPush( weak, &tree );
         update_weights( tree );
         trim_weights();
-        if( cvCountNonZero(subsample_mask) == 0 )
+        if( cv::countNonZero(cv::cvarrToMat(subsample_mask)) == 0 )
             break;
     }
     while( !isErrDesired() && (weak->total < params.weak_count) );
@@ -1491,7 +1491,7 @@ void CvCascadeBoost::update_weights( CvBoostTree* tree )
         if( have_subsample )
         {
             // invert the subsample mask
-            cvXorS( subsample_mask, cvScalar(1.), subsample_mask );
+            { cv::Mat _m = cv::cvarrToMat(subsample_mask); cv::bitwise_xor(_m, cv::Scalar::all(1), _m); }
 
             // run tree through all the non-processed samples
             for( int i = 0; i < n; i++ )

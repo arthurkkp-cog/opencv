@@ -174,7 +174,7 @@ cvTsGenerateBlobImage( IplImage* img, int min_blob_size, int max_blob_size,
 
     CV_Assert(img->depth == IPL_DEPTH_8U && img->nChannels == 1);
 
-    cvZero( img );
+    cv::cvarrToMat(img).setTo(cv::Scalar(0));
 
     // keep the border clear
     cvSetImageROI( img, cvRect(1,1,img->width-2,img->height-2) );
@@ -251,8 +251,8 @@ int CV_FindContourTest::prepare_test_case( int test_case_idx )
     cvTsGenerateBlobImage( img[0], min_blob_size, max_blob_size,
         blob_count, min_brightness, max_brightness, rng );
 
-    cvCopy( img[0], img[1] );
-    cvCopy( img[0], img[2] );
+    cv::cvarrToMat(img[0]).copyTo(cv::cvarrToMat(img[1]));
+    cv::cvarrToMat(img[0]).copyTo(cv::cvarrToMat(img[2]));
 
     cvTsMarkContours( img[1], 255 );
 
@@ -265,19 +265,19 @@ void CV_FindContourTest::run_func()
     contours = contours2 = chain = 0;
     count = cvFindContours( img[2], storage, &contours, sizeof(CvContour), retr_mode, approx_method );
 
-    cvZero( img[3] );
+    cv::cvarrToMat(img[3]).setTo(cv::Scalar(0));
 
     if( contours && retr_mode != CV_RETR_EXTERNAL && approx_method < CV_CHAIN_APPROX_TC89_L1 )
         cvDrawContours( img[3], contours, cvScalar(255), cvScalar(255), INT_MAX, -1 );
 
-    cvCopy( img[0], img[2] );
+    cv::cvarrToMat(img[0]).copyTo(cv::cvarrToMat(img[2]));
 
     count2 = cvFindContours( img[2], storage, &chain, sizeof(CvChain), retr_mode, CV_CHAIN_CODE );
 
     if( chain )
         contours2 = cvApproxChains( chain, storage, approx_method, 0, 0, 1 );
 
-    cvZero( img[2] );
+    cv::cvarrToMat(img[2]).setTo(cv::Scalar(0));
 
     if( contours && retr_mode != CV_RETR_EXTERNAL && approx_method < CV_CHAIN_APPROX_TC89_L1 )
         cvDrawContours( img[2], contours2, cvScalar(255), cvScalar(255), INT_MAX );
@@ -289,7 +289,7 @@ int CV_FindContourTest::validate_test_results( int /*test_case_idx*/ )
 {
     int code = cvtest::TS::OK;
 
-    cvCmpS( img[0], 0, img[0], cv::CMP_GT );
+    { cv::Mat _s = cv::cvarrToMat(img[0]); cv::compare(_s, 0, _s, cv::CMP_GT); }
 
     if( count != count2 )
     {

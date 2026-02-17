@@ -350,7 +350,7 @@ void CV_QueryHistTest::clear()
 void CV_QueryHistTest::init_hist( int /*test_case_idx*/, int i )
 {
     if( hist_type == CV_HIST_ARRAY )
-        cvZero( hist[i]->bins );
+        cv::cvarrToMat(hist[i]->bins).setTo(cv::Scalar(0));
 }
 
 
@@ -1233,7 +1233,12 @@ void CV_CalcHistTest::run_func(void)
     {
         CvSparseMat* sparsemat = (CvSparseMat*)hist[0]->bins;
 
-        cvZero( hist[0]->bins );
+        {
+            CvSparseMat* _sm = (CvSparseMat*)(hist[0]->bins);
+            cvClearSet( _sm->heap );
+            if( _sm->hashtable )
+                memset( _sm->hashtable, 0, _sm->hashsize*sizeof(_sm->hashtable[0]));
+        }
 
         cv::SparseMat sH;
         sparsemat->copyToSparseMat(sH);
@@ -1267,7 +1272,17 @@ cvTsCalcHist( const vector<Mat>& images, CvHistogram* hist, Mat mask, const vect
     int uniform = CV_IS_UNIFORM_HIST(hist);
 
     int cdims = cvGetDims( hist->bins, dims );
-    cvZero( hist->bins );
+    if( CV_IS_SPARSE_MAT(hist->bins) )
+    {
+        CvSparseMat* _sm = (CvSparseMat*)(hist->bins);
+        cvClearSet( _sm->heap );
+        if( _sm->hashtable )
+            memset( _sm->hashtable, 0, _sm->hashsize*sizeof(_sm->hashtable[0]));
+    }
+    else
+    {
+        cv::cvarrToMat(hist->bins).setTo(cv::Scalar(0));
+    }
 
     Size img_size = images[0].size();
     int img_depth = images[0].depth();

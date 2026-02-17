@@ -2360,13 +2360,13 @@ void Core_SolvePolyTest::run( int )
             {
                 ar2.resize(n);
                 cv::Mat _umat2(3, 1, CV_64F, &ar2[0]), umat2 = _umat2;
-                cvFlip(&amat, &amat, 0);
+                { cv::Mat _m = cv::cvarrToMat(&amat); cv::flip(_m, _m, 0); }
                 int nr2;
                 if( cubic_case == 0 )
                     nr2 = cv::solveCubic(cv::cvarrToMat(&amat),umat2);
                 else
                     nr2 = cv::solveCubic(cv::Mat_<float>(cv::cvarrToMat(&amat)), umat2);
-                cvFlip(&amat, &amat, 0);
+                { cv::Mat _m = cv::cvarrToMat(&amat); cv::flip(_m, _m, 0); }
                 if(nr2 > 0)
                     std::sort(ar2.begin(), ar2.begin()+nr2, pred_double());
                 ar2.resize(nr2);

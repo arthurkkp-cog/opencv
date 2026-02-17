@@ -248,7 +248,7 @@ void epnp::estimate_R_and_t(double R[3][3], double t[3])
   CvMat ABt_U = cvMat(3, 3, CV_64F, abt_u);
   CvMat ABt_V = cvMat(3, 3, CV_64F, abt_v);
 
-  cvSetZero(&ABt);
+  cv::cvarrToMat(&ABt).setTo(cv::Scalar(0));
   for(int i = 0; i < number_of_correspondences; i++) {
     double * pc = &pcs[3 * i];
     double * pw = &pws[3 * i];

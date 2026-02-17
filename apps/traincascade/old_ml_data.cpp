@@ -214,7 +214,7 @@ int CvMLData::read_csv(const char* filename)
     seq = cvCreateSeq( 0, sizeof(*seq), cols_count*sizeof(float), storage );
 
     var_types = cvCreateMat( 1, cols_count, CV_8U );
-    cvZero( var_types );
+    cv::cvarrToMat(var_types).setTo(cv::Scalar(0));
     var_types_ptr = var_types->data.ptr;
 
     for(;;)
@@ -247,7 +247,7 @@ int CvMLData::read_csv(const char* filename)
     values = cvCreateMat( seq->total, cols_count, CV_32FC1 );
     missing = cvCreateMat( seq->total, cols_count, CV_8U );
     var_idx_mask = cvCreateMat( 1, values->cols, CV_8UC1 );
-    cvSet( var_idx_mask, cvRealScalar(1) );
+    cv::cvarrToMat(var_idx_mask).setTo(cv::Scalar(1));
     train_sample_count = seq->total;
 
     cvStartReadSeq( seq, &reader );
@@ -265,7 +265,7 @@ int CvMLData::read_csv(const char* filename)
         CV_NEXT_SEQ_ELEM( seq->elem_size, reader );
     }
 
-    if ( cvNorm( missing, 0, CV_L1 ) <= FLT_EPSILON )
+    if ( cv::norm(cv::cvarrToMat(missing), CV_L1) <= FLT_EPSILON )
         cvReleaseMat( &missing );
 
     cvReleaseMemStorage( &storage );
@@ -441,13 +441,13 @@ void CvMLData::set_var_types( const char* str )
 
     if ( !ord && strlen(cat) == 3 ) // str == "cat"
     {
-        cvSet( var_types, cvScalarAll(CV_VAR_CATEGORICAL) );
+        cv::cvarrToMat(var_types).setTo(cv::Scalar::all(CV_VAR_CATEGORICAL));
         return;
     }
 
     if ( !cat && strlen(ord) == 3 ) // str == "ord"
     {
-        cvSet( var_types, cvScalarAll(CV_VAR_ORDERED) );
+        cv::cvarrToMat(var_types).setTo(cv::Scalar::all(CV_VAR_ORDERED));
         return;
     }
 
@@ -557,7 +557,7 @@ const CvMat* CvMLData::get_var_types()
 
     assert( var_idx_mask );
 
-    avcount = cvFloor( cvNorm( var_idx_mask, 0, CV_L1 ) );
+    avcount = cvFloor( cv::norm(cv::cvarrToMat(var_idx_mask), CV_L1) );
     vt_size = avcount + (response_idx >= 0);
 
     if ( avcount == values->cols || (avcount == values->cols-1 && response_idx == values->cols-1) )
@@ -735,7 +735,7 @@ const CvMat* CvMLData::get_var_idx()
 
     assert( var_idx_mask );
 
-    avcount = cvFloor( cvNorm( var_idx_mask, 0, CV_L1 ) );
+    avcount = cvFloor( cv::norm(cv::cvarrToMat(var_idx_mask), CV_L1) );
     int* vidx;
 
     if ( avcount == values->cols )

@@ -218,7 +218,7 @@ cvCloneMat( const CvMat* src )
     if( src->data.ptr )
     {
         cvCreateData( dst );
-        cvCopy( src, dst );
+        cv::cvarrToMat(src).copyTo(cv::cvarrToMat(dst));
     }
 
     return dst;
@@ -319,7 +319,7 @@ cvCloneMatND( const CvMatND* src )
         uchar* data0 = dst->data.ptr;
         _src.copyTo(_dst);
         CV_Assert(_dst.data == data0);
-        //cvCopy( src, dst );
+        // data already copied above
     }
 
     return dst;
@@ -607,7 +607,35 @@ cvCloneSparseMat( const CvSparseMat* src )
         CV_Error( cv::Error::StsBadArg, "Invalid sparse array header" );
 
     CvSparseMat* dst = cvCreateSparseMat( src->dims, src->size, src->type );
-    cvCopy( src, dst );
+
+    dst->dims = src->dims;
+    memcpy( dst->size, src->size, src->dims*sizeof(src->size[0]));
+    dst->valoffset = src->valoffset;
+    dst->idxoffset = src->idxoffset;
+    cvClearSet( dst->heap );
+
+    if( src->heap->active_count >= dst->hashsize*CV_SPARSE_HASH_RATIO )
+    {
+        cvFree( &dst->hashtable );
+        dst->hashsize = src->hashsize;
+        dst->hashtable =
+            (void**)cvAlloc( dst->hashsize*sizeof(dst->hashtable[0]));
+    }
+
+    memset( dst->hashtable, 0, dst->hashsize*sizeof(dst->hashtable[0]));
+
+    CvSparseMatIterator iterator;
+    CvSparseNode* node;
+    for( node = cvInitSparseMatIterator( src, &iterator );
+         node != 0; node = cvGetNextSparseNode( &iterator ))
+    {
+        CvSparseNode* node_copy = (CvSparseNode*)cvSetNew( dst->heap );
+        int tabidx = node->hashval & (dst->hashsize - 1);
+        memcpy( node_copy, node, dst->heap->elem_size );
+        node_copy->next = (CvSparseNode*)dst->hashtable[tabidx];
+        dst->hashtable[tabidx] = node_copy;
+    }
+
     return dst;
 }
 

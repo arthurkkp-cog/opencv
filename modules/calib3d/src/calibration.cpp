@@ -465,7 +465,7 @@ static double calibrateCameraInternal( const Mat& objectPoints,
         if ( !proceed && stdDevs.empty() && perViewErr.empty() )
             break;
         else if ( !proceed && !stdDevs.empty() )
-            cvZero(_JtJ);
+            cv::cvarrToMat(_JtJ).setTo(cv::Scalar(0));
 
         reprojErr = 0;
 

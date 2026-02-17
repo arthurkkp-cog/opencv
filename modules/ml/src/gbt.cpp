@@ -192,7 +192,7 @@ CvGBTrees::train( const CvMat* _train_data, int _tflag,
     }
 
     CvMat* new_responses = cvCreateMat( n, 1, CV_32F);
-    cvZero(new_responses);
+    cv::cvarrToMat(new_responses).setTo(cv::Scalar(0));
 
     data = new CvDTreeTrainData( _train_data, _tflag, new_responses, _var_idx,
         _sample_idx, _var_type, _missing_mask, _params, true, true );
@@ -200,7 +200,7 @@ CvGBTrees::train( const CvMat* _train_data, int _tflag,
     {
         missing = cvCreateMat(_missing_mask->rows, _missing_mask->cols,
                               _missing_mask->type);
-        cvCopy( _missing_mask, missing);
+        cv::cvarrToMat(_missing_mask).copyTo(cv::cvarrToMat(missing));
     }
 
     orig_response = cvCreateMat( 1, n, CV_32F );
@@ -295,7 +295,7 @@ CvGBTrees::train( const CvMat* _train_data, int _tflag,
 
     sum_response = cvCreateMat(class_count, n, CV_32F);
     sum_response_tmp = cvCreateMat(class_count, n, CV_32F);
-    cvZero(sum_response);
+    cv::cvarrToMat(sum_response).setTo(cv::Scalar(0));
 
     delta = 0.0f;
     /*
@@ -313,7 +313,7 @@ CvGBTrees::train( const CvMat* _train_data, int _tflag,
       current predicition on all training samples is set to be
       equal to the base_value
     */
-    cvSet( sum_response, cvScalar(base_value) );
+    cv::cvarrToMat(sum_response).setTo(cv::Scalar::all(base_value));
 
     weak = new pCvSeq[class_count];
     for (int i=0; i<class_count; ++i)
