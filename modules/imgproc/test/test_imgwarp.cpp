@@ -525,8 +525,13 @@ void CV_WarpAffineTest::get_test_array_types_and_sizes( int test_case_idx, vecto
 
 void CV_WarpAffineTest::run_func()
 {
-    CvMat mtx = cvMat(test_mat[INPUT][1]);
-    cvWarpAffine( test_array[INPUT][0], test_array[INPUT_OUTPUT][0], &mtx, interpolation );
+    cv::Mat& src = test_mat[INPUT][0];
+    cv::Mat& dst = test_mat[INPUT_OUTPUT][0];
+    cv::Mat& matrix = test_mat[INPUT][1];
+    CV_Assert( src.type() == dst.type() );
+    cv::warpAffine( src, dst, matrix, dst.size(), interpolation,
+        (interpolation & cv::WARP_FILL_OUTLIERS) ? cv::BORDER_CONSTANT : cv::BORDER_TRANSPARENT,
+        cv::Scalar::all(0) );
 }
 
 
@@ -1028,8 +1033,35 @@ void CV_GetQuadSubPixTest::get_test_array_types_and_sizes( int test_case_idx, ve
 
 void CV_GetQuadSubPixTest::run_func()
 {
-    CvMat mtx = cvMat(test_mat[INPUT][1]);
-    cvGetQuadrangleSubPix( test_array[INPUT][0], test_array[INPUT_OUTPUT][0], &mtx );
+    cv::Mat src = test_mat[INPUT][0];
+    cv::Mat dst = test_mat[INPUT_OUTPUT][0];
+    cv::Mat m = test_mat[INPUT][1];
+
+    CV_Assert( src.channels() == dst.channels() );
+
+    cv::Size win_size = dst.size();
+    double matrix[6] = {0};
+    cv::Mat M(2, 3, CV_64F, matrix);
+    m.convertTo(M, CV_64F);
+    double dx = (win_size.width - 1)*0.5;
+    double dy = (win_size.height - 1)*0.5;
+    matrix[2] -= matrix[0]*dx + matrix[1]*dy;
+    matrix[5] -= matrix[3]*dx + matrix[4]*dy;
+
+    if( src.depth() != dst.depth() )
+    {
+        cv::Mat tmp;
+        src.convertTo(tmp, dst.depth());
+        cv::warpAffine(tmp, dst, M, dst.size(),
+                       cv::INTER_LINEAR + cv::WARP_INVERSE_MAP,
+                       cv::BORDER_REPLICATE);
+    }
+    else
+    {
+        cv::warpAffine(src, dst, M, dst.size(),
+                       cv::INTER_LINEAR + cv::WARP_INVERSE_MAP,
+                       cv::BORDER_REPLICATE);
+    }
 }
 
 
@@ -1145,20 +1177,12 @@ static void check_resize_area(const Mat& expected, const Mat& actual, double tol
 
 TEST(Imgproc_cvWarpAffine, regression)
 {
-    IplImage* src = cvCreateImage(cvSize(100, 100), IPL_DEPTH_8U, 1);
-    IplImage* dst = cvCreateImage(cvSize(100, 100), IPL_DEPTH_8U, 1);
+    cv::Mat src = cv::Mat::zeros(100, 100, CV_8UC1);
+    cv::Mat dst(100, 100, CV_8UC1);
 
-    cvZero(src);
-
-    float m[6];
-    CvMat M = cvMat( 2, 3, CV_32F, m );
-    int w = src->width;
-    int h = src->height;
-    cv2DRotationMatrix(cvPoint2D32f(w*0.5f, h*0.5f), 45.0, 1.0, &M);
-    cvWarpAffine(src, dst, &M);
-
-    cvReleaseImage(&src);
-    cvReleaseImage(&dst);
+    cv::Mat M = cv::getRotationMatrix2D(cv::Point2f(src.cols*0.5f, src.rows*0.5f), 45.0, 1.0);
+    cv::warpAffine(src, dst, M, dst.size(), cv::INTER_LINEAR | cv::WARP_FILL_OUTLIERS,
+                   cv::BORDER_CONSTANT, cv::Scalar::all(0));
 }
 
 TEST(Imgproc_fitLine_vector_3d, regression)

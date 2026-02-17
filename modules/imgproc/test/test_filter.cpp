@@ -1241,7 +1241,7 @@ CV_PyramidUpTest::CV_PyramidUpTest() : CV_PyramidBaseTest( false )
 
 void CV_PyramidUpTest::run_func()
 {
-    cvPyrUp( test_array[INPUT][0], test_array[OUTPUT][0], CV_GAUSSIAN_5x5 );
+    cv::pyrUp( test_mat[INPUT][0], test_mat[OUTPUT][0], test_mat[OUTPUT][0].size() );
 }
 
 
