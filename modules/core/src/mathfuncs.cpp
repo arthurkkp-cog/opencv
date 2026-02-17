@@ -1438,8 +1438,8 @@ void patchNaNs( InputOutputArray _a, double _val )
 
 #ifndef OPENCV_EXCLUDE_C_API
 
-CV_IMPL float cvCbrt(float value) { return cv::cubeRoot(value); }
-CV_IMPL float cvFastArctan(float y, float x) { return cv::fastAtan2(y, x); }
+CV_DEPRECATED CV_IMPL float cvCbrt(float value) { return cv::cubeRoot(value); }
+CV_DEPRECATED CV_IMPL float cvFastArctan(float y, float x) { return cv::fastAtan2(y, x); }
 
 CV_IMPL void
 cvCartToPolar( const CvArr* xarr, const CvArr* yarr,
