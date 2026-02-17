@@ -102,8 +102,8 @@ void CV_POSITTest::run( int start_from )
     criteria.max_iter = 10000;
 
     /* Allocating source arrays; */
-    obj_points = (CvPoint3D32f*)cvAlloc( 8 * sizeof(CvPoint3D32f) );
-    img_points = (CvPoint2D32f*)cvAlloc( 8 * sizeof(CvPoint2D32f) );
+    obj_points = (CvPoint3D32f*)cv::fastMalloc( 8 * sizeof(CvPoint3D32f) );
+    img_points = (CvPoint2D32f*)cv::fastMalloc( 8 * sizeof(CvPoint2D32f) );
 
     /* Fill points arrays with values */
 

@@ -16,7 +16,7 @@ typedef  struct  CvTsSimpleSeq
 
 static CvTsSimpleSeq*  cvTsCreateSimpleSeq( int max_count, int elem_size )
 {
-    CvTsSimpleSeq* seq = (CvTsSimpleSeq*)cvAlloc( sizeof(*seq) + max_count * elem_size );
+    CvTsSimpleSeq* seq = (CvTsSimpleSeq*)cv::fastMalloc( sizeof(*seq) + max_count * elem_size );
     seq->elem_size = elem_size;
     seq->max_count = max_count;
     seq->count = 0;
@@ -111,7 +111,7 @@ static void  cvTsClearSimpleSet( CvTsSimpleSet* set_header )
 
 static CvTsSimpleSet*  cvTsCreateSimpleSet( int max_count, int elem_size )
 {
-    CvTsSimpleSet* set_header = (CvTsSimpleSet*)cvAlloc( sizeof(*set_header) + max_count *
+    CvTsSimpleSet* set_header = (CvTsSimpleSet*)cv::fastMalloc( sizeof(*set_header) + max_count *
                                                         (elem_size + 1 + sizeof(int)));
     set_header->elem_size = elem_size + 1;
     set_header->max_count = max_count;
@@ -192,7 +192,7 @@ static CvTsSimpleGraph*  cvTsCreateSimpleGraph( int max_vtx_count, int vtx_size,
     CvTsSimpleGraph* graph;
 
     CV_Assert( max_vtx_count > 1 && vtx_size >= 0 && edge_size >= 0 );
-    graph = (CvTsSimpleGraph*)cvAlloc( sizeof(*graph) +
+    graph = (CvTsSimpleGraph*)cv::fastMalloc( sizeof(*graph) +
                                       max_vtx_count * max_vtx_count * (edge_size + 1));
     graph->vtx = cvTsCreateSimpleSet( max_vtx_count, vtx_size );
     graph->edge_size = edge_size + 1;

@@ -965,7 +965,7 @@ icvMemCopy( double **buf1, double **buf2, double **buf3, int *b_max )
     if( *buf2 == NULL )
     {
         *b_max = 2 * (*b_max);
-        *buf2 = (double *)cvAlloc( (*b_max) * sizeof( double ));
+        *buf2 = (double *)cv::fastMalloc( (*b_max) * sizeof( double ));
 
         memcpy( *buf2, *buf3, bb * sizeof( double ));
 
@@ -976,7 +976,7 @@ icvMemCopy( double **buf1, double **buf2, double **buf3, int *b_max )
     else
     {
         *b_max = 2 * (*b_max);
-        *buf1 = (double *) cvAlloc( (*b_max) * sizeof( double ));
+        *buf1 = (double *) cv::fastMalloc( (*b_max) * sizeof( double ));
 
         memcpy( *buf1, *buf3, bb * sizeof( double ));
 
@@ -1018,7 +1018,7 @@ static double icvContourSecArea( CvSeq * contour, CvSlice slice )
     sk1 = 0;
     flag = 0;
     dxy = 0;
-    p_are1 = (double *) cvAlloc( p_max * sizeof( double ));
+    p_are1 = (double *) cv::fastMalloc( p_max * sizeof( double ));
 
     p_are = p_are1;
     p_are2 = NULL;

@@ -1311,7 +1311,7 @@ cvCreateStructuringElementEx( int cols, int rows,
 
     int i, size = rows * cols;
     int element_size = sizeof(IplConvKernel) + size*sizeof(int);
-    IplConvKernel *element = (IplConvKernel*)cvAlloc(element_size + 32);
+    IplConvKernel *element = (IplConvKernel*)cv::fastMalloc(element_size + 32);
 
     element->nCols = cols;
     element->nRows = rows;

@@ -204,7 +204,7 @@ cvStartFindContours_Impl( void* _img, CvMemStorage* storage,
     if( header_size < (int) (method == CV_CHAIN_CODE ? sizeof( CvChain ) : sizeof( CvContour )))
         CV_Error( cv::Error::StsBadSize, "" );
 
-    CvContourScanner scanner = (CvContourScanner)cvAlloc( sizeof( *scanner ));
+    CvContourScanner scanner = (CvContourScanner)cv::fastMalloc( sizeof( *scanner ));
     memset( scanner, 0, sizeof(*scanner) );
 
     scanner->storage1 = scanner->storage2 = storage;

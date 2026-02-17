@@ -109,7 +109,7 @@ icvInitMemStorage( CvMemStorage* storage, int block_size )
 CV_IMPL CvMemStorage*
 cvCreateMemStorage( int block_size )
 {
-    CvMemStorage* storage = (CvMemStorage *)cvAlloc( sizeof( CvMemStorage ));
+    CvMemStorage* storage = (CvMemStorage *)cv::fastMalloc( sizeof( CvMemStorage ));
     icvInitMemStorage( storage, block_size );
     return storage;
 }
@@ -223,7 +223,7 @@ icvGoNextMemBlock( CvMemStorage * storage )
 
         if( !(storage->parent) )
         {
-            block = (CvMemBlock *)cvAlloc( storage->block_size );
+            block = (CvMemBlock *)cv::fastMalloc( storage->block_size );
         }
         else
         {
@@ -3052,7 +3052,7 @@ cvCreateGraphScanner( CvGraph* graph, CvGraphVtx* vtx, int mask )
 
     CV_Assert( graph->storage != 0 );
 
-    CvGraphScanner* scanner = (CvGraphScanner*)cvAlloc( sizeof(*scanner) );
+    CvGraphScanner* scanner = (CvGraphScanner*)cv::fastMalloc( sizeof(*scanner) );
     memset( scanner, 0, sizeof(*scanner));
 
     scanner->graph = graph;
@@ -3270,8 +3270,8 @@ cvCloneGraph( const CvGraph* graph, CvMemStorage* storage )
     vtx_size = graph->elem_size;
     edge_size = graph->edges->elem_size;
 
-    flag_buffer = (int*)cvAlloc( graph->total*sizeof(flag_buffer[0]));
-    ptr_buffer = (CvGraphVtx**)cvAlloc( graph->total*sizeof(ptr_buffer[0]));
+    flag_buffer = (int*)cv::fastMalloc( graph->total*sizeof(flag_buffer[0]));
+    ptr_buffer = (CvGraphVtx**)cv::fastMalloc( graph->total*sizeof(ptr_buffer[0]));
     result = cvCreateGraph( graph->flags, graph->header_size,
                                      vtx_size, edge_size, storage );
     memcpy( result + sizeof(CvGraph), graph + sizeof(CvGraph),
@@ -3323,9 +3323,6 @@ cvCloneGraph( const CvGraph* graph, CvMemStorage* storage )
 
     cvFree( &flag_buffer );
     cvFree( &ptr_buffer );
-
-    if( cvGetErrStatus() < 0 )
-        result = 0;
 
     return result;
 }
