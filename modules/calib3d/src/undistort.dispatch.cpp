@@ -384,7 +384,7 @@ static void cvUndistortPointsInternal( const CvMat* _src, CvMat* _dst, const CvM
         cvConvert( matR, &_RR );
     }
     else
-        cvSetIdentity(&_RR);
+        { cv::Mat __rr = cv::cvarrToMat(&_RR); cv::setIdentity(__rr); }
 
     if( matP )
     {
@@ -392,7 +392,7 @@ static void cvUndistortPointsInternal( const CvMat* _src, CvMat* _dst, const CvM
         CvMat _P3x3, _PP=cvMat(3, 3, CV_64F, PP);
         CV_Assert( CV_IS_MAT(matP) && matP->rows == 3 && (matP->cols == 3 || matP->cols == 4));
         cvConvert( cvGetCols(matP, &_P3x3, 0, 3), &_PP );
-        cvMatMul( &_PP, &_RR, &_RR );
+        { cv::Mat _pp = cv::cvarrToMat(&_PP), _rr = cv::cvarrToMat(&_RR); cv::gemm(_pp, _rr, 1, cv::Mat(), 0, _rr); }
     }
 
     const CvPoint2D32f* srcf = (const CvPoint2D32f*)_src->data.ptr;

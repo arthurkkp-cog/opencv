@@ -69,8 +69,13 @@ void epnp::choose_control_points(void)
     for(int j = 0; j < 3; j++)
       PW0->data.db[3 * i + j] = pws[3 * i + j] - cws[0][j];
 
-  cvMulTransposed(PW0, &PW0tPW0, 1);
-  cvSVD(&PW0tPW0, &DC, &UCt, 0, CV_SVD_MODIFY_A | CV_SVD_U_T);
+  { cv::Mat _src = cv::cvarrToMat(PW0), _dst = cv::cvarrToMat(&PW0tPW0); cv::mulTransposed(_src, _dst, true); }
+  {
+      cv::Mat _a = cv::cvarrToMat(&PW0tPW0), _w, _u, _vt;
+      cv::SVD::compute(_a, _w, _u, _vt, cv::SVD::MODIFY_A);
+      _w.copyTo(cv::cvarrToMat(&DC));
+      cv::transpose(_u, cv::cvarrToMat(&UCt));
+  }
 
   cvReleaseMat(&PW0);
 
@@ -91,7 +96,7 @@ void epnp::compute_barycentric_coordinates(void)
     for(int j = 1; j < 4; j++)
       cc[3 * i + j - 1] = cws[j][i] - cws[0][i];
 
-  cvInvert(&CC, &CC_inv, CV_SVD);
+  cv::invert(cv::cvarrToMat(&CC), cv::cvarrToMat(&CC_inv), cv::DECOMP_SVD);
   double * ci = cc_inv;
   for(int i = 0; i < number_of_correspondences; i++) {
     double * pi = &pws[0] + 3 * i;
@@ -164,8 +169,13 @@ void epnp::compute_pose(Mat& R, Mat& t)
   CvMat D   = cvMat(12,  1, CV_64F, d);
   CvMat Ut  = cvMat(12, 12, CV_64F, ut);
 
-  cvMulTransposed(M, &MtM, 1);
-  cvSVD(&MtM, &D, &Ut, 0, CV_SVD_MODIFY_A | CV_SVD_U_T);
+  { cv::Mat _src = cv::cvarrToMat(M), _dst = cv::cvarrToMat(&MtM); cv::mulTransposed(_src, _dst, true); }
+  {
+      cv::Mat _a = cv::cvarrToMat(&MtM), _w, _u, _vt;
+      cv::SVD::compute(_a, _w, _u, _vt, cv::SVD::MODIFY_A);
+      _w.copyTo(cv::cvarrToMat(&D));
+      cv::transpose(_u, cv::cvarrToMat(&Ut));
+  }
   cvReleaseMat(&M);
 
   double l_6x10[6 * 10] = {}, rho[6] = {};
@@ -260,7 +270,13 @@ void epnp::estimate_R_and_t(double R[3][3], double t[3])
     }
   }
 
-  cvSVD(&ABt, &ABt_D, &ABt_U, &ABt_V, CV_SVD_MODIFY_A);
+  {
+      cv::Mat _a = cv::cvarrToMat(&ABt), _w, _u, _vt;
+      cv::SVD::compute(_a, _w, _u, _vt, cv::SVD::MODIFY_A);
+      _w.copyTo(cv::cvarrToMat(&ABt_D));
+      _u.copyTo(cv::cvarrToMat(&ABt_U));
+      cv::transpose(_vt, cv::cvarrToMat(&ABt_V));
+  }
 
   for(int i = 0; i < 3; i++)
     for(int j = 0; j < 3; j++)
@@ -345,7 +361,7 @@ void epnp::find_betas_approx_1(const CvMat * L_6x10, const CvMat * Rho,
     cvmSet(&L_6x4, i, 3, cvmGet(L_6x10, i, 6));
   }
 
-  cvSolve(&L_6x4, Rho, &B4, CV_SVD);
+  cv::solve(cv::cvarrToMat(&L_6x4), cv::cvarrToMat(Rho), cv::cvarrToMat(&B4), cv::DECOMP_SVD);
 
   if (b4[0] < 0) {
     betas[0] = sqrt(-b4[0]);
@@ -376,7 +392,7 @@ void epnp::find_betas_approx_2(const CvMat * L_6x10, const CvMat * Rho,
     cvmSet(&L_6x3, i, 2, cvmGet(L_6x10, i, 2));
   }
 
-  cvSolve(&L_6x3, Rho, &B3, CV_SVD);
+  cv::solve(cv::cvarrToMat(&L_6x3), cv::cvarrToMat(Rho), cv::cvarrToMat(&B3), cv::DECOMP_SVD);
 
   if (b3[0] < 0) {
     betas[0] = sqrt(-b3[0]);
@@ -410,7 +426,7 @@ void epnp::find_betas_approx_3(const CvMat * L_6x10, const CvMat * Rho,
     cvmSet(&L_6x5, i, 4, cvmGet(L_6x10, i, 4));
   }
 
-  cvSolve(&L_6x5, Rho, &B5, CV_SVD);
+  cv::solve(cv::cvarrToMat(&L_6x5), cv::cvarrToMat(Rho), cv::cvarrToMat(&B5), cv::DECOMP_SVD);
 
   if (b5[0] < 0) {
     betas[0] = sqrt(-b5[0]);

@@ -584,7 +584,7 @@ void CV_UndistortPointsTest::distortPoints(const CvMat* _src, CvMat* _dst, const
         double x = (_src->data.db[2*i]-__P->data.db[2])/__P->data.db[0];
         double y = (_src->data.db[2*i+1]-__P->data.db[5+movement])/__P->data.db[4+movement];
         CvMat inverse = cvMat(3,3,CV_64F,a);
-        cvInvert(__R,&inverse);
+        { cv::Mat _s = cv::cvarrToMat(__R), _d = cv::cvarrToMat(&inverse); cv::invert(_s, _d); }
         double w1 = x*inverse.data.db[6]+y*inverse.data.db[7]+inverse.data.db[8];
         double _x = (x*inverse.data.db[0]+y*inverse.data.db[1]+inverse.data.db[2])/w1;
         double _y = (x*inverse.data.db[3]+y*inverse.data.db[4]+inverse.data.db[5])/w1;

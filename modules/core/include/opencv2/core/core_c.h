@@ -1084,9 +1084,6 @@ CVAPI(void)  cvMul( const CvArr* src1, const CvArr* src2,
 CVAPI(void)  cvDiv( const CvArr* src1, const CvArr* src2,
                     CvArr* dst, double scale CV_DEFAULT(1));
 
-/** dst = src1 * scale + src2 */
-CVAPI(void)  cvScaleAdd( const CvArr* src1, CvScalar scale,
-                         const CvArr* src2, CvArr* dst );
 #define cvAXPY( A, real_scalar, B, C ) cvScaleAdd(A, cvRealScalar(real_scalar), B, C)
 
 /** dst = src1 * alpha + src2 * beta + gamma */
@@ -1094,19 +1091,6 @@ CVAPI(void)  cvAddWeighted( const CvArr* src1, double alpha,
                             const CvArr* src2, double beta,
                             double gamma, CvArr* dst );
 
-/** @brief Calculates the dot product of two arrays in Euclidean metrics.
-
-The function calculates and returns the Euclidean dot product of two arrays.
-
-\f[src1  \bullet src2 =  \sum _I ( \texttt{src1} (I)  \texttt{src2} (I))\f]
-
-In the case of multiple channel arrays, the results for all channels are accumulated. In particular,
-cvDotProduct(a,a) where a is a complex vector, will return \f$||\texttt{a}||^2\f$. The function can
-process multi-dimensional arrays, row by row, layer by layer, and so on.
-@param src1 The first source array
-@param src2 The second source array
- */
-CVAPI(double)  cvDotProduct( const CvArr* src1, const CvArr* src2 );
 
 /** dst(idx) = src1(idx) & src2(idx) */
 CVAPI(void) cvAnd( const CvArr* src1, const CvArr* src2,
@@ -1182,85 +1166,19 @@ CVAPI(void) cvAbsDiffS( const CvArr* src, CvArr* dst, CvScalar value );
 *                                Math operations                                         *
 \****************************************************************************************/
 
-/** Does cartesian->polar coordinates conversion.
-   Either of output components (magnitude or angle) is optional */
-CVAPI(void)  cvCartToPolar( const CvArr* x, const CvArr* y,
-                            CvArr* magnitude, CvArr* angle CV_DEFAULT(NULL),
-                            int angle_in_degrees CV_DEFAULT(0));
-
-/** Does polar->cartesian coordinates conversion.
-   Either of output components (magnitude or angle) is optional.
-   If magnitude is missing it is assumed to be all 1's */
-CVAPI(void)  cvPolarToCart( const CvArr* magnitude, const CvArr* angle,
-                            CvArr* x, CvArr* y,
-                            int angle_in_degrees CV_DEFAULT(0));
-
-/** Does powering: dst(idx) = src(idx)^power */
-CVAPI(void)  cvPow( const CvArr* src, CvArr* dst, double power );
-
-/** Does exponention: dst(idx) = exp(src(idx)).
-   Overflow is not handled yet. Underflow is handled.
-   Maximal relative error is ~7e-6 for single-precision input */
-CVAPI(void)  cvExp( const CvArr* src, CvArr* dst );
-
-/** Calculates natural logarithms: dst(idx) = log(abs(src(idx))).
-   Logarithm of 0 gives large negative number(~-700)
-   Maximal relative error is ~3e-7 for single-precision output
-*/
-CVAPI(void)  cvLog( const CvArr* src, CvArr* dst );
-
-/** Fast arctangent calculation */
-CVAPI(float) cvFastArctan( float y, float x );
-
-/** Fast cubic root calculation */
-CVAPI(float)  cvCbrt( float value );
 
 #define  CV_CHECK_RANGE    1
 #define  CV_CHECK_QUIET    2
-/** Checks array values for NaNs, Infs or simply for too large numbers
-   (if CV_CHECK_RANGE is set). If CV_CHECK_QUIET is set,
-   no runtime errors is raised (function returns zero value in case of "bad" values).
-   Otherwise cvError is called */
-CVAPI(int)  cvCheckArr( const CvArr* arr, int flags CV_DEFAULT(0),
-                        double min_val CV_DEFAULT(0), double max_val CV_DEFAULT(0));
-#define cvCheckArray cvCheckArr
 
 #define CV_RAND_UNI      0
 #define CV_RAND_NORMAL   1
 
-/** @brief Fills an array with random numbers and updates the RNG state.
-
-The function fills the destination array with uniformly or normally distributed random numbers.
-@param rng CvRNG state initialized by cvRNG
-@param arr The destination array
-@param dist_type Distribution type
-> -   **CV_RAND_UNI** uniform distribution
-> -   **CV_RAND_NORMAL** normal or Gaussian distribution
-@param param1 The first parameter of the distribution. In the case of a uniform distribution it is
-the inclusive lower boundary of the random numbers range. In the case of a normal distribution it
-is the mean value of the random numbers.
-@param param2 The second parameter of the distribution. In the case of a uniform distribution it
-is the exclusive upper boundary of the random numbers range. In the case of a normal distribution
-it is the standard deviation of the random numbers.
-@sa randu, randn, RNG::fill.
- */
-CVAPI(void) cvRandArr( CvRNG* rng, CvArr* arr, int dist_type,
-                      CvScalar param1, CvScalar param2 );
-
-CVAPI(void) cvRandShuffle( CvArr* mat, CvRNG* rng,
-                           double iter_factor CV_DEFAULT(1.));
 
 #define CV_SORT_EVERY_ROW 0
 #define CV_SORT_EVERY_COLUMN 1
 #define CV_SORT_ASCENDING 0
 #define CV_SORT_DESCENDING 16
 
-CVAPI(void) cvSort( const CvArr* src, CvArr* dst CV_DEFAULT(NULL),
-                    CvArr* idxmat CV_DEFAULT(NULL),
-                    int flags CV_DEFAULT(0));
-
-/** Finds real roots of a cubic equation */
-CVAPI(int) cvSolveCubic( const CvMat* coeffs, CvMat* roots );
 
 /** Finds all real and complex roots of a polynomial equation */
 CVAPI(void) cvSolvePoly(const CvMat* coeffs, CvMat *roots2,
@@ -1270,54 +1188,9 @@ CVAPI(void) cvSolvePoly(const CvMat* coeffs, CvMat *roots2,
 *                                Matrix operations                                       *
 \****************************************************************************************/
 
-/** @brief Calculates the cross product of two 3D vectors.
-
-The function calculates the cross product of two 3D vectors:
-\f[\texttt{dst} =  \texttt{src1} \times \texttt{src2}\f]
-or:
-\f[\begin{array}{l} \texttt{dst} _1 =  \texttt{src1} _2  \texttt{src2} _3 -  \texttt{src1} _3  \texttt{src2} _2 \\ \texttt{dst} _2 =  \texttt{src1} _3  \texttt{src2} _1 -  \texttt{src1} _1  \texttt{src2} _3 \\ \texttt{dst} _3 =  \texttt{src1} _1  \texttt{src2} _2 -  \texttt{src1} _2  \texttt{src2} _1 \end{array}\f]
-@param src1 The first source vector
-@param src2 The second source vector
-@param dst The destination vector
- */
-CVAPI(void)  cvCrossProduct( const CvArr* src1, const CvArr* src2, CvArr* dst );
-
-/** Matrix transform: dst = A*B + C, C is optional */
-#define cvMatMulAdd( src1, src2, src3, dst ) cvGEMM( (src1), (src2), 1., (src3), 1., (dst), 0 )
-#define cvMatMul( src1, src2, dst )  cvMatMulAdd( (src1), (src2), NULL, (dst))
-
 #define CV_GEMM_A_T 1
 #define CV_GEMM_B_T 2
 #define CV_GEMM_C_T 4
-/** Extended matrix transform:
-   dst = alpha*op(A)*op(B) + beta*op(C), where op(X) is X or X^T */
-CVAPI(void)  cvGEMM( const CvArr* src1, const CvArr* src2, double alpha,
-                     const CvArr* src3, double beta, CvArr* dst,
-                     int tABC CV_DEFAULT(0));
-#define cvMatMulAddEx cvGEMM
-
-/** Transforms each element of source array and stores
-   resultant vectors in destination array */
-CVAPI(void)  cvTransform( const CvArr* src, CvArr* dst,
-                          const CvMat* transmat,
-                          const CvMat* shiftvec CV_DEFAULT(NULL));
-#define cvMatMulAddS cvTransform
-
-/** Does perspective transform on every element of input array */
-CVAPI(void)  cvPerspectiveTransform( const CvArr* src, CvArr* dst,
-                                     const CvMat* mat );
-
-/** Calculates (A-delta)*(A-delta)^T (order=0) or (A-delta)^T*(A-delta) (order=1) */
-CVAPI(void) cvMulTransposed( const CvArr* src, CvArr* dst, int order,
-                             const CvArr* delta CV_DEFAULT(NULL),
-                             double scale CV_DEFAULT(1.) );
-
-/** Transposes matrix. Square matrices can be transposed in-place */
-CVAPI(void)  cvTranspose( const CvArr* src, CvArr* dst );
-#define cvT cvTranspose
-
-/** Completes the symmetric matrix from the lower (LtoR=0) or from the upper (LtoR!=0) part */
-CVAPI(void)  cvCompleteSymm( CvMat* matrix, int LtoR CV_DEFAULT(0) );
 
 /** Mirror array data around horizontal (flip=0),
    vertical (flip=1) or both(flip=-1) axises:
@@ -1331,15 +1204,6 @@ CVAPI(void)  cvFlip( const CvArr* src, CvArr* dst CV_DEFAULT(NULL),
 #define CV_SVD_U_T        2
 #define CV_SVD_V_T        4
 
-/** Performs Singular Value Decomposition of a matrix */
-CVAPI(void)   cvSVD( CvArr* A, CvArr* W, CvArr* U CV_DEFAULT(NULL),
-                     CvArr* V CV_DEFAULT(NULL), int flags CV_DEFAULT(0));
-
-/** Performs Singular Value Back Substitution (solves A*X = B):
-   flags must be the same as in cvSVD */
-CVAPI(void)   cvSVBkSb( const CvArr* W, const CvArr* U,
-                        const CvArr* V, const CvArr* B,
-                        CvArr* X, int flags );
 
 #define CV_LU  0
 #define CV_SVD 1
@@ -1348,37 +1212,6 @@ CVAPI(void)   cvSVBkSb( const CvArr* W, const CvArr* U,
 #define CV_QR  4
 #define CV_NORMAL 16
 
-/** Inverts matrix */
-CVAPI(double)  cvInvert( const CvArr* src, CvArr* dst,
-                         int method CV_DEFAULT(CV_LU));
-#define cvInv cvInvert
-
-/** Solves linear system (src1)*(dst) = (src2)
-   (returns 0 if src1 is a singular and CV_LU method is used) */
-CVAPI(int)  cvSolve( const CvArr* src1, const CvArr* src2, CvArr* dst,
-                     int method CV_DEFAULT(CV_LU));
-
-/** Calculates determinant of input matrix */
-CVAPI(double) cvDet( const CvArr* mat );
-
-/** Calculates trace of the matrix (sum of elements on the main diagonal) */
-CVAPI(CvScalar) cvTrace( const CvArr* mat );
-
-/** Finds eigen values and vectors of a symmetric matrix */
-CVAPI(void)  cvEigenVV( CvArr* mat, CvArr* evects, CvArr* evals,
-                        double eps CV_DEFAULT(0),
-                        int lowindex CV_DEFAULT(-1),
-                        int highindex CV_DEFAULT(-1));
-
-///* Finds selected eigen values and vectors of a symmetric matrix */
-//CVAPI(void)  cvSelectedEigenVV( CvArr* mat, CvArr* evects, CvArr* evals,
-//                                int lowindex, int highindex );
-
-/** Makes an identity matrix (mat_ij = i == j) */
-CVAPI(void)  cvSetIdentity( CvArr* mat, CvScalar value CV_DEFAULT(cvRealScalar(1)) );
-
-/** Fills matrix with given range of numbers */
-CVAPI(CvArr*)  cvRange( CvArr* mat, double start, double end );
 
 /**   @anchor core_c_CovarFlags
 @name Flags for cvCalcCovarMatrix
@@ -1407,27 +1240,9 @@ CVAPI(CvArr*)  cvRange( CvArr* mat, double start, double end );
 
 /** @} */
 
-/** Calculates covariation matrix for a set of vectors
-@see @ref core_c_CovarFlags "flags"
-*/
-CVAPI(void)  cvCalcCovarMatrix( const CvArr** vects, int count,
-                                CvArr* cov_mat, CvArr* avg, int flags );
-
 #define CV_PCA_DATA_AS_ROW 0
 #define CV_PCA_DATA_AS_COL 1
 #define CV_PCA_USE_AVG 2
-CVAPI(void)  cvCalcPCA( const CvArr* data, CvArr* mean,
-                        CvArr* eigenvals, CvArr* eigenvects, int flags );
-
-CVAPI(void)  cvProjectPCA( const CvArr* data, const CvArr* mean,
-                           const CvArr* eigenvects, CvArr* result );
-
-CVAPI(void)  cvBackProjectPCA( const CvArr* proj, const CvArr* mean,
-                               const CvArr* eigenvects, CvArr* result );
-
-/** Calculates Mahalanobis(weighted) distance */
-CVAPI(double)  cvMahalanobis( const CvArr* vec1, const CvArr* vec2, const CvArr* mat );
-#define cvMahalonobis  cvMahalanobis
 
 /****************************************************************************************\
 *                                    Array Statistics                                    *
@@ -1495,9 +1310,6 @@ CVAPI(void)  cvNormalize( const CvArr* src, CvArr* dst,
 #define CV_REDUCE_MIN 3
 /** @} */
 
-/** @see @ref core_c_ReduceFlags "flags" */
-CVAPI(void)  cvReduce( const CvArr* src, CvArr* dst, int dim CV_DEFAULT(-1),
-                       int op CV_DEFAULT(CV_REDUCE_SUM) );
 
 /****************************************************************************************\
 *                      Discrete Linear Transforms and Related Functions                  *
@@ -1516,29 +1328,6 @@ CVAPI(void)  cvReduce( const CvArr* src, CvArr* dst, int dim CV_DEFAULT(-1),
 #define CV_DXT_MUL_CONJ 8 /**< conjugate the second argument of cvMulSpectrums */
 /** @} */
 
-/** Discrete Fourier Transform:
-    complex->complex,
-    real->ccs (forward),
-    ccs->real (inverse)
-@see core_c_DftFlags "flags"
-*/
-CVAPI(void)  cvDFT( const CvArr* src, CvArr* dst, int flags,
-                    int nonzero_rows CV_DEFAULT(0) );
-#define cvFFT cvDFT
-
-/** Multiply results of DFTs: DFT(X)*DFT(Y) or DFT(X)*conj(DFT(Y))
-@see core_c_DftFlags "flags"
-*/
-CVAPI(void)  cvMulSpectrums( const CvArr* src1, const CvArr* src2,
-                             CvArr* dst, int flags );
-
-/** Finds optimal DFT vector size >= size0 */
-CVAPI(int)  cvGetOptimalDFTSize( int size0 );
-
-/** Discrete Cosine Transform
-@see core_c_DftFlags "flags"
-*/
-CVAPI(void)  cvDCT( const CvArr* src, CvArr* dst, int flags );
 
 /****************************************************************************************\
 *                              Dynamic data structures                                   *
@@ -1920,13 +1709,7 @@ CVAPI(void) cvRemoveNodeFromTree( void* node, void* frame );
 CVAPI(CvSeq*) cvTreeToNodeSeq( const void* first, int header_size,
                               CvMemStorage* storage );
 
-/** The function implements the K-means algorithm for clustering an array of sample
-   vectors in a specified number of classes */
 #define CV_KMEANS_USE_INITIAL_LABELS    1
-CVAPI(int) cvKMeans2( const CvArr* samples, int cluster_count, CvArr* labels,
-                      CvTermCriteria termcrit, int attempts CV_DEFAULT(1),
-                      CvRNG* rng CV_DEFAULT(0), int flags CV_DEFAULT(0),
-                      CvArr* _centers CV_DEFAULT(0), double* compactness CV_DEFAULT(0) );
 
 /****************************************************************************************\
 *                                    System functions                                    *

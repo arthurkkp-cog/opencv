@@ -349,10 +349,10 @@ HoughLinesSDiv( InputArray image, OutputArray lines, int type,
                 xc = (float) col + 0.5f;
 
                 /* Update the accumulator */
-                t = (float) fabs( cvFastArctan( yc, xc ) * d2r );
-                r = (float) std::sqrt( (double)xc * xc + (double)yc * yc );
-                r0 = r * irho;
-                ti0 = cvFloor( (t + CV_PI*0.5) * itheta );
+                                t = (float) fabs( cv::fastAtan2( yc, xc ) * d2r );
+                                r = (float) std::sqrt( (double)xc * xc + (double)yc * yc );
+                                r0 = r * irho;
+                                ti0 = cvFloor( (t + CV_PI*0.5) * itheta );
 
                 caccum[ti0]++;
 
@@ -417,8 +417,8 @@ HoughLinesSDiv( InputArray image, OutputArray lines, int type,
                     xc = (float) x[index] + 0.5f;
 
                     // Update the accumulator
-                    t = (float) fabs( cvFastArctan( yc, xc ) * d2r );
-                    r = (float) std::sqrt( (double)xc * xc + (double)yc * yc ) * isrho;
+                                        t = (float) fabs( cv::fastAtan2( yc, xc ) * d2r );
+                                        r = (float) std::sqrt( (double)xc * xc + (double)yc * yc ) * isrho;
                     ti0 = cvFloor( (t + CV_PI * 0.5) * istheta );
                     ti2 = (ti * stn - ti0) * 5;
                     r0 = (float) ri *srn;

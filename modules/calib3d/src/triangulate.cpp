@@ -220,15 +220,21 @@ icvCorrectMatches(CvMat *F_, CvMat *points1_, CvMat *points2_, CvMat *new_points
         cvSetReal2D(T2i,2,2,1);
         cvSetReal2D(T2i,0,2,x2);
         cvSetReal2D(T2i,1,2,y2);
-        cvGEMM(T2i,F,1,0,0,tmp33,CV_GEMM_A_T);
+        cv::gemm(cv::cvarrToMat(T2i), cv::cvarrToMat(F), 1, cv::Mat(), 0, cv::cvarrToMat(tmp33), cv::GEMM_1_T);
         cvSetZero(TFT);
-        cvGEMM(tmp33,T1i,1,0,0,TFT);
+        cv::gemm(cv::cvarrToMat(tmp33), cv::cvarrToMat(T1i), 1, cv::Mat(), 0, cv::cvarrToMat(TFT));
 
         // Compute the right epipole e1 from F * e1 = 0
         cvSetZero(U);
         cvSetZero(S);
         cvSetZero(V);
-        cvSVD(TFT,S,U,V);
+        {
+            cv::Mat _w, _u, _vt;
+            cv::SVD::compute(cv::cvarrToMat(TFT), _w, _u, _vt);
+            _u.copyTo(cv::cvarrToMat(U));
+            cv::transpose(_vt, cv::cvarrToMat(V));
+            cv::Mat _S = cv::cvarrToMat(S); _S.setTo(0); _w.copyTo(_S.diag());
+        }
         scale = sqrt(cvGetReal2D(V,0,2)*cvGetReal2D(V,0,2) + cvGetReal2D(V,1,2)*cvGetReal2D(V,1,2));
         cvSetReal2D(e1,0,0,cvGetReal2D(V,0,2)/scale);
         cvSetReal2D(e1,1,0,cvGetReal2D(V,1,2)/scale);
@@ -241,11 +247,17 @@ icvCorrectMatches(CvMat *F_, CvMat *points1_, CvMat *points2_, CvMat *new_points
 
         // Compute the left epipole e2 from e2' * F = 0  =>  F' * e2 = 0
         cvSetZero(TFTt);
-        cvTranspose(TFT, TFTt);
+        cv::transpose(cv::cvarrToMat(TFT), cv::cvarrToMat(TFTt));
         cvSetZero(U);
         cvSetZero(S);
         cvSetZero(V);
-        cvSVD(TFTt,S,U,V);
+        {
+            cv::Mat _w, _u, _vt;
+            cv::SVD::compute(cv::cvarrToMat(TFTt), _w, _u, _vt);
+            _u.copyTo(cv::cvarrToMat(U));
+            cv::transpose(_vt, cv::cvarrToMat(V));
+            cv::Mat _S = cv::cvarrToMat(S); _S.setTo(0); _w.copyTo(_S.diag());
+        }
         cvSetZero(e2);
         scale = sqrt(cvGetReal2D(V,0,2)*cvGetReal2D(V,0,2) + cvGetReal2D(V,1,2)*cvGetReal2D(V,1,2));
         cvSetReal2D(e2,0,0,cvGetReal2D(V,0,2)/scale);
@@ -270,8 +282,8 @@ icvCorrectMatches(CvMat *F_, CvMat *points1_, CvMat *points2_, CvMat *new_points
         cvSetReal2D(R2,1,0,-cvGetReal2D(e2,1,0));
         cvSetReal2D(R2,1,1,cvGetReal2D(e2,0,0));
         cvSetReal2D(R2,2,2,1);
-        cvGEMM(R2,TFT,1,0,0,tmp33);
-        cvGEMM(tmp33,R1,1,0,0,RTFTR,CV_GEMM_B_T);
+        cv::gemm(cv::cvarrToMat(R2), cv::cvarrToMat(TFT), 1, cv::Mat(), 0, cv::cvarrToMat(tmp33));
+        cv::gemm(cv::cvarrToMat(tmp33), cv::cvarrToMat(R1), 1, cv::Mat(), 0, cv::cvarrToMat(RTFTR), cv::GEMM_2_T);
 
         // Set f1 = e1(3), f2 = e2(3), a = F22, b = F23, c = F32, d = F33
         f1 = cvGetReal2D(e1,2,0);
@@ -314,8 +326,8 @@ icvCorrectMatches(CvMat *F_, CvMat *points1_, CvMat *points2_, CvMat *new_points
         tmp31->data.db[0] /= tmp31->data.db[2];
         tmp31->data.db[1] /= tmp31->data.db[2];
         tmp31->data.db[2] /= tmp31->data.db[2];
-        cvGEMM(T1i,R1,1,0,0,tmp33,CV_GEMM_B_T);
-        cvGEMM(tmp33,tmp31,1,0,0,tmp31_2);
+        cv::gemm(cv::cvarrToMat(T1i), cv::cvarrToMat(R1), 1, cv::Mat(), 0, cv::cvarrToMat(tmp33), cv::GEMM_2_T);
+        cv::gemm(cv::cvarrToMat(tmp33), cv::cvarrToMat(tmp31), 1, cv::Mat(), 0, cv::cvarrToMat(tmp31_2));
         x1 = tmp31_2->data.db[0];
         y1 = tmp31_2->data.db[1];
 
@@ -325,8 +337,8 @@ icvCorrectMatches(CvMat *F_, CvMat *points1_, CvMat *points2_, CvMat *new_points
         tmp31->data.db[0] /= tmp31->data.db[2];
         tmp31->data.db[1] /= tmp31->data.db[2];
         tmp31->data.db[2] /= tmp31->data.db[2];
-        cvGEMM(T2i,R2,1,0,0,tmp33,CV_GEMM_B_T);
-        cvGEMM(tmp33,tmp31,1,0,0,tmp31_2);
+        cv::gemm(cv::cvarrToMat(T2i), cv::cvarrToMat(R2), 1, cv::Mat(), 0, cv::cvarrToMat(tmp33), cv::GEMM_2_T);
+        cv::gemm(cv::cvarrToMat(tmp33), cv::cvarrToMat(tmp31), 1, cv::Mat(), 0, cv::cvarrToMat(tmp31_2));
         x2 = tmp31_2->data.db[0];
         y2 = tmp31_2->data.db[1];
 
