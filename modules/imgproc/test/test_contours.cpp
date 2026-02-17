@@ -195,7 +195,10 @@ cvTsGenerateBlobImage( IplImage* img, int min_blob_size, int max_blob_size,
         axes.height = (cvtest::randInt(rng) %
                       (max_blob_size - min_blob_size) + min_blob_size + 1)/2;
 
-        cvEllipse( img, cvPoint(center), cvSize(axes), angle, 0, 360, cvScalar(brightness), CV_FILLED );
+        {
+            Mat m = cvarrToMat(img);
+            cv::ellipse( m, center, axes, angle, 0, 360, Scalar(brightness), cv::FILLED );
+        }
     }
 
     cvResetImageROI( img );
@@ -268,7 +271,20 @@ void CV_FindContourTest::run_func()
     cvZero( img[3] );
 
     if( contours && retr_mode != CV_RETR_EXTERNAL && approx_method < CV_CHAIN_APPROX_TC89_L1 )
-        cvDrawContours( img[3], contours, cvScalar(255), cvScalar(255), INT_MAX, -1 );
+    {
+        std::vector<std::vector<Point>> contour_vec;
+        CvTreeNodeIterator iter;
+        cvInitTreeNodeIterator(&iter, contours, INT_MAX);
+        while (CvSeq* c = (CvSeq*)cvNextTreeNode(&iter)) {
+            if (CV_IS_SEQ_POLYLINE(c) && c->total > 0) {
+                std::vector<Point> pts(c->total);
+                cvCvtSeqToArray(c, &pts[0]);
+                contour_vec.push_back(pts);
+            }
+        }
+        Mat m = cvarrToMat(img[3]);
+        cv::drawContours(m, contour_vec, -1, Scalar(255), cv::FILLED);
+    }
 
     cvCopy( img[0], img[2] );
 
@@ -280,7 +296,20 @@ void CV_FindContourTest::run_func()
     cvZero( img[2] );
 
     if( contours && retr_mode != CV_RETR_EXTERNAL && approx_method < CV_CHAIN_APPROX_TC89_L1 )
-        cvDrawContours( img[2], contours2, cvScalar(255), cvScalar(255), INT_MAX );
+    {
+        std::vector<std::vector<Point>> contour_vec;
+        CvTreeNodeIterator iter;
+        cvInitTreeNodeIterator(&iter, contours2, INT_MAX);
+        while (CvSeq* c = (CvSeq*)cvNextTreeNode(&iter)) {
+            if (CV_IS_SEQ_POLYLINE(c) && c->total > 0) {
+                std::vector<Point> pts(c->total);
+                cvCvtSeqToArray(c, &pts[0]);
+                contour_vec.push_back(pts);
+            }
+        }
+        Mat m = cvarrToMat(img[2]);
+        cv::drawContours(m, contour_vec, -1, Scalar(255), 1);
+    }
 }
 
 

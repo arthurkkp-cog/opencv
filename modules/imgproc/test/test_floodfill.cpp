@@ -269,7 +269,10 @@ cvTsFloodFill( CvMat* _img, CvPoint seed_pt, CvScalar new_val,
     {
         Mat m_mask = cvarrToMat(mask);
         cvtest::set( m_mask, Scalar::all(0), Mat() );
-        cvRectangle( mask, cvPoint(0,0), cvPoint(mask->cols-1,mask->rows-1), cvScalar(Scalar::all(1.)), 1, 8, 0 );
+        {
+            Mat m_rect = cvarrToMat(mask);
+            cv::rectangle( m_rect, Point(0,0), Point(mask->cols-1,mask->rows-1), Scalar::all(1.), 1, 8, 0 );
+        }
     }
 
     new_mask_val = (new_mask_val != 0 ? new_mask_val : 1) << 8;
