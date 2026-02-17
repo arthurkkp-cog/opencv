@@ -788,7 +788,11 @@ void Core_MulTransposedTest::get_minmax_bounds( int /*i*/, int /*j*/, int /*type
 
 void Core_MulTransposedTest::run_func()
 {
-    { cv::Mat _s = cv::cvarrToMat(test_array[INPUT][0]), _d = cv::cvarrToMat(test_array[OUTPUT][0]); cv::Mat _delta = test_array[INPUT][1] ? cv::cvarrToMat(test_array[INPUT][1]) : cv::Mat(); cv::mulTransposed(_s, _d, order != 0, _delta); }
+    cv::Mat _s = cv::cvarrToMat(test_array[INPUT][0]), _d0 = cv::cvarrToMat(test_array[OUTPUT][0]), _d = _d0;
+    cv::Mat _delta = test_array[INPUT][1] ? cv::cvarrToMat(test_array[INPUT][1]) : cv::Mat();
+    cv::mulTransposed(_s, _d, order != 0, _delta, 1.0, _d.type());
+    if( _d.data != _d0.data )
+        _d.convertTo(_d0, _d0.type());
 }
 
 
@@ -1334,8 +1338,8 @@ int Core_CovarMatrixTest::prepare_test_case( int test_case_idx )
 
 void Core_CovarMatrixTest::run_func()
 {
-    cv::Mat _cov = cv::cvarrToMat(test_array[OUTPUT][0]);
-    cv::Mat _avg = cv::cvarrToMat(test_array[INPUT_OUTPUT][0]);
+    cv::Mat _cov0 = cv::cvarrToMat(test_array[OUTPUT][0]), _cov = _cov0;
+    cv::Mat _avg0 = cv::cvarrToMat(test_array[INPUT_OUTPUT][0]), _avg = _avg0;
     if (flags & (CV_COVAR_ROWS | CV_COVAR_COLS)) {
         cv::calcCovarMatrix(cv::cvarrToMat(temp_hdrs[0]), _cov, _avg, flags, _cov.type());
     } else {
@@ -1344,6 +1348,10 @@ void Core_CovarMatrixTest::run_func()
             mats[i] = cv::cvarrToMat(temp_hdrs[i]);
         cv::calcCovarMatrix(&mats[0], count, _cov, _avg, flags, _cov.type());
     }
+    if( _avg.data != _avg0.data )
+        _avg.convertTo(_avg0, _avg0.type());
+    if( _cov.data != _cov0.data )
+        _cov.convertTo(_cov0, _cov0.type());
 }
 
 
@@ -2010,7 +2018,37 @@ void Core_SVDTest::run_func()
     CvArr* src = test_array[!(flags & CV_SVD_MODIFY_A) ? INPUT : OUTPUT][0];
     if( !src )
         src = test_array[INPUT][0];
-    { cv::Mat _src = cv::cvarrToMat(src), _w = cv::cvarrToMat(test_array[TEMP][0]); cv::Mat _u, _v; if (test_array[TEMP][1]) _u = cv::cvarrToMat(test_array[TEMP][1]); if (test_array[TEMP][2]) _v = cv::cvarrToMat(test_array[TEMP][2]); cv::SVD::compute(_src, _w, _u, _v, flags); }
+    cv::Mat a = cv::cvarrToMat(src), w = cv::cvarrToMat(test_array[TEMP][0]);
+    int m = a.rows, n = a.cols, mn = std::max(m, n), nm = std::min(m, n);
+    cv::Mat u, v;
+    if( test_array[TEMP][1] )
+        u = cv::cvarrToMat(test_array[TEMP][1]);
+    if( test_array[TEMP][2] )
+        v = cv::cvarrToMat(test_array[TEMP][2]);
+    cv::SVD svd;
+    if( w.size() == cv::Size(nm, 1) )
+        svd.w = cv::Mat(nm, 1, a.type(), w.ptr());
+    else if( w.isContinuous() )
+        svd.w = w;
+    if( !u.empty() ) svd.u = u;
+    if( !v.empty() ) svd.vt = v;
+    int cppflags = ((flags & CV_SVD_MODIFY_A) ? cv::SVD::MODIFY_A : 0) |
+        ((!svd.u.data && !svd.vt.data) ? cv::SVD::NO_UV : 0) |
+        ((m != n && (svd.u.size() == cv::Size(mn, mn) ||
+        svd.vt.size() == cv::Size(mn, mn))) ? cv::SVD::FULL_UV : 0);
+    svd(a, cppflags);
+    if( !u.empty() ) {
+        if( flags & CV_SVD_U_T ) cv::transpose(svd.u, u);
+        else if( u.data != svd.u.data ) { CV_Assert(u.size() == svd.u.size()); svd.u.copyTo(u); }
+    }
+    if( !v.empty() ) {
+        if( !(flags & CV_SVD_V_T) ) cv::transpose(svd.vt, v);
+        else if( v.data != svd.vt.data ) { CV_Assert(v.size() == svd.vt.size()); svd.vt.copyTo(v); }
+    }
+    if( w.data != svd.w.data ) {
+        if( w.size() == svd.w.size() ) svd.w.copyTo(w);
+        else { w = cv::Scalar(0); cv::Mat wd = w.diag(); svd.w.copyTo(wd); }
+    }
 }
 
 
@@ -2198,7 +2236,35 @@ int Core_SVBkSbTest::prepare_test_case( int test_case_idx )
             cvtest::copy( temp, input );
         }
 
-        { cv::Mat _src = input.clone(), _w = cv::cvarrToMat(test_array[TEMP][0]); cv::Mat _u, _v; if (test_array[TEMP][1]) _u = cv::cvarrToMat(test_array[TEMP][1]); if (test_array[TEMP][2]) _v = cv::cvarrToMat(test_array[TEMP][2]); cv::SVD::compute(_src, _w, _u, _v, flags); }
+        {
+            cv::Mat a = input.clone(), w = cv::cvarrToMat(test_array[TEMP][0]);
+            int m = a.rows, n = a.cols, mn = std::max(m, n), nm = std::min(m, n);
+            cv::Mat u, v;
+            if( test_array[TEMP][1] ) u = cv::cvarrToMat(test_array[TEMP][1]);
+            if( test_array[TEMP][2] ) v = cv::cvarrToMat(test_array[TEMP][2]);
+            cv::SVD svd;
+            if( w.size() == cv::Size(nm, 1) ) svd.w = cv::Mat(nm, 1, a.type(), w.ptr());
+            else if( w.isContinuous() ) svd.w = w;
+            if( !u.empty() ) svd.u = u;
+            if( !v.empty() ) svd.vt = v;
+            int cppflags = ((flags & CV_SVD_MODIFY_A) ? cv::SVD::MODIFY_A : 0) |
+                ((!svd.u.data && !svd.vt.data) ? cv::SVD::NO_UV : 0) |
+                ((m != n && (svd.u.size() == cv::Size(mn, mn) ||
+                svd.vt.size() == cv::Size(mn, mn))) ? cv::SVD::FULL_UV : 0);
+            svd(a, cppflags);
+            if( !u.empty() ) {
+                if( flags & CV_SVD_U_T ) cv::transpose(svd.u, u);
+                else if( u.data != svd.u.data ) { CV_Assert(u.size() == svd.u.size()); svd.u.copyTo(u); }
+            }
+            if( !v.empty() ) {
+                if( !(flags & CV_SVD_V_T) ) cv::transpose(svd.vt, v);
+                else if( v.data != svd.vt.data ) { CV_Assert(v.size() == svd.vt.size()); svd.vt.copyTo(v); }
+            }
+            if( w.data != svd.w.data ) {
+                if( w.size() == svd.w.size() ) svd.w.copyTo(w);
+                else { w = cv::Scalar(0); cv::Mat wd = w.diag(); svd.w.copyTo(wd); }
+            }
+        }
     }
 
     return code;
@@ -2220,7 +2286,14 @@ double Core_SVBkSbTest::get_success_error_level( int /*test_case_idx*/, int /*i*
 
 void Core_SVBkSbTest::run_func()
 {
-    { cv::Mat _w = cv::cvarrToMat(test_array[TEMP][0]), _u = cv::cvarrToMat(test_array[TEMP][1]), _v = cv::cvarrToMat(test_array[TEMP][2]); cv::Mat _rhs = test_array[INPUT][1] ? cv::cvarrToMat(test_array[INPUT][1]) : cv::Mat(); cv::Mat _dst = cv::cvarrToMat(test_array[OUTPUT][0]); cv::SVD::backSubst(_w, _u, _v, _rhs, _dst); }
+    cv::Mat w = cv::cvarrToMat(test_array[TEMP][0]);
+    cv::Mat u = cv::cvarrToMat(test_array[TEMP][1]);
+    cv::Mat v = cv::cvarrToMat(test_array[TEMP][2]);
+    cv::Mat rhs = test_array[INPUT][1] ? cv::cvarrToMat(test_array[INPUT][1]) : cv::Mat();
+    cv::Mat dst = cv::cvarrToMat(test_array[OUTPUT][0]);
+    if( flags & CV_SVD_U_T ) { cv::Mat tmp; cv::transpose(u, tmp); u = tmp; }
+    if( !(flags & CV_SVD_V_T) ) { cv::Mat tmp; cv::transpose(v, tmp); v = tmp; }
+    cv::SVD::backSubst(w, u, v, rhs, dst);
 }
 
 
