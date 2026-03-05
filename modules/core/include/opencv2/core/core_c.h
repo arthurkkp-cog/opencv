@@ -1209,11 +1209,11 @@ CVAPI(void)  cvExp( const CvArr* src, CvArr* dst );
 */
 CVAPI(void)  cvLog( const CvArr* src, CvArr* dst );
 
-/** Fast arctangent calculation */
-CVAPI(float) cvFastArctan( float y, float x );
+/** @deprecated Use cv::fastAtan2 instead. Fast arctangent calculation */
+CV_DEPRECATED CVAPI(float) cvFastArctan( float y, float x );
 
-/** Fast cubic root calculation */
-CVAPI(float)  cvCbrt( float value );
+/** @deprecated Use cv::cubeRoot instead. Fast cubic root calculation */
+CV_DEPRECATED CVAPI(float)  cvCbrt( float value );
 
 #define  CV_CHECK_RANGE    1
 #define  CV_CHECK_QUIET    2

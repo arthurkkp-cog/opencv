@@ -4229,5 +4229,28 @@ TEST(Core_FastMath, InlineIsInf)
     EXPECT_EQ( cvIsInf(suf.f), 0);
 }
 
+TEST(Core_cvCbrt, accuracy)
+{
+    EXPECT_FLOAT_EQ(cvCbrt(0.0f), cv::cubeRoot(0.0f));
+    EXPECT_FLOAT_EQ(cvCbrt(1.0f), cv::cubeRoot(1.0f));
+    EXPECT_FLOAT_EQ(cvCbrt(-1.0f), cv::cubeRoot(-1.0f));
+    EXPECT_FLOAT_EQ(cvCbrt(8.0f), cv::cubeRoot(8.0f));
+    EXPECT_FLOAT_EQ(cvCbrt(-27.0f), cv::cubeRoot(-27.0f));
+    EXPECT_FLOAT_EQ(cvCbrt(0.001f), cv::cubeRoot(0.001f));
+    EXPECT_FLOAT_EQ(cvCbrt(1e10f), cv::cubeRoot(1e10f));
+}
+
+TEST(Core_cvFastArctan, accuracy)
+{
+    EXPECT_FLOAT_EQ(cvFastArctan(0.0f, 1.0f), cv::fastAtan2(0.0f, 1.0f));
+    EXPECT_FLOAT_EQ(cvFastArctan(1.0f, 0.0f), cv::fastAtan2(1.0f, 0.0f));
+    EXPECT_FLOAT_EQ(cvFastArctan(0.0f, -1.0f), cv::fastAtan2(0.0f, -1.0f));
+    EXPECT_FLOAT_EQ(cvFastArctan(-1.0f, 0.0f), cv::fastAtan2(-1.0f, 0.0f));
+    EXPECT_FLOAT_EQ(cvFastArctan(1.0f, 1.0f), cv::fastAtan2(1.0f, 1.0f));
+    EXPECT_FLOAT_EQ(cvFastArctan(-1.0f, -1.0f), cv::fastAtan2(-1.0f, -1.0f));
+    EXPECT_FLOAT_EQ(cvFastArctan(0.0f, 0.0f), cv::fastAtan2(0.0f, 0.0f));
+    EXPECT_FLOAT_EQ(cvFastArctan(3.0f, 4.0f), cv::fastAtan2(3.0f, 4.0f));
+}
+
 }} // namespace
 /* End of file. */
